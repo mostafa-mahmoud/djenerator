@@ -1,0 +1,6 @@
+djenerator
+
+A simple tool to generate test/random data from the model description of django.
+
+At this stage a very simple modification needs to be done to the model descriptions (a change that will not affect the execution of the django app).
+
