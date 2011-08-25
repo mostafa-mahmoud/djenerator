@@ -29,6 +29,21 @@ def is_instance_of_model(reference):
     return 'django.db.models.base.Model' in bases
 
 
+def is_related(field):
+    """ Is a related field
+    
+    Test if a given field is a related field.
+    
+    Args : 
+        field : A reference to the class of a given field.
+    
+    Returns:
+        A boolean value that's is true only if the given field is a related one.
+        
+    """
+    return 'django.db.models.fields.related' in field.__module__
+
+
 def field_type(field):
     """ Field Type
     
