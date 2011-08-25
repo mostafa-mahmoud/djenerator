@@ -11,6 +11,7 @@ from model_reader import is_instance_of_model
 from model_reader import is_related
 from model_reader import list_of_fields
 from model_reader import list_of_models
+from model_reader import module_import
 from model_reader import names_of_fields
 from model_reader import relation_type
 from models import CycleA
@@ -145,4 +146,9 @@ class TestRelationType(TestCase):
                          'ManyToOneRel')
 
 
+class TestModuleImport(TestCase):
+    def test(self):
+        self.assertEqual(mdls, module_import('djenerator.models'))
+ 
+ 
 
