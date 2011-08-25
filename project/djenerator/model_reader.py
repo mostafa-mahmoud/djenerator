@@ -5,6 +5,7 @@ This module has utility functions for reading models and their fields.
 import inspect
 import settings
 from django.core.management import setup_environ
+from django.db.models import Model
 
 setup_environ(settings)
 
@@ -49,5 +50,29 @@ def list_of_models(models_module, abstract=None):
         def isnt_abstract(model):
             return not model._meta.abstract
         return filter(isnt_abstract, models)
+
+
+def list_of_fields(model):
+    """ List of fields
+    
+    Retrieves the fields of a given model.
+    
+    Args:
+        model : A reference to the class of a given model.
+    
+    Returns:
+        A list of references to the fields of the given model.
+    """
+    fields = model._meta._fields() + model._meta._many_to_many()
+    if Model != model.__base__:
+        clone = [fld for fld in fields]
+        for field in clone:
+            if (is_related(field) and ('OneToOne' in relation_type(field) 
+                or 'ManyToMany' in relation_type(field)) and (field.rel.to in 
+                model.__bases__) and field.rel.to != model):
+                fields.remove(field)
+                fields += filter(lambda x : not is_auto_field(x),
+                                 list_of_fields(field.rel.to))
+    return fields
 
 
