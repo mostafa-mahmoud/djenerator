@@ -12,6 +12,7 @@ from model_reader import is_related
 from model_reader import list_of_fields
 from model_reader import list_of_models
 from model_reader import names_of_fields
+from model_reader import relation_type
 from models import CycleA
 from models import CycleB
 from models import CycleC
@@ -132,6 +133,16 @@ class TestIsRelated(TestCase):
         self.assertFalse(is_related(models.BooleanField))
         self.assertFalse(is_related(models.EmailField))
         self.assertFalse(is_related(models.IntegerField))
+
+
+class TestRelationType(TestCase):
+    def test(self):
+        self.assertEqual(relation_type(models.OneToOneField(ExtendingModel)),
+                         'OneToOneRel')
+        self.assertEqual(relation_type(models.ManyToManyField(ExtendingModel)),
+                         'ManyToManyRel')
+        self.assertEqual(relation_type(models.ForeignKey(ExtendingModel)),
+                         'ManyToOneRel')
 
 
 
