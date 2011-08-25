@@ -76,3 +76,20 @@ def list_of_fields(model):
     return fields
 
 
+def names_of_fields(model):
+    """ Names of fields
+    
+    Retrieves the names of the fields of a given model.
+    
+    Args : 
+        model : A reference to the class of a given model.
+    
+    Returns :
+        A list of strings of the attributes' names of the field of 
+        the given model.
+    """
+    def get_name(s):
+        return s.name
+    return map(get_name, list_of_fields(model))
+
+
