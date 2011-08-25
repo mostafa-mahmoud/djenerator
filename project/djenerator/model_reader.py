@@ -44,6 +44,21 @@ def field_type(field):
     return field.get_internal_type()
 
 
+def is_auto_field(field):
+    """ Is an auto-field
+    
+    Test if a given field is an Auto-Field or not.
+    
+    Args : 
+        field : A reference to the class of a given field.
+        
+    Returns:
+        A boolean value that's true only if the given field is an Auto-Field.
+        
+    """
+    return field.get_internal_type() == 'AutoField'
+
+
 def list_of_models(models_module, keep_abstract=None):
     """ List of models
     
