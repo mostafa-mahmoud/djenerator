@@ -161,3 +161,20 @@ def names_of_fields(model):
     return map(get_name, list_of_fields(model))
 
 
+def module_import(app_path):
+    """ Module import
+    
+    Imports a module in a given path.
+    
+    Args : 
+        app_path : A string that contains the path of the module and it's name.
+    
+    Returns :
+        A reference to the module in the given path.
+    """
+    module = __import__(app_path)
+    for part in app_path.split('.')[1:]:
+        module = getattr(module, part)
+    return module
+
+
