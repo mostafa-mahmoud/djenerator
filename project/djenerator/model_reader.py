@@ -28,3 +28,26 @@ def is_instance_of_model(reference):
     return 'django.db.models.base.Model' in bases
 
 
+def list_of_models(models_module, abstract=None):
+    """ List of models
+    
+    This function filters the models from the instances in given module. 
+    
+    Args:
+        models_module : A reference to a given models module.
+        abstact(optional) : A boolean value that decides filtering of abstract
+                            models.
+                
+    Returns:
+        A list of reference to the classes of the models in 
+        the imported models file.
+    """
+    models = filter(is_instance_of_model, models_module.__dict__.values())
+    if abstract:
+        return models
+    else:
+        def isnt_abstract(model):
+            return not model._meta.abstract
+        return filter(isnt_abstract, models)
+
+
