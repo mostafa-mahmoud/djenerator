@@ -7,6 +7,7 @@ from django.test import TestCase
 from model_reader import is_instance_of_model
 from model_reader import list_of_fields
 from model_reader import list_of_models
+from model_reader import names_of_fields
 from models import CycleA
 from models import CycleB
 from models import CycleC
@@ -80,6 +81,16 @@ class TestListOfFields(TestCase):
                              [models.AutoField, models.OneToOneField,
                               models.ForeignKey, models.IntegerField,
                               models.ManyToManyField])]))
+
+
+class TestNamesOfFields(TestCase):
+    def test(self):
+        self.assertEqual(['id', 'field1E', 'field3E', 'field4E', 'field2E'],
+                         names_of_fields(TestModelE))
+        self.assertEqual(['id', 'field1', 'field2', 'field3'],
+                         names_of_fields(TestModel1))
+        self.assertEqual(['id', 'field1', 'field2'],
+                         names_of_fields(TestModel0))
 
 
 
