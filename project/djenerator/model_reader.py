@@ -25,11 +25,11 @@ def is_instance_of_model(reference):
     if not inspect.isclass(reference):
         return False
     bases = ['%s.%s' % (b.__module__, b.__name__) for b 
-            in inspect.getmro(reference)]
+             in inspect.getmro(reference)]
     return 'django.db.models.base.Model' in bases
 
 
-def list_of_models(models_module, abstract=None):
+def list_of_models(models_module, keep_abstract=None):
     """ List of models
     
     This function filters the models from the instances in given module. 
@@ -44,12 +44,13 @@ def list_of_models(models_module, abstract=None):
         the imported models file.
     """
     models = filter(is_instance_of_model, models_module.__dict__.values())
-    if abstract:
+    if keep_abstract:
         return models
     else:
-        def isnt_abstract(model):
+        def is_not_abstract(model):
             return not model._meta.abstract
-        return filter(isnt_abstract, models)
+
+        return filter(is_not_abstract, models)
 
 
 def list_of_fields(model):
@@ -64,6 +65,12 @@ def list_of_fields(model):
         A list of references to the fields of the given model.
     """
     fields = model._meta._fields() + model._meta._many_to_many()
+    # If the inheritance is multi-table inheritence, the fields of 
+    # the super class(that should be inherited) will not appear
+    # in fields, and they will be replaced by a OneToOneField to the 
+    # super class or ManyToManyField in case of a proxy model, so 
+    # this block of code will be replace the related field
+    # by those of the super class. 
     if Model != model.__base__:
         clone = [fld for fld in fields]
         for field in clone:

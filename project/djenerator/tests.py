@@ -37,7 +37,7 @@ from models import TestModelY
 class TestInstanceOfModel(TestCase):
     def test(self):
         models = [TestModel0, TestModel1, TestModelA, TestModelB, TestModelC,
-                 TestModelD, TestModelE, TestModelX, TestModelY, ExtendingModel]
+                  TestModelD, TestModelE, TestModelX, TestModelY, ExtendingModel]
         for model in models:
             self.assertTrue(is_instance_of_model(model))
         self.assertFalse(is_instance_of_model(NotExtendingModel))
@@ -56,7 +56,7 @@ class TestListOfModels(TestCase):
                               ExtendSuperClass, ProxyExtend, SuperAbstract, 
                               TestModelFieldsTwo, CycleA, CycleB, CycleC, 
                               CycleD, CycleE, CycleF]), 
-                              set(list_of_models(mdls, abstract=True)))
+                              set(list_of_models(mdls, keep_abstract=True)))
         self.assertEqual(set([ExtendingModel, TestModel0, TestModel1, 
                               TestModelA, TestModelB, TestModelC, TestModelD, 
                               TestModelE, TestModelX, TestModelY, 
