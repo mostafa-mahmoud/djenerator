@@ -5,6 +5,7 @@ This module contains tests for djenerator app.
 """
 import models as mdls
 from django.test import TestCase
+from model_reader import field_type
 from model_reader import is_instance_of_model
 from model_reader import list_of_fields
 from model_reader import list_of_models
@@ -92,5 +93,23 @@ class TestNamesOfFields(TestCase):
                           names_of_fields(TestModel1))
         self.assertEqual(['id', 'field1', 'field2'],
                           names_of_fields(TestModel0))
+
+class TestFieldType(TestCase):
+    def test(self):
+        self.assertEqual(field_type(models.CharField()),
+                         'CharField')
+        self.assertEqual(field_type(models.IntegerField()),
+                         'IntegerField')
+        self.assertEqual(field_type(models.EmailField()),
+                         'CharField')
+        self.assertEqual(field_type(models.BooleanField()),
+                         'BooleanField')
+        self.assertEqual(field_type(models.ForeignKey(ExtendingModel)),
+                         'ForeignKey')
+        self.assertEqual(field_type(models.OneToOneField(ExtendingModel)),
+                         'OneToOneField')
+        self.assertEqual(field_type(models.ManyToManyField(ExtendingModel)),
+                         'ManyToManyField')
+
 
 
