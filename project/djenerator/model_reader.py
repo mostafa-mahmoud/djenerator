@@ -97,6 +97,7 @@ def names_of_fields(model):
     """
     def get_name(s):
         return s.name
+    
     return map(get_name, list_of_fields(model))
 
 

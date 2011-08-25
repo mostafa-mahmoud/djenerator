@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python
 """
 This module contains tests for djenerator app.
@@ -86,11 +87,10 @@ class TestListOfFields(TestCase):
 class TestNamesOfFields(TestCase):
     def test(self):
         self.assertEqual(['id', 'field1E', 'field3E', 'field4E', 'field2E'],
-                         names_of_fields(TestModelE))
+                          names_of_fields(TestModelE))
         self.assertEqual(['id', 'field1', 'field2', 'field3'],
-                         names_of_fields(TestModel1))
+                          names_of_fields(TestModel1))
         self.assertEqual(['id', 'field1', 'field2'],
-                         names_of_fields(TestModel0))
-
+                          names_of_fields(TestModel0))
 
 
