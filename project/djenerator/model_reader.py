@@ -29,6 +29,21 @@ def is_instance_of_model(reference):
     return 'django.db.models.base.Model' in bases
 
 
+def field_type(field):
+    """ Field Type
+    
+    Retrieves the type of a given field.
+    
+    Args : 
+        field : A reference to a given field object.
+    
+    Returns:
+        A string that contains the type of the field.
+        
+    """
+    return field.get_internal_type()
+
+
 def list_of_models(models_module, keep_abstract=None):
     """ List of models
     
