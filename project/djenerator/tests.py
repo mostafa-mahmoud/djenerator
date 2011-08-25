@@ -6,6 +6,7 @@ This module contains tests for djenerator app.
 import models as mdls
 from django.test import TestCase
 from model_reader import field_type
+from model_reader import is_auto_field
 from model_reader import is_instance_of_model
 from model_reader import list_of_fields
 from model_reader import list_of_models
@@ -110,6 +111,15 @@ class TestFieldType(TestCase):
                          'OneToOneField')
         self.assertEqual(field_type(models.ManyToManyField(ExtendingModel)),
                          'ManyToManyField')
+
+
+class TestIsAutoField(TestCase):
+    def test(self):
+        self.assertTrue(is_auto_field(models.AutoField(primary_key=True)))
+        self.assertFalse(is_auto_field(models.CharField()))
+        self.assertFalse(is_auto_field(models.BooleanField()))
+        self.assertFalse(is_auto_field(models.IntegerField()))
+        self.assertFalse(is_auto_field(models.ForeignKey(ExtendingModel)))
 
 
 
