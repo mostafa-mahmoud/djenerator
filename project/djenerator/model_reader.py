@@ -74,6 +74,21 @@ def is_auto_field(field):
     return field.get_internal_type() == 'AutoField'
 
 
+def relation_type(field):
+    """ Relation Type
+    
+    Retrieves the type of the relation of a given related field.
+    
+    Args : 
+        field : A reference to a field object.
+    
+    Returns :
+        A string that contains the type of the relation of the field.
+        
+    """
+    return field.rel.__class__.__name__
+
+
 def list_of_models(models_module, keep_abstract=None):
     """ List of models
     
