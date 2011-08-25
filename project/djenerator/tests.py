@@ -8,6 +8,7 @@ from django.test import TestCase
 from model_reader import field_type
 from model_reader import is_auto_field
 from model_reader import is_instance_of_model
+from model_reader import is_related
 from model_reader import list_of_fields
 from model_reader import list_of_models
 from model_reader import names_of_fields
@@ -120,6 +121,17 @@ class TestIsAutoField(TestCase):
         self.assertFalse(is_auto_field(models.BooleanField()))
         self.assertFalse(is_auto_field(models.IntegerField()))
         self.assertFalse(is_auto_field(models.ForeignKey(ExtendingModel)))
+
+
+class TestIsRelated(TestCase):
+    def test(self):
+        self.assertTrue(is_related(models.ForeignKey))
+        self.assertTrue(is_related(models.OneToOneField))
+        self.assertTrue(is_related(models.ManyToManyField))
+        self.assertFalse(is_related(models.CharField))
+        self.assertFalse(is_related(models.BooleanField))
+        self.assertFalse(is_related(models.EmailField))
+        self.assertFalse(is_related(models.IntegerField))
 
 
 
