@@ -78,3 +78,93 @@ class TestModelY(models.Model):
     def __unicode__(self):
         return str(self.field1Y) + " " + self.field2Y + " " + str(self.field3Y)
 
+
+class SuperClass(models.Model):
+    fieldS = models.IntegerField()
+    fieldAbr = models.IntegerField()
+    fieldFak = models.IntegerField()
+    fieldMTM = models.ManyToManyField('self')
+    
+
+class SuperAbstract(models.Model):
+    fieldAbs = models.IntegerField()
+        
+    class Meta:
+        abstract = True
+
+
+class ExtendAbstract(SuperAbstract):
+    fieldExAbs = models.CharField(max_length=200)
+    fieldZZZ = models.IntegerField()
+    
+
+class ExtendSuperClass(SuperClass):
+    fieldExSup = models.CharField(max_length=200) 
+    
+
+class ProxyExtend(SuperClass):
+    
+    class Meta:
+        proxy = True
+
+
+class TestModelFieldsTwo(models.Model):
+    fieldA = models.CharField(max_length=500)
+    fieldB = models.IntegerField()
+    fieldC = models.CharField(max_length=50)
+    fieldD = models.IntegerField()
+    fieldE = models.BooleanField()
+    fieldF = models.IntegerField()
+    fieldG = models.CharField(max_length=200)
+    fieldH = models.BooleanField()
+    fieldZ = models.ManyToManyField(TestModelE)
+    
+
+class TestModelFields(models.Model):
+    fieldY = models.OneToOneField(TestModelY)
+    fieldA = models.CharField(max_length=500)
+    fieldB = models.IntegerField()
+    fieldC = models.CharField(max_length=50)
+    fieldD = models.IntegerField()
+    fieldE = models.BooleanField()
+    fieldF = models.IntegerField()
+    fieldG = models.CharField(max_length=200)
+    fieldH = models.BooleanField()
+    fieldX = models.ForeignKey(TestModelX)
+    fieldZ = models.ManyToManyField(TestModelE)
+    
+
+class CycleA(models.Model):
+    ab = models.ForeignKey('CycleB')
+    ae = models.ForeignKey('CycleE')
+    a = models.IntegerField()
+    
+
+class CycleB(models.Model):
+    bc = models.ForeignKey('CycleC')
+    b = models.IntegerField()
+    
+
+class CycleC(models.Model):
+    cc = models.ManyToManyField('self')
+    ca = models.ManyToManyField(CycleA)
+    c = models.DecimalField(max_digits=15, decimal_places=10)
+    
+
+class CycleD(models.Model):
+    dc = models.ForeignKey(CycleC)
+    df = models.ManyToManyField('CycleF')
+    d = models.IntegerField()
+    
+
+class CycleE(models.Model):
+    ec = models.ForeignKey(CycleC)
+    ed = models.ForeignKey(CycleD)
+    e = models.IntegerField()
+    
+
+class CycleF(models.Model):
+    fd = models.ForeignKey(CycleD)
+    f = models.IntegerField()
+
+
