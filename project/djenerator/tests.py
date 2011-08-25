@@ -5,6 +5,7 @@ This module contains tests for djenerator app.
 import models as mdls
 from django.test import TestCase
 from model_reader import is_instance_of_model
+from model_reader import list_of_fields
 from model_reader import list_of_models
 from models import CycleA
 from models import CycleB
@@ -45,7 +46,6 @@ class TestInstanceOfModel(TestCase):
         self.assertFalse(is_instance_of_model(not_extending_model_function))
 
 
-
 class TestListOfModels(TestCase):
     def test(self):
         self.assertEqual(set([ExtendingModel, TestModel0, TestModel1, 
@@ -63,6 +63,23 @@ class TestListOfModels(TestCase):
                               ExtendSuperClass, TestModelFieldsTwo, ProxyExtend,
                               CycleA, CycleB, CycleC, CycleD, CycleE, CycleF]), 
                               set(list_of_models(mdls)))
+
+
+class TestListOfFields(TestCase):
+    def test(self):
+        self.assertTrue(all([isinstance(*x) 
+                             for x in zip(list_of_fields(TestModel1), 
+                             [models.AutoField, models.CharField,
+                              models.IntegerField, models.ForeignKey])]))
+        self.assertTrue(all([isinstance(*x) 
+                             for x in zip(list_of_fields(TestModel0),
+                             [models.AutoField, models.BooleanField,
+                              models.EmailField])]))
+        self.assertTrue(all([isinstance(*x) 
+                             for x in zip(list_of_fields(TestModelE),
+                             [models.AutoField, models.OneToOneField,
+                              models.ForeignKey, models.IntegerField,
+                              models.ManyToManyField])]))
 
 
 
