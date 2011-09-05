@@ -3,12 +3,14 @@
 """
 This module contains tests for djenerator app.
 """
+import itertools
 import models as mdls
 from django.db import models
 from django.test import TestCase
 from generate_test_data import create_model
 from generate_test_data import dependencies
 from generate_test_data import field_sample_values
+from generate_test_data import topological_sort
 from model_reader import field_type
 from model_reader import is_auto_field
 from model_reader import is_instance_of_model
@@ -215,6 +217,31 @@ class TestDependencies(TestCase):
                          set([TestModelB, TestModelC]))
         self.assertEqual(dependencies(TestModelC), [TestModelB])
         self.assertEqual(dependencies(TestModelB), [TestModelA])
+
+
+class TestTopologicalSorting(TestCase):
+    def test(self):
+        self.assertEqual(topological_sort([ExtendingModel, TestModel1, 
+                                            TestModel0]), 
+                         [ExtendingModel, TestModel0, TestModel1])
+        self.assertEqual(topological_sort([TestModel1, TestModel0]), 
+                                          [TestModel0, TestModel1])
+        self.assertEqual(topological_sort([TestModel0, TestModel1]), 
+                                          [TestModel0, TestModel1])
+        def assertions(sorted_list):
+            self.assertTrue(sorted_list.index(TestModelA) < 
+                            sorted_list.index(TestModelB))
+            self.assertTrue(sorted_list.index(TestModelB) < 
+                            sorted_list.index(TestModelC))
+            self.assertTrue(sorted_list.index(TestModelB) < 
+                            sorted_list.index(TestModelE))
+            self.assertTrue(sorted_list.index(TestModelC) < 
+                            sorted_list.index(TestModelE))
+            self.assertTrue(ExtendingModel in sorted_list)
+        for perm in itertools.permutations([TestModelA, TestModelB, TestModelD, 
+                                            TestModelC, TestModelE, 
+                                            ExtendingModel]):
+            assertions(topological_sort(list(perm)))
 
 
 
