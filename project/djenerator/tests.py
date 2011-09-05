@@ -21,6 +21,7 @@ from model_reader import module_import
 from model_reader import names_of_fields
 from model_reader import relation_type
 from utility import sort_unique_tuple
+from utility import sort_unique_tuples
 from utility import unique_items
 from models import CycleA
 from models import CycleB
@@ -279,6 +280,45 @@ class TestSortTuple(TestCase):
         self.assertEqual(sort_unique_tuple(('fieldD', 'fieldH', 'fieldF'), 
                                            TestModelFields), 
                                            ('fieldD', 'fieldF', 'fieldH'))
+
+
+class TestSortTuples(TestCase):
+    def test(self):
+        self.assertEqual(sort_unique_tuples((('fieldA',), ('fieldA', 'fieldD'),
+                                             ('fieldC', 'fieldX', 'fieldB'), 
+                                             ('fieldC', 'fieldE', 'fieldH'), 
+                                             ('fieldA', 'fieldX', 'fieldC')),
+                                            TestModelFields), 
+                                            (('fieldA',), 
+                                             ('fieldA', 'fieldC', 'fieldX'), 
+                                             ('fieldA', 'fieldD'), 
+                                             ('fieldB', 'fieldC', 'fieldX'), 
+                                             ('fieldC', 'fieldE', 'fieldH')))
+        self.assertEqual(sort_unique_tuples((('fieldA', 'fieldD'), 
+                                             ('fieldA', 'fieldE', 'fieldX')), 
+                                            TestModelFields), 
+                                            (('fieldA', 'fieldD'), 
+                                             ('fieldA', 'fieldE', 'fieldX')))
+        self.assertEqual(sort_unique_tuples((('fieldA', 'fieldE', 'fieldX'), 
+                                             ('fieldA', 'fieldD')), 
+                                            TestModelFields), 
+                                            (('fieldA', 'fieldD'), 
+                                             ('fieldA', 'fieldE', 'fieldX')))
+        self.assertEqual(sort_unique_tuples((('fieldA', 'fieldD', 'fieldX'), 
+                                             ('fieldA', 'fieldD')), 
+                                            TestModelFields), 
+                                            (('fieldA', 'fieldD'), 
+                                             ('fieldA', 'fieldD', 'fieldX')))
+        self.assertEqual(sort_unique_tuples((('fieldA', 'fieldE'), 
+                                             ('fieldA', 'fieldE', 'fieldX')), 
+                                            TestModelFields), 
+                                            (('fieldA', 'fieldE'), 
+                                             ('fieldA', 'fieldE', 'fieldX')))
+        self.assertEqual(sort_unique_tuples((('fieldA', 'fieldD'), 
+                                             ('fieldA', 'fieldD')), 
+                                            TestModelFields), 
+                                            (('fieldA', 'fieldD'), 
+                                             ('fieldA', 'fieldD')))
 
 
 
