@@ -11,6 +11,7 @@ from generate_test_data import create_model
 from generate_test_data import dependencies
 from generate_test_data import dfs
 from generate_test_data import field_sample_values
+from generate_test_data import generate_model
 from generate_test_data import topological_sort
 from model_reader import field_type
 from model_reader import is_auto_field
@@ -355,6 +356,43 @@ class TestDFS(TestCase):
             self.assertTrue(mdl.fieldF in [6, 28, 496, 8128, 33550336])
             self.assertTrue(mdl.fieldG in ['Mathematics', 'Physics', 'Chemistry', 'Biology'])
             self.assertTrue(not (mdl.fieldE ^ mdl.fieldH))
+
+
+class TestGenerateModel(TestCase):
+    def test(self):
+        generate_model(TestModelX, 5)
+        generate_model(TestModelY, 95)
+        generated_models = list(TestModelY.objects.all())
+        length = len(generated_models)
+        self.assertTrue(len(TestModelX.objects.all()) * 18 == length)
+        generate_model(TestModelA, 7)
+        self.assertEqual(len(TestModelA.objects.all()), 6)
+        generate_model(TestModelB, 17)
+        self.assertEqual(len(TestModelB.objects.all()), 12)
+        generate_model(TestModelC, 53)
+        self.assertEqual(len(TestModelC.objects.all()), 12)
+        for model in generated_models:
+            self.assertTrue(isinstance(model, TestModelY))
+            self.assertTrue(model.field1Y in [2, 3, 5, 7, 11, 13])
+            self.assertTrue(model.field2Y in ['MMa', 'XXa', 'azz'])
+            self.assertTrue(model.field3Y in TestModelX.objects.all())
+        to_be_computed_test = generate_model(TestModelFieldsTwo, 50)
+        self.assertTrue(to_be_computed_test)
+        self.assertEqual(TestModelFieldsTwo, to_be_computed_test[0])
+        self.assertTrue(to_be_computed_test[1])
+        for fld in to_be_computed_test[1]:
+            self.assertTrue(is_related(fld) 
+                            and 'ManyToMany' in relation_type(fld))
+            self.assertEqual(fld.rel.to, TestModelE)
+        generate_model(TestModelE, 2, shuffle=False)[0]
+        generated_models = list(TestModelE.objects.all())
+        for model in generated_models:
+            self.assertTrue(isinstance(model, TestModelE))
+            self.assertTrue(model.field4E in [1000000009, 1000003, 101])
+            self.assertTrue(model.field1E in TestModelB.objects.all())
+            self.assertTrue(all([x in TestModelA.objects.all() 
+                                 for x in model.field2E.all()]))
+            self.assertTrue(model.field3E in TestModelC.objects.all())
 
 
 
