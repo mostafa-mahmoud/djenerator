@@ -6,6 +6,7 @@ This module contains tests for djenerator app.
 import models as mdls
 from django.db import models
 from django.test import TestCase
+from generate_test_data import create_model
 from generate_test_data import field_sample_values
 from model_reader import field_type
 from model_reader import is_auto_field
@@ -188,6 +189,22 @@ class TestListOfSampleFieldValues(TestCase):
         self.assertTrue(all([x in [a, b] for x in field_sample_values(fld)[0]]))
         vals = [int (x) for x in field_sample_values(list_of_fields(CycleF)[2])]
         self.assertEqual(vals, range(4000, 5000))
+
+
+class TestCreateModel(TestCase):
+    def test(self):
+        kwargsa = {'field1A': 'Hrr', 'field2A': 'HxxA'} 
+        atest = create_model(TestModelA, kwargsa.items())
+        self.assertEqual(atest, TestModelA.objects.get(**kwargsa))
+        kwargsa = {'field1B': 'Hello Worrd', 'field2B': atest}
+        btest = create_model(TestModelB, kwargsa.items())
+        self.assertEqual(btest, TestModelB.objects.get(**kwargsa))
+        kwargsa = {'field1C': 'Hello Egypt!!', 'field2C': btest}
+        ctest = create_model(TestModelC, kwargsa.items())
+        self.assertEqual(ctest, TestModelC.objects.get(**kwargsa))
+        kwargsa = {'field1D' : 77, 'field2D' : TestModelA.objects.all()}
+        dtest = create_model(TestModelD, kwargsa.items())
+        self.assertEqual(dtest, TestModelD.objects.get(**kwargsa))
 
 
 
