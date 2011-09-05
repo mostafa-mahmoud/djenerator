@@ -4,7 +4,9 @@
 This module contains tests for djenerator app.
 """
 import models as mdls
+from django.db import models
 from django.test import TestCase
+from generate_test_data import field_sample_values
 from model_reader import field_type
 from model_reader import is_auto_field
 from model_reader import is_instance_of_model
@@ -151,4 +153,41 @@ class TestModuleImport(TestCase):
         self.assertEqual(mdls, module_import('djenerator.models'))
  
  
+class TestListOfSampleFieldValues(TestCase):
+    def test(self):
+        Y = list_of_fields(TestModelY)
+        X = list_of_fields(TestModelX)
+        A = list_of_fields(TestModelA)
+        B = list_of_fields(TestModelB)
+        C = list_of_fields(TestModelC)
+        D = list_of_fields(TestModelD)
+        E = list_of_fields(TestModelE)
+        self.assertFalse(field_sample_values(X[0]))
+        self.assertEqual(field_sample_values(Y[1]), [2, 3, 5, 7, 11, 13])
+        self.assertEqual(field_sample_values(Y[2]), ['MMa', 'XXa', 'azz'])
+        self.assertEqual(field_sample_values(X[1]), 
+                         [x * x * x for x in range(10)])
+        self.assertEqual(field_sample_values(E[3]), [1000000009, 1000003, 101])
+        self.assertEqual(field_sample_values(D[1]), 
+                         [x * x * x for x in range(10)])
+        self.assertEqual(field_sample_values(C[1]), 
+                         ['Hello I am C', 'MUHAHAHAHAHA', 'CCCC', '^_^'])
+        self.assertEqual(field_sample_values(B[1]), 
+                         ['Hello Universe', 'Hello Parallel Universe!'])
+        self.assertEqual(field_sample_values(A[1]), 
+                         ['Hello World', 'Hello Africa', 'axxx!!'])
+        self.assertEqual(field_sample_values(A[2]), 
+                         ['Hello Second Field', 'field 2'])
+        a = TestModelX(field1X=12)
+        b = TestModelX(field1X=15)
+        a.save()
+        b.save()
+        self.assertEqual((field_sample_values(models.ForeignKey(TestModelX))), 
+                         ([a, b]))
+        fld = models.ManyToManyField(TestModelX)
+        self.assertTrue(all([x in [a, b] for x in field_sample_values(fld)[0]]))
+        vals = [int (x) for x in field_sample_values(list_of_fields(CycleF)[2])]
+        self.assertEqual(vals, range(4000, 5000))
+
+
 
