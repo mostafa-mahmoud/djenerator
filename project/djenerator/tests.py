@@ -20,6 +20,7 @@ from model_reader import list_of_models
 from model_reader import module_import
 from model_reader import names_of_fields
 from model_reader import relation_type
+from utility import unique_items
 from models import CycleA
 from models import CycleB
 from models import CycleC
@@ -242,6 +243,28 @@ class TestTopologicalSorting(TestCase):
                                             TestModelC, TestModelE, 
                                             ExtendingModel]):
             assertions(topological_sort(list(perm)))
+
+
+class TestUniqueConstraints(TestCase):
+    def test(self):
+        constraint = unique_items(('fieldA', 'fieldD',))
+        model = TestModelFieldsTwo(fieldA='A', fieldD=5, fieldB=10, 
+                                   fieldC='Winner', fieldE=True, fieldF=6, 
+                                   fieldG='Mathematics', fieldH=False)
+        model.save()
+        fields = list_of_fields(TestModelFields)
+        self.assertFalse(constraint([('fieldA', 'A'), ('fieldD', 5)],
+                                    TestModelFieldsTwo, fields[5]))
+        self.assertTrue(constraint([('fieldA', 'A')],
+                                   TestModelFields, fields[5]))
+        self.assertFalse(constraint([('fieldA', 'A'), ('fieldD', 5)],
+                                    TestModelFieldsTwo, fields[5]))
+        self.assertTrue(constraint([('fieldA', 'A'), ('fieldD', 3)],
+                                   TestModelFieldsTwo, fields[5]))
+        self.assertTrue(constraint([('fieldA', 'A')], 
+                                   TestModelFieldsTwo, fields[5]))
+        self.assertTrue(constraint([('fieldA', 'A'), ('fieldD', 3)], 
+                                   TestModelFieldsTwo, fields[5]))
 
 
 
