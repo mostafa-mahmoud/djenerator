@@ -308,7 +308,7 @@ def generate_test_data(app_models, size):
     for mdlfld in to_be_computed:
         mdl = mdlfld[0]
         for fld in mdlfld[1]:
-            if not (mdl, fld.name) in precomp:
+            if (mdl, fld.name) not in precomp:
                 precomp.add((mdl, fld.name))
                 recompute(mdl, fld)
 
