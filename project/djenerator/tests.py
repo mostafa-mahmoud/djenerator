@@ -9,6 +9,7 @@ from django.db import models
 from django.test import TestCase
 from generate_test_data import create_model
 from generate_test_data import dependencies
+from generate_test_data import dfs
 from generate_test_data import field_sample_values
 from generate_test_data import topological_sort
 from model_reader import field_type
@@ -319,6 +320,41 @@ class TestSortTuples(TestCase):
                                             TestModelFields), 
                                             (('fieldA', 'fieldD'), 
                                              ('fieldA', 'fieldD')))
+
+
+class TestDFS(TestCase):
+    def test(self):
+        def func(cur_tuple, models, field):
+            dic = dict(cur_tuple)
+            keys = dic.keys()
+            if not 'fieldD' in keys:
+               return True
+            elif dic['fieldD'] % 3 != 1:
+                return False
+            if not ('fieldE' in keys and 'fieldH' in keys):
+                return True 
+            elif dic['fieldE'] ^ dic['fieldH']:
+                return False
+            return True
+
+        dfs.size = 30
+        to_be_computed = []
+        cur_tup = [('fieldA', 'X'), ('fieldB', 199), ('fieldC', 'general')]
+        unique_together = TestModelFieldsTwo._meta.unique_together
+        unique = list(unique_together)
+        unique = sort_unique_tuples(unique, TestModelFieldsTwo)
+        unique_constraints = [unique_items(un_tuple) for un_tuple in unique]
+        constraints = [func] + unique_constraints
+        dfs(cur_tup, 4, to_be_computed, constraints, TestModelFieldsTwo, False)
+        self.assertEqual(len(list(TestModelFieldsTwo.objects.all())), 30)
+        for mdl in list(TestModelFieldsTwo.objects.all()):
+            self.assertEqual(mdl.fieldA, 'X')
+            self.assertEqual(mdl.fieldB, 199)
+            self.assertEqual(mdl.fieldC, 'general')
+            self.assertTrue(mdl.fieldD in [13, 19, 31, 43])
+            self.assertTrue(mdl.fieldF in [6, 28, 496, 8128, 33550336])
+            self.assertTrue(mdl.fieldG in ['Mathematics', 'Physics', 'Chemistry', 'Biology'])
+            self.assertTrue(not (mdl.fieldE ^ mdl.fieldH))
 
 
 
