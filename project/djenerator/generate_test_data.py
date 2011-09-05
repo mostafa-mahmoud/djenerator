@@ -110,9 +110,11 @@ def dfs(cur_tuple, index, to_be_computed, constraints, model, to_be_shuffled):
     else:
         list_field_values = field_sample_values(fields[index])
         if not list_field_values:
-            if ((is_related(fields[index]) and 'ManyToMany' 
-                in relation_type(fields[index])) or fields[index].null 
-                or is_auto_field(fields[index])):
+            many_to_many_related = (is_related(fields[index]) and 'ManyToMany'
+                                    in relation_type(fields[index]))
+            optional_field = fields[index].null
+            auto_fld = is_auto_field(fields[index])
+            if many_to_many_related or optional_field or auto_fld:
                 if not is_auto_field(fields[index]):
                     to_be_computed.append(fields[index])
                 return dfs(cur_tuple, index + 1, to_be_computed,
@@ -166,7 +168,7 @@ def generate_model(model, size, shuffle=None):
     to_be_computed = []
     dfs.size = size
     dfs([], 0, to_be_computed, constraints, model, shuffle)
-    return (model, to_be_computed)
+    return model, to_be_computed
 
 
 def create_model(model, val):
