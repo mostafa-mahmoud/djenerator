@@ -34,7 +34,7 @@ def unique_items(var_tuple):
                 return True
         l = [(val, var) for (val, var) in variable if val in var_tuple]
         while model != Model and not model._meta.abstract:
-            if bool(list(model.objects.filter(**dict(l)))):
+            if list(model.objects.filter(**dict(l))):
                 return False
             model = model.__base__
         return True
@@ -93,7 +93,8 @@ def sort_unique_tuples(var_tuples, model):
                 return -1
             else:
                 return 1
-    
-    clone = sorted([x for x in var_tuples], cm)
+
+    clone = var_tuples[:]
+    clone.sort(cmp=cm)
     return tuple(clone)
 
