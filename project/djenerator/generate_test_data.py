@@ -102,3 +102,20 @@ def create_model(model, val):
         return mdl
 
 
+def dependencies(model):
+    """ Dependencies
+    Retrieves the models the must be generated before a given model.
+    
+    Args : 
+        model : a reference to the class of the given model.
+    
+    Returns :
+        list of references to the classes of the models.
+        
+    """
+    fields = list_of_fields(model)
+    return [field.rel.to for field in fields 
+            if ((not field.null) and (is_related(field) 
+                and not 'ManyToMany' in relation_type(field)))]
+
+
