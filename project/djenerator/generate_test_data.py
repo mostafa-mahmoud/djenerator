@@ -10,6 +10,7 @@ from django.core.management import setup_environ
 from django.db.models import Model
 from model_reader import is_auto_field
 from model_reader import is_related
+from model_reader import list_of_fields
 from model_reader import relation_type
 
 setup_environ(settings)
@@ -60,5 +61,92 @@ def field_sample_values(field):
             # TODO(mostafa.amin93@gmail.com) : Generate totally randomized
             #                                  objects if the file is not found
     return list(list_field_values)
+
+
+def create_model(model, val):
+    """ Create models
+    
+    Creates a new model given a reference to it's class and a list of the values
+    of it's variables.
+    
+    Args : 
+        model : A reference to the class of the model that will be created.
+        val : A list of tuples having the format (field name, field value)
+    
+    Returns :
+        A model with the values given.
+    """
+    vals_dictionary = dict(val)
+    have_many_to_many_relation = any([x for x in list_of_fields(model) 
+                                       if is_related(x) 
+                                       and 'ManyToMany' in relation_type(x)])
+    if not have_many_to_many_relation:
+        mdl = model(**vals_dictionary)
+        mdl.save()
+        return mdl
+    else:
+        mdl = model()
+        flds = list_of_fields(model)
+        dict_T = {}
+        for field in flds:
+            dict_T[field.name] = relation_type(field)
+        for key, val in vals_dictionary.items():
+            if not 'ManyToMany' in dict_T[key]:
+                setattr(mdl, key, val)
+        mdl.save()
+        for key, val in vals_dictionary.items():
+            if 'ManyToMany' in dict_T[key]:
+                for x in val:
+                    getattr(mdl, key).add(x)
+        mdl.save()
+        return mdl
+
+
+def dependencies(model):
+    """ Dependencies
+    Retrieves the models the must be generated before a given model.
+    
+    Args : 
+        model : a reference to the class of the given model.
+    
+    Returns :
+        list of references to the classes of the models.
+        
+    """
+    fields = list_of_fields(model)
+    return [field.rel.to for field in fields 
+            if ((not field.null) and (is_related(field) 
+                and not 'ManyToMany' in relation_type(field)))]
+
+
+def topological_sort(models):
+    """ Topological sorting
+    Sort a given list of models according to the dependencies of the 
+    relations between the models.
+    
+    Args : 
+        models : A list of references to the classes of the given models.
+    
+    Return :
+        A list of references to the classes of the given models.
+    """
+    result = []
+    visited = []
+    S = filter(dependencies, models)
+    def visit(model):
+        if not model in visited:
+            visited.append(model)
+            for dep_model in dependencies(model):
+                visit(dep_model)
+            result.append(model)
+            
+    while S:
+        model = S.pop(0)
+        visit(model)
+    result_singleton = []
+    for model in models:
+        if not model in result:
+            result_singleton.append(model)
+    return result_singleton + result
 
 
