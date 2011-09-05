@@ -20,6 +20,7 @@ from model_reader import list_of_models
 from model_reader import module_import
 from model_reader import names_of_fields
 from model_reader import relation_type
+from utility import sort_unique_tuple
 from utility import unique_items
 from models import CycleA
 from models import CycleB
@@ -265,6 +266,19 @@ class TestUniqueConstraints(TestCase):
                                    TestModelFieldsTwo, fields[5]))
         self.assertTrue(constraint([('fieldA', 'A'), ('fieldD', 3)], 
                                    TestModelFieldsTwo, fields[5]))
+
+
+class TestSortTuple(TestCase):
+    def test(self):
+        flds = tuple(names_of_fields(TestModelFields))
+        self.assertEqual(sort_unique_tuple(('fieldA', 'fieldX', 'fieldG',
+                                            'fieldD'), TestModelFields), 
+                                           ('fieldA', 'fieldD', 'fieldG', 
+                                            'fieldX'))
+        self.assertEqual(sort_unique_tuple(flds[::-1], TestModelFields), flds)
+        self.assertEqual(sort_unique_tuple(('fieldD', 'fieldH', 'fieldF'), 
+                                           TestModelFields), 
+                                           ('fieldD', 'fieldF', 'fieldH'))
 
 
 
