@@ -7,6 +7,7 @@ import models as mdls
 from django.db import models
 from django.test import TestCase
 from generate_test_data import create_model
+from generate_test_data import dependencies
 from generate_test_data import field_sample_values
 from model_reader import field_type
 from model_reader import is_auto_field
@@ -205,6 +206,15 @@ class TestCreateModel(TestCase):
         kwargsa = {'field1D' : 77, 'field2D' : TestModelA.objects.all()}
         dtest = create_model(TestModelD, kwargsa.items())
         self.assertEqual(dtest, TestModelD.objects.get(**kwargsa))
+
+
+class TestDependencies(TestCase):
+    def test(self):
+        self.assertEqual(dependencies(TestModelD), [])
+        self.assertEqual(set(dependencies(TestModelE)), 
+                         set([TestModelB, TestModelC]))
+        self.assertEqual(dependencies(TestModelC), [TestModelB])
+        self.assertEqual(dependencies(TestModelB), [TestModelA])
 
 
 
