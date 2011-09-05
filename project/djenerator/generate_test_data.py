@@ -6,7 +6,10 @@ given models.
 import inspect
 import random
 import settings
+from django.core import management
+from django.core import serializers
 from django.core.management import setup_environ
+from django.db import connection
 from django.db.models import Model
 from model_reader import is_auto_field
 from model_reader import is_related
@@ -308,5 +311,33 @@ def generate_test_data(app_models, size):
             if not (mdl, fld.name) in precomp:
                 precomp.add((mdl, fld.name))
                 recompute(mdl, fld)
+
+
+def djenerator(app_path, size, output_file, printing=None):
+    """ djenerator
+    Generates a sample data for all models in a given app and export the data to
+    a .json file.
+    
+    Args : 
+        app_path : A string that contains the path of the app.
+        size : The number of models generated for each model in the models.
+        output_file : a file object in which the data will be dumped.
+    
+    Returns:
+        None
+    
+    """
+    db_name = connection.creation.create_test_db()
+    generate_test_data(app_path + '.models', size)
+    management.call_command("dumpdata", app_path, stdout=output_file)
+    if printing:
+        mdls = module_import(app_path + '.models')
+        data_base = [mdl.objects.all() for mdl in list_of_models(mdls)]
+        for mdls_ls in data_base:
+            for mdl in mdls_ls:
+                if hasattr(mdl, '__unicode__'):
+                    print mdl.__unicode__()
+                else:
+                    print mdl
 
 
