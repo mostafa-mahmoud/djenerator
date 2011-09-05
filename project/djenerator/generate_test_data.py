@@ -63,6 +63,76 @@ def field_sample_values(field):
     return list(list_field_values)
 
 
+def dfs(cur_tuple, index, to_be_computed, constraints, model, to_be_shuffled):
+    """ Depth first search
+    
+    Generates values for the fields of a given model by simulating
+    a depth first search.
+    
+    Args : 
+        cur_tuple : current tuple, a tuple of the values of the filled fields.
+        index : the index of the field being filled in the list of fields.
+        to_be_computed : A list used for accumulation of the ignored fields.
+        constraints : a list of utility, that will constraint the output.
+        model : a reference to the class of the given model.
+        to_be_shuffled : A boolean variable that will determine if the sample
+                         data will be shuffled or not.
+    
+    Returns:
+        None
+        
+    The model will be saved in a temporary database.
+            
+    The interface of the predicate should be :        
+        predicate(cur_tuple, model, field)
+            where:
+                - cur_tuple : list of tuples of the filled values of the field 
+                              being filled, in the 
+                              format (field name , field value).
+                
+                - model : a reference to the class of the given model.
+                
+                - field : A reference to the class of the field being generated.
+         The function should handle that the given tuple might be not full, 
+         and it should depend that the previously generated models are stored
+         in the temporary database, and it should return a boolean value that's 
+         true only if the required constraint is satisfied.
+                
+    """
+    fields = list_of_fields(model)
+    if dfs.size <= 0:
+        return True
+    if index >= len(fields):
+        dfs.size -= 1
+        create_model(model, cur_tuple)
+    else:
+        list_field_values = field_sample_values(fields[index])
+        if not list_field_values:
+            if ((is_related(fields[index]) and 'ManyToMany' 
+                in relation_type(fields[index])) or fields[index].null 
+                or is_auto_field(fields[index])):
+                if not is_auto_field(fields[index]):
+                    to_be_computed.append(fields[index])
+                return dfs(cur_tuple, index + 1, to_be_computed,
+                           constraints, model, to_be_shuffled)
+        else:
+            if to_be_shuffled:
+                random.shuffle(list_field_values)
+            for nxt_field in list_field_values:
+                new_tuple = cur_tuple[:]
+                new_tuple.append((fields[index].name, nxt_field))
+                are_constraints_satisfied = True
+                for cons in constraints:
+                    if not cons(new_tuple, model, fields[index]):
+                        are_constraints_satisfied = False
+                        break
+                if are_constraints_satisfied:
+                    is_done = dfs(new_tuple, index + 1, to_be_computed, 
+                                  constraints, model, to_be_shuffled)
+                    if is_done:
+                        return True
+
+
 def create_model(model, val):
     """ Create models
     
