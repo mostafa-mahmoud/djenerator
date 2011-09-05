@@ -11,6 +11,8 @@ from django.db.models import Model
 from model_reader import is_auto_field
 from model_reader import is_related
 from model_reader import list_of_fields
+from model_reader import list_of_models
+from model_reader import module_import
 from model_reader import relation_type
 from utility import sort_unique_tuples
 from utility import unique_items
@@ -280,5 +282,31 @@ def recompute(model, field):
                 field.null and not getattr(mdl, field.name)):
                 setattr(mdl, field.name, list_field_values[index % n])
                 mdl.save()
+
+
+def generate_test_data(app_models, size):
+    """ Generate test data
+    Generates a list of 'size' random data for each model in the models module 
+    in the given path, If the sample data is not enough for generating 'size'
+    models, then all of the sample data will be used. If the models are 
+    inconsistent then no data will be generated. The data will be stored in 
+    a temporary database used for generation.
+    
+    Args:
+        app_models : A string that contains the path of the models module.
+        size : An integer that specifies the size of the generated data.
+    
+    Returns:
+        None.
+    """
+    models = topological_sort(list_of_models(module_import(app_models)))
+    to_be_computed = [generate_model(model, size) for model in models]
+    precomp = set([]) 
+    for mdlfld in to_be_computed:
+        mdl = mdlfld[0]
+        for fld in mdlfld[1]:
+            if not (mdl, fld.name) in precomp:
+                precomp.add((mdl, fld.name))
+                recompute(mdl, fld)
 
 
