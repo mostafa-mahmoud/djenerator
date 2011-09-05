@@ -2,11 +2,13 @@
 """
 This module contains utiltiy functions that are used in generating data.
 """
+import itertools
 import settings
 from django.core.management import setup_environ
 from django.db import models
 from django.db.models import Model
 from model_reader import list_of_fields
+from model_reader import names_of_fields
 
 setup_environ(settings)
 
@@ -61,4 +63,37 @@ def sort_unique_tuple(var_tuple, model):
             result.append(field.name)
     return tuple(result)
 
+
+def sort_unique_tuples(var_tuples, model):
+    """ sort unique tuples
+    Sort lexicographically the tuples of fields according to what appears first 
+    in the model.
+    
+    Args : 
+        var_tuples : a list of tuples of names of some fields.
+        model : A reference to the class of the given model.
+    
+    Returns : 
+        a list of tuples of names of some fields.
+        
+    """
+    fields = names_of_fields(model)
+    var_tuples = [sort_unique_tuple(var_tup, model) for var_tup in var_tuples]
+    def cm(a, b):
+        if not len(a) and not len(b):
+            return 0
+        elif not len(a):
+            return -1
+        elif not len(b):
+            return 1
+        if a[0] == b[0]:
+            return cm(a[1:], b[1:])
+        else:
+            if fields.index(a[0]) < fields.index(b[0]):
+                return -1
+            else:
+                return 1
+    
+    clone = sorted([x for x in var_tuples], cm)
+    return tuple(clone)
 
