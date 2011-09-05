@@ -275,13 +275,13 @@ def recompute(model, field):
         None
     """
     if is_related(field):
-        models = list(model.objects.all())
+        models = model.objects.all()
         list_field_values = field_sample_values(field)
         random.shuffle(list_field_values)
         n = len(list_field_values)
-        for (index, mdl) in enumerate(models):
+        for index, mdl in enumerate(models):
             if ('ManyToMany' in relation_type(field) and 
-                not getattr(mdl, field.name).all() or
+                not getattr(mdl, field.name).exists() or
                 field.null and not getattr(mdl, field.name)):
                 setattr(mdl, field.name, list_field_values[index % n])
                 mdl.save()
