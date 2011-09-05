@@ -119,3 +119,34 @@ def dependencies(model):
                 and not 'ManyToMany' in relation_type(field)))]
 
 
+def topological_sort(models):
+    """ Topological sorting
+    Sort a given list of models according to the dependencies of the 
+    relations between the models.
+    
+    Args : 
+        models : A list of references to the classes of the given models.
+    
+    Return :
+        A list of references to the classes of the given models.
+    """
+    result = []
+    visited = []
+    S = filter(dependencies, models)
+    def visit(model):
+        if not model in visited:
+            visited.append(model)
+            for dep_model in dependencies(model):
+                visit(dep_model)
+            result.append(model)
+            
+    while S:
+        model = S.pop(0)
+        visit(model)
+    result_singleton = []
+    for model in models:
+        if not model in result:
+            result_singleton.append(model)
+    return result_singleton + result
+
+
