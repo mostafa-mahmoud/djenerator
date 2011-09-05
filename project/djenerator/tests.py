@@ -12,6 +12,7 @@ from generate_test_data import dependencies
 from generate_test_data import dfs
 from generate_test_data import field_sample_values
 from generate_test_data import generate_model
+from generate_test_data import recompute
 from generate_test_data import topological_sort
 from model_reader import field_type
 from model_reader import is_auto_field
@@ -393,6 +394,28 @@ class TestGenerateModel(TestCase):
             self.assertTrue(all([x in TestModelA.objects.all() 
                                  for x in model.field2E.all()]))
             self.assertTrue(model.field3E in TestModelC.objects.all())
+
+
+class TestRecompute(TestCase):
+    def test(self):
+        c = CycleC(c='3.14159')
+        c.save()
+        d = CycleD(d=53, dc=c)
+        d.save()
+        b = CycleB(b=1000000009, bc=c)
+        b.save()
+        e = CycleE(e=17, ec=c, ed=d)
+        e.save()
+        a = CycleA(a=999, ab=b, ae=e)
+        a.save()
+        f = CycleF(f=123, fd=d)
+        f.save()
+        recompute(CycleD, list_of_fields(CycleD)[2])
+        recompute(CycleC, list_of_fields(CycleC)[1])
+        recompute(CycleC, list_of_fields(CycleC)[3])
+        self.assertTrue(CycleD.objects.all()[0].df)
+        self.assertTrue(CycleC.objects.all()[0].ca)
+        self.assertTrue(CycleC.objects.all()[0].cc.all())
 
 
 
