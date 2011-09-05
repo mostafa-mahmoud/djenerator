@@ -5,12 +5,14 @@ This module contains tests for djenerator app.
 """
 import itertools
 import models as mdls
+import tempfile
 import time 
 from django.db import models
 from django.test import TestCase
 from generate_test_data import create_model
 from generate_test_data import dependencies
 from generate_test_data import dfs
+from generate_test_data import djenerator
 from generate_test_data import field_sample_values
 from generate_test_data import generate_model
 from generate_test_data import generate_test_data
@@ -467,5 +469,13 @@ class TestGenerateData(TestCase):
         print '\n...done...  %s  Nodes :  %d  ,   Edges :  %d' %(time.ctime(), 
                                                                  nodes, edges)
 
+
+class TestDjenerator(TestCase):
+    def test(self):
+        fl = tempfile.TemporaryFile()
+        djenerator('djenerator', 1, fl, printing=True)
+        fl.seek(0)
+        length = len(fl.read())
+        self.assertGreater(length, 600)
 
 
