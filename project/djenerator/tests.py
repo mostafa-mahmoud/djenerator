@@ -5,6 +5,7 @@ This module contains tests for djenerator app.
 """
 import itertools
 import models as mdls
+import time 
 from django.db import models
 from django.test import TestCase
 from generate_test_data import create_model
@@ -12,6 +13,7 @@ from generate_test_data import dependencies
 from generate_test_data import dfs
 from generate_test_data import field_sample_values
 from generate_test_data import generate_model
+from generate_test_data import generate_test_data
 from generate_test_data import recompute
 from generate_test_data import topological_sort
 from model_reader import field_type
@@ -416,6 +418,54 @@ class TestRecompute(TestCase):
         self.assertTrue(CycleD.objects.all()[0].df)
         self.assertTrue(CycleC.objects.all()[0].ca)
         self.assertTrue(CycleC.objects.all()[0].cc.all())
+
+
+class TestGenerateData(TestCase):
+    def test(self):
+        print '\n\n...entered... ', time.ctime()
+        generate_test_data('djenerator.models', 10)
+        length = len(list_of_models(mdls))
+        visited = dict(zip(list_of_models(mdls), length * [False]))
+        pairs = []
+        data_base = dict([(mdl, list(mdl.objects.all())) 
+                          for mdl in list_of_models(mdls)])
+        generated_data = data_base.values()
+        print '\n...generated... ', time.ctime(), ' ...testing...'
+        nodes = 0
+        edges = 0
+        for list_model in generated_data:
+            for model in list_model:
+                visited[model.__class__] = True
+                fields = list_of_fields(model.__class__)
+                nodes += 1
+                for field in fields:
+                    if not is_auto_field(field):
+                        val = getattr(model, field.name)
+                        if is_related(field):
+                            if 'ManyToMany' in relation_type(field):
+                                r = data_base[field.rel.to]
+                                self.assertTrue(list(val.all()))
+                                self.assertTrue(all([x in r 
+                                                     for x in list(val.all())]))
+                            else:
+                                r = data_base[field.rel.to]
+                                self.assertTrue(val in r)
+                            edges += 1 
+                        else:
+                            sample_values = map(lambda x : str(x),
+                                                field_sample_values(field))
+                            val = str(val)
+                            self.assertTrue(val in sample_values)
+            if model.__class__ == TestModelFields:
+                pr = (model.fieldC, model.fieldA)
+                self.assertFalse(pr in pairs)
+                pairs.append(pr)
+                self.assertTrue((model.fieldB < 50) 
+                                or (model.fieldD / 2 % 2 == 1))
+        self.assertTrue(all(visited.values()), 
+                        "Not all of the models with sample data are generated.")
+        print '\n...done...  %s  Nodes :  %d  ,   Edges :  %d' %(time.ctime(), 
+                                                                 nodes, edges)
 
 
 
