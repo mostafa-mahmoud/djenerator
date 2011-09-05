@@ -8,12 +8,12 @@ Name                             Stmts   Exec  Cover   Missing
 --------------------------------------------------------------
 __init__                             0      0   100%   
 djenerator/__init__                  0      0   100%   
-djenerator/generate_test_data       38     37    97%   42
+djenerator/generate_test_data       82     81    98%   43
 djenerator/management/__init__       0      0   100%   
 djenerator/model_reader             43     38    88%   135-141
 djenerator/models                  188    176    93%   48, 59, 70, 85, 98, 108, 121, 167-171
-djenerator/tests                   121    120    99%   53
+djenerator/tests                   158    157    99%   57
 manage                              11      7    63%   6-9
 settings                            24     24   100%   
 --------------------------------------------------------------
-TOTAL                              425    402    94%   
+TOTAL                              506    483    95%   
