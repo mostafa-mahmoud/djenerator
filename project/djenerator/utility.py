@@ -6,6 +6,7 @@ import settings
 from django.core.management import setup_environ
 from django.db import models
 from django.db.models import Model
+from model_reader import list_of_fields
 
 setup_environ(settings)
 
@@ -37,5 +38,27 @@ def unique_items(var_tuple):
         return True
         
     return uniqueness_constraint
+
+
+def sort_unique_tuple(var_tuple, model):
+    """ Sort unique tuple
+    Sorts a tuple of names of a fields for a given model, in the order of 
+    which field comes first.
+    
+    Args : 
+        var_tuple : A tuple of strings of the names of some fields in the 
+                    given model.
+        model : A reference to the class of the given model.
+    
+    Returns :
+        A tuple of strings of names of the names of the fields.
+    
+    """
+    result = []
+    fields = list_of_fields(model)
+    for field in fields:
+        if field.name in var_tuple:
+            result.append(field.name)
+    return tuple(result)
 
 
