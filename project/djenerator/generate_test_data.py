@@ -258,3 +258,27 @@ def topological_sort(models):
     return result_singleton + result
 
 
+def recompute(model, field):
+    """ recompute
+    Recompute the ignored fields in the models.
+    
+    Args : 
+        model : A reference to the class of the given model.
+        field : A reference to the class of the non-computed field.
+    
+    Returns :
+        None
+    """
+    if is_related(field):
+        models = list(model.objects.all())
+        list_field_values = field_sample_values(field)
+        random.shuffle(list_field_values)
+        n = len(list_field_values)
+        for (index, mdl) in enumerate(models):
+            if ('ManyToMany' in relation_type(field) and 
+                not getattr(mdl, field.name).all() or
+                field.null and not getattr(mdl, field.name)):
+                setattr(mdl, field.name, list_field_values[index % n])
+                mdl.save()
+
+
