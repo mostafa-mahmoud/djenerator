@@ -245,7 +245,7 @@ class CycleB(models.Model):
 
 class CycleC(models.Model):
     cc = models.ManyToManyField('self')
-    ca = models.ManyToManyField(CycleA)
+    ca = models.OneToOneField(CycleA, null=True)
     c = models.DecimalField(max_digits=15, decimal_places=10)
     
     class TestData:
