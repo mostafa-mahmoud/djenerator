@@ -12,6 +12,8 @@ from model_reader import is_auto_field
 from model_reader import is_related
 from model_reader import list_of_fields
 from model_reader import relation_type
+from utility import sort_unique_tuples
+from utility import unique_items
 
 setup_environ(settings)
 
@@ -131,6 +133,40 @@ def dfs(cur_tuple, index, to_be_computed, constraints, model, to_be_shuffled):
                                   constraints, model, to_be_shuffled)
                     if is_done:
                         return True
+
+
+def generate_model(model, size, shuffle=None):
+    """ Generate model
+    
+    Generate 'size' sample models given a model and stores them in a temporary
+    data base.
+    
+    Args : 
+        model : A reference to the class of the given model.
+        size : An integer of the size of the sample models to be generated.
+        shuffle : An optional boolean variable that will determine if the sample 
+                  input will be shuffled or not.
+    
+    Returns : 
+        A tuple that contains a reference to the class of the given model, 
+        and list of field that's not computed.
+    """
+    unique_fields = [(f.name,) for f in list_of_fields(model) 
+                     if f.unique and not is_auto_field(f)]
+    unique_together = model._meta.unique_together
+    unique = list(unique_together) + unique_fields
+    unique = sort_unique_tuples(unique, model)
+    unique_constraints = [unique_items(un_tuple) for un_tuple in unique]
+    constraints = []
+    if hasattr(model, 'Constraints'):
+        constraints = model.Constraints.constraints
+    constraints += unique_constraints
+    if shuffle is None:
+        shuffle = True
+    to_be_computed = []
+    dfs.size = size
+    dfs([], 0, to_be_computed, constraints, model, shuffle)
+    return (model, to_be_computed)
 
 
 def create_model(model, val):
