@@ -6,7 +6,6 @@ This module contains tests for djenerator app.
 import itertools
 import models as mdls
 import tempfile
-import time 
 from django.db import models
 from django.test import TestCase
 from generate_test_data import create_model
@@ -227,6 +226,10 @@ class TestDependencies(TestCase):
                          set([TestModelB, TestModelC]))
         self.assertEqual(dependencies(TestModelC), [TestModelB])
         self.assertEqual(dependencies(TestModelB), [TestModelA])
+        self.assertEqual(dependencies(CycleD), [CycleC])
+        self.assertFalse(dependencies(CycleC))
+        self.assertEqual(set(dependencies(TestModelFields)), 
+                         set([TestModelY, TestModelX]))
 
 
 class TestTopologicalSorting(TestCase):
@@ -424,7 +427,6 @@ class TestRecompute(TestCase):
 
 class TestGenerateData(TestCase):
     def test(self):
-        print '\n\n...entered... ', time.ctime()
         generate_test_data('djenerator.models', 10)
         length = len(list_of_models(mdls))
         visited = dict(zip(list_of_models(mdls), length * [False]))
@@ -432,7 +434,6 @@ class TestGenerateData(TestCase):
         data_base = dict([(mdl, list(mdl.objects.all())) 
                           for mdl in list_of_models(mdls)])
         generated_data = data_base.values()
-        print '\n...generated... ', time.ctime(), ' ...testing...'
         nodes = 0
         edges = 0
         for list_model in generated_data:
@@ -466,8 +467,6 @@ class TestGenerateData(TestCase):
                                 or (model.fieldD / 2 % 2 == 1))
         self.assertTrue(all(visited.values()), 
                         "Not all of the models with sample data are generated.")
-        print '\n...done...  %s  Nodes :  %d  ,   Edges :  %d' %(time.ctime(), 
-                                                                 nodes, edges)
 
 
 class TestDjenerator(TestCase):

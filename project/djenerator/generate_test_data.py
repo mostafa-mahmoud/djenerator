@@ -65,8 +65,8 @@ def field_sample_values(field):
                                                          field.name)
                 input_file = open(path, 'r')
                 list_field_values = [word[:-1] for word in input_file]
-            # TODO(mostafa.amin93@gmail.com) : Generate totally randomized
-            #                                  objects if the file is not found
+            # TODO(mostafa-mahmoud) : Generate totally randomized
+            #                         objects if the file is not found.
     return list(list_field_values)
 
 
