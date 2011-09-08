@@ -3,14 +3,11 @@
 This module contains utiltiy functions that are used in generating data.
 """
 import itertools
-import settings
-from django.core.management import setup_environ
 from django.db import models
 from django.db.models import Model
 from model_reader import list_of_fields
 from model_reader import names_of_fields
 
-setup_environ(settings)
 
 def unique_items(var_tuple):
     """ Unique items

@@ -3,11 +3,8 @@
 This module has utility functions for reading models and their fields.
 """
 import inspect
-import settings
-from django.core.management import setup_environ
 from django.db.models import Model
 
-setup_environ(settings)
 
 def is_instance_of_model(reference):
     """ Is instance of Model

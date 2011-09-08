@@ -5,10 +5,8 @@ given models.
 """
 import inspect
 import random
-import settings
 from django.core import management
 from django.core import serializers
-from django.core.management import setup_environ
 from django.db import connection
 from django.db.models import Model
 from model_reader import is_auto_field
@@ -20,7 +18,6 @@ from model_reader import relation_type
 from utility import sort_unique_tuples
 from utility import unique_items
 
-setup_environ(settings)
 
 def field_sample_values(field):
     """ Field sample values

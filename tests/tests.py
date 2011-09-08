@@ -8,27 +8,27 @@ import models as mdls
 import tempfile
 from django.db import models
 from django.test import TestCase
-from generate_test_data import create_model
-from generate_test_data import dependencies
-from generate_test_data import dfs
-from generate_test_data import djenerator
-from generate_test_data import field_sample_values
-from generate_test_data import generate_model
-from generate_test_data import generate_test_data
-from generate_test_data import recompute
-from generate_test_data import topological_sort
-from model_reader import field_type
-from model_reader import is_auto_field
-from model_reader import is_instance_of_model
-from model_reader import is_related
-from model_reader import list_of_fields
-from model_reader import list_of_models
-from model_reader import module_import
-from model_reader import names_of_fields
-from model_reader import relation_type
-from utility import sort_unique_tuple
-from utility import sort_unique_tuples
-from utility import unique_items
+from djenerator.generate_test_data import create_model
+from djenerator.generate_test_data import dependencies
+from djenerator.generate_test_data import dfs
+from djenerator.generate_test_data import djenerator
+from djenerator.generate_test_data import field_sample_values
+from djenerator.generate_test_data import generate_model
+from djenerator.generate_test_data import generate_test_data
+from djenerator.generate_test_data import recompute
+from djenerator.generate_test_data import topological_sort
+from djenerator.model_reader import field_type
+from djenerator.model_reader import is_auto_field
+from djenerator.model_reader import is_instance_of_model
+from djenerator.model_reader import is_related
+from djenerator.model_reader import list_of_fields
+from djenerator.model_reader import list_of_models
+from djenerator.model_reader import module_import
+from djenerator.model_reader import names_of_fields
+from djenerator.model_reader import relation_type
+from djenerator.utility import sort_unique_tuple
+from djenerator.utility import sort_unique_tuples
+from djenerator.utility import unique_items
 from models import CycleA
 from models import CycleB
 from models import CycleC
@@ -163,7 +163,7 @@ class TestRelationType(TestCase):
 
 class TestModuleImport(TestCase):
     def test(self):
-        self.assertEqual(mdls, module_import('djenerator.models'))
+        self.assertEqual(mdls, module_import('tests.models'))
  
  
 class TestListOfSampleFieldValues(TestCase):
@@ -427,7 +427,7 @@ class TestRecompute(TestCase):
 
 class TestGenerateData(TestCase):
     def test(self):
-        generate_test_data('djenerator.models', 10)
+        generate_test_data('tests.models', 10)
         length = len(list_of_models(mdls))
         visited = dict(zip(list_of_models(mdls), length * [False]))
         pairs = []
@@ -472,7 +472,7 @@ class TestGenerateData(TestCase):
 class TestDjenerator(TestCase):
     def test(self):
         fl = tempfile.TemporaryFile()
-        djenerator('djenerator', 1, fl, printing=True)
+        djenerator('tests', 1, fl, printing=False)
         fl.seek(0)
         length = len(fl.read())
         self.assertGreater(length, 600)
