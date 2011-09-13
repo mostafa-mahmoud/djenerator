@@ -21,12 +21,12 @@ from utility import unique_items
 
 def field_sample_values(field):
     """ Field sample values
-    
+
     Retrieves the list of sample values for a given field.
-    
-    Args : 
+
+    Args :
         field : a reference to the class of the field.
-    
+
     Returns :
     a list of sample values for the given field.
     """
@@ -42,7 +42,7 @@ def field_sample_values(field):
             found = False
             if hasattr(field.model, 'TestData'):
                 model = field.model
-                while (model.__base__ != Model 
+                while (model.__base__ != Model
                        and not hasattr(model.TestData, field.name)):
                     model = model.__base__
                 if field.name in model.TestData.__dict__.keys():
@@ -51,7 +51,7 @@ def field_sample_values(field):
                     if isinstance(input_method, str):
                         input_file = open('TestTemplates/' + input_method, 'r')
                         list_field_values = [word[:-1] for word in input_file]
-                    elif (isinstance(input_method, list) 
+                    elif (isinstance(input_method, list)
                           or isinstance(input_method, tuple)):
                         list_field_values = input_method
                     else:
@@ -69,11 +69,11 @@ def field_sample_values(field):
 
 def dfs(cur_tuple, index, to_be_computed, constraints, model, to_be_shuffled):
     """ Depth first search
-    
+
     Generates values for the fields of a given model by simulating
     a depth first search.
-    
-    Args : 
+
+    Args :
         cur_tuple : current tuple, a tuple of the values of the filled fields.
         index : the index of the field being filled in the list of fields.
         to_be_computed : A list used for accumulation of the ignored fields.
@@ -81,27 +81,28 @@ def dfs(cur_tuple, index, to_be_computed, constraints, model, to_be_shuffled):
         model : a reference to the class of the given model.
         to_be_shuffled : A boolean variable that will determine if the sample
                          data will be shuffled or not.
-    
+
     Returns:
         None
-        
+
     The model will be saved in a temporary database.
-            
-    The interface of the predicate should be :        
+
+    The interface of the predicate should be :
         predicate(cur_tuple, model, field)
             where:
-                - cur_tuple : list of tuples of the filled values of the field 
-                              being filled, in the 
+                - cur_tuple : list of tuples of the filled values of the field
+                              being filled, in the
                               format (field name , field value).
-                
+
                 - model : a reference to the class of the given model.
-                
-                - field : A reference to the class of the field being generated.
-         The function should handle that the given tuple might be not full, 
+
+                - field : A reference to the class of the field being generated
+
+         The function should handle that the given tuple might be not full,
          and it should depend that the previously generated models are stored
-         in the temporary database, and it should return a boolean value that's 
+         in the temporary database, and it should return a boolean value that's
          true only if the required constraint is satisfied.
-                
+
     """
     fields = list_of_fields(model)
     if dfs.size <= 0:
@@ -133,7 +134,7 @@ def dfs(cur_tuple, index, to_be_computed, constraints, model, to_be_shuffled):
                         are_constraints_satisfied = False
                         break
                 if are_constraints_satisfied:
-                    is_done = dfs(new_tuple, index + 1, to_be_computed, 
+                    is_done = dfs(new_tuple, index + 1, to_be_computed,
                                   constraints, model, to_be_shuffled)
                     if is_done:
                         return True
@@ -141,21 +142,21 @@ def dfs(cur_tuple, index, to_be_computed, constraints, model, to_be_shuffled):
 
 def generate_model(model, size, shuffle=None):
     """ Generate model
-    
+
     Generate 'size' sample models given a model and stores them in a temporary
     data base.
-    
-    Args : 
+
+    Args :
         model : A reference to the class of the given model.
         size : An integer of the size of the sample models to be generated.
-        shuffle : An optional boolean variable that will determine if the sample 
-                  input will be shuffled or not.
-    
-    Returns : 
-        A tuple that contains a reference to the class of the given model, 
+        shuffle : An optional boolean variable that will determine if
+                  the sample input will be shuffled or not.
+
+    Returns :
+        A tuple that contains a reference to the class of the given model,
         and list of field that's not computed.
     """
-    unique_fields = [(f.name,) for f in list_of_fields(model) 
+    unique_fields = [(f.name,) for f in list_of_fields(model)
                      if f.unique and not is_auto_field(f)]
     unique_together = model._meta.unique_together
     unique = list(unique_together) + unique_fields
@@ -175,20 +176,20 @@ def generate_model(model, size, shuffle=None):
 
 def create_model(model, val):
     """ Create models
-    
-    Creates a new model given a reference to it's class and a list of the values
-    of it's variables.
-    
-    Args : 
+
+    Creates a new model given a reference to it's class and a list of
+    the values of it's variables.
+
+    Args :
         model : A reference to the class of the model that will be created.
         val : A list of tuples having the format (field name, field value)
-    
+
     Returns :
         A model with the values given.
     """
     vals_dictionary = dict(val)
-    have_many_to_many_relation = any([x for x in list_of_fields(model) 
-                                       if is_related(x) 
+    have_many_to_many_relation = any([x for x in list_of_fields(model)
+                                       if is_related(x)
                                        and 'ManyToMany' in relation_type(x)])
     if not have_many_to_many_relation:
         mdl = model(**vals_dictionary)
@@ -215,41 +216,42 @@ def create_model(model, val):
 def dependencies(model):
     """ Dependencies
     Retrieves the models the must be generated before a given model.
-    
-    Args : 
+
+    Args :
         model : a reference to the class of the given model.
-    
+
     Returns :
         list of references to the classes of the models.
-        
+
     """
     fields = list_of_fields(model)
-    return [field.rel.to for field in fields 
-            if ((not field.null) and (is_related(field) 
+    return [field.rel.to for field in fields
+            if ((not field.null) and (is_related(field)
                 and not 'ManyToMany' in relation_type(field)))]
 
 
 def topological_sort(models):
     """ Topological sorting
-    Sort a given list of models according to the dependencies of the 
+    Sort a given list of models according to the dependencies of the
     relations between the models.
-    
-    Args : 
+
+    Args :
         models : A list of references to the classes of the given models.
-    
+
     Return :
         A list of references to the classes of the given models.
     """
     result = []
     visited = []
     S = filter(dependencies, models)
+
     def visit(model):
         if not model in visited:
             visited.append(model)
             for dep_model in dependencies(model):
                 visit(dep_model)
             result.append(model)
-            
+
     while S:
         model = S.pop(0)
         visit(model)
@@ -263,11 +265,11 @@ def topological_sort(models):
 def recompute(model, field):
     """ recompute
     Recompute the ignored fields in the models.
-    
-    Args : 
+
+    Args :
         model : A reference to the class of the given model.
         field : A reference to the class of the non-computed field.
-    
+
     Returns :
         None
     """
@@ -277,7 +279,7 @@ def recompute(model, field):
         random.shuffle(list_field_values)
         n = len(list_field_values)
         for index, mdl in enumerate(models):
-            if ('ManyToMany' in relation_type(field) and 
+            if ('ManyToMany' in relation_type(field) and
                 not getattr(mdl, field.name).exists() or
                 field.null and not getattr(mdl, field.name)):
                 setattr(mdl, field.name, list_field_values[index % n])
@@ -286,22 +288,22 @@ def recompute(model, field):
 
 def generate_test_data(app_models, size):
     """ Generate test data
-    Generates a list of 'size' random data for each model in the models module 
+    Generates a list of 'size' random data for each model in the models module
     in the given path, If the sample data is not enough for generating 'size'
-    models, then all of the sample data will be used. If the models are 
-    inconsistent then no data will be generated. The data will be stored in 
+    models, then all of the sample data will be used. If the models are
+    inconsistent then no data will be generated. The data will be stored in
     a temporary database used for generation.
-    
+
     Args:
         app_models : A string that contains the path of the models module.
         size : An integer that specifies the size of the generated data.
-    
+
     Returns:
         None.
     """
     models = topological_sort(list_of_models(module_import(app_models)))
     to_be_computed = [generate_model(model, size) for model in models]
-    precomp = set([]) 
+    precomp = set([])
     for mdlfld in to_be_computed:
         mdl = mdlfld[0]
         for fld in mdlfld[1]:
@@ -312,17 +314,17 @@ def generate_test_data(app_models, size):
 
 def djenerator(app_path, size, output_file, printing=None):
     """ djenerator
-    Generates a sample data for all models in a given app and export the data to
-    a .json file.
-    
-    Args : 
+    Generates a sample data for all models in a given app
+    and export the data to a .json file.
+
+    Args :
         app_path : A string that contains the path of the app.
         size : The number of models generated for each model in the models.
         output_file : a file object in which the data will be dumped.
-    
+
     Returns:
         None
-    
+
     """
     db_name = connection.creation.create_test_db()
     generate_test_data(app_path + '.models', size)
@@ -336,5 +338,3 @@ def djenerator(app_path, size, output_file, printing=None):
                     print mdl.__unicode__()
                 else:
                     print mdl
-
-

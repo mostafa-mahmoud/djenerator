@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python
 """
 This module contains tests for djenerator app.
@@ -57,47 +56,50 @@ from models import TestModelY
 
 class TestInstanceOfModel(TestCase):
     def test(self):
-        models = [TestModel0, TestModel1, TestModelA, TestModelB, TestModelC,
-                  TestModelD, TestModelE, TestModelX, TestModelY, ExtendingModel]
+        models = [TestModel0, TestModel1, TestModelA, TestModelB,
+                  TestModelC, TestModelD, TestModelE, TestModelX,
+                  TestModelY, ExtendingModel]
         for model in models:
             self.assertTrue(is_instance_of_model(model))
         self.assertFalse(is_instance_of_model(NotExtendingModel))
+
         def not_extending_model_function():
             pass
-        
+
         self.assertFalse(is_instance_of_model(not_extending_model_function))
 
 
 class TestListOfModels(TestCase):
     def test(self):
-        self.assertEqual(set([ExtendingModel, TestModel0, TestModel1, 
-                              TestModelA, TestModelB, TestModelC, TestModelD, 
-                              TestModelE, TestModelX, TestModelY, 
-                              TestModelFields, SuperClass, ExtendAbstract, 
-                              ExtendSuperClass, ProxyExtend, SuperAbstract, 
-                              TestModelFieldsTwo, CycleA, CycleB, CycleC, 
-                              CycleD, CycleE, CycleF]), 
+        self.assertEqual(set([ExtendingModel, TestModel0, TestModel1,
+                              TestModelA, TestModelB, TestModelC, TestModelD,
+                              TestModelE, TestModelX, TestModelY,
+                              TestModelFields, SuperClass, ExtendAbstract,
+                              ExtendSuperClass, ProxyExtend, SuperAbstract,
+                              TestModelFieldsTwo, CycleA, CycleB, CycleC,
+                              CycleD, CycleE, CycleF]),
                               set(list_of_models(mdls, keep_abstract=True)))
-        self.assertEqual(set([ExtendingModel, TestModel0, TestModel1, 
-                              TestModelA, TestModelB, TestModelC, TestModelD, 
-                              TestModelE, TestModelX, TestModelY, 
-                              TestModelFields, SuperClass, ExtendAbstract, 
-                              ExtendSuperClass, TestModelFieldsTwo, ProxyExtend,
-                              CycleA, CycleB, CycleC, CycleD, CycleE, CycleF]), 
+        self.assertEqual(set([ExtendingModel, TestModel0, TestModel1,
+                              TestModelA, TestModelB, TestModelC, TestModelD,
+                              TestModelE, TestModelX, TestModelY,
+                              TestModelFields, SuperClass, ExtendAbstract,
+                              ExtendSuperClass, TestModelFieldsTwo,
+                              ProxyExtend, CycleA, CycleB, CycleC, CycleD,
+                              CycleE, CycleF]),
                               set(list_of_models(mdls)))
 
 
 class TestListOfFields(TestCase):
     def test(self):
-        self.assertTrue(all([isinstance(*x) 
-                             for x in zip(list_of_fields(TestModel1), 
+        self.assertTrue(all([isinstance(*x)
+                             for x in zip(list_of_fields(TestModel1),
                              [models.AutoField, models.CharField,
                               models.IntegerField, models.ForeignKey])]))
-        self.assertTrue(all([isinstance(*x) 
+        self.assertTrue(all([isinstance(*x)
                              for x in zip(list_of_fields(TestModel0),
                              [models.AutoField, models.BooleanField,
                               models.EmailField])]))
-        self.assertTrue(all([isinstance(*x) 
+        self.assertTrue(all([isinstance(*x)
                              for x in zip(list_of_fields(TestModelE),
                              [models.AutoField, models.OneToOneField,
                               models.ForeignKey, models.IntegerField,
@@ -112,6 +114,7 @@ class TestNamesOfFields(TestCase):
                           names_of_fields(TestModel1))
         self.assertEqual(['id', 'field1', 'field2'],
                           names_of_fields(TestModel0))
+
 
 class TestFieldType(TestCase):
     def test(self):
@@ -164,8 +167,8 @@ class TestRelationType(TestCase):
 class TestModuleImport(TestCase):
     def test(self):
         self.assertEqual(mdls, module_import('tests.models'))
- 
- 
+
+
 class TestListOfSampleFieldValues(TestCase):
     def test(self):
         Y = list_of_fields(TestModelY)
@@ -178,34 +181,35 @@ class TestListOfSampleFieldValues(TestCase):
         self.assertFalse(field_sample_values(X[0]))
         self.assertEqual(field_sample_values(Y[1]), [2, 3, 5, 7, 11, 13])
         self.assertEqual(field_sample_values(Y[2]), ['MMa', 'XXa', 'azz'])
-        self.assertEqual(field_sample_values(X[1]), 
+        self.assertEqual(field_sample_values(X[1]),
                          [x * x * x for x in range(10)])
         self.assertEqual(field_sample_values(E[3]), [1000000009, 1000003, 101])
-        self.assertEqual(field_sample_values(D[1]), 
+        self.assertEqual(field_sample_values(D[1]),
                          [x * x * x for x in range(10)])
-        self.assertEqual(field_sample_values(C[1]), 
+        self.assertEqual(field_sample_values(C[1]),
                          ['Hello I am C', 'MUHAHAHAHAHA', 'CCCC', '^_^'])
-        self.assertEqual(field_sample_values(B[1]), 
+        self.assertEqual(field_sample_values(B[1]),
                          ['Hello Universe', 'Hello Parallel Universe!'])
-        self.assertEqual(field_sample_values(A[1]), 
+        self.assertEqual(field_sample_values(A[1]),
                          ['Hello World', 'Hello Africa', 'axxx!!'])
-        self.assertEqual(field_sample_values(A[2]), 
+        self.assertEqual(field_sample_values(A[2]),
                          ['Hello Second Field', 'field 2'])
         a = TestModelX(field1X=12)
         b = TestModelX(field1X=15)
         a.save()
         b.save()
-        self.assertEqual((field_sample_values(models.ForeignKey(TestModelX))), 
+        self.assertEqual((field_sample_values(models.ForeignKey(TestModelX))),
                          ([a, b]))
         fld = models.ManyToManyField(TestModelX)
-        self.assertTrue(all([x in [a, b] for x in field_sample_values(fld)[0]]))
-        vals = [int (x) for x in field_sample_values(list_of_fields(CycleF)[2])]
+        self.assertTrue(all([x in [a, b]
+                             for x in field_sample_values(fld)[0]]))
+        vals = [int(x) for x in field_sample_values(list_of_fields(CycleF)[2])]
         self.assertEqual(vals, range(4000, 5000))
 
 
 class TestCreateModel(TestCase):
     def test(self):
-        kwargsa = {'field1A': 'Hrr', 'field2A': 'HxxA'} 
+        kwargsa = {'field1A': 'Hrr', 'field2A': 'HxxA'}
         atest = create_model(TestModelA, kwargsa.items())
         self.assertEqual(atest, TestModelA.objects.get(**kwargsa))
         kwargsa = {'field1B': 'Hello Worrd', 'field2B': atest}
@@ -214,7 +218,7 @@ class TestCreateModel(TestCase):
         kwargsa = {'field1C': 'Hello Egypt!!', 'field2C': btest}
         ctest = create_model(TestModelC, kwargsa.items())
         self.assertEqual(ctest, TestModelC.objects.get(**kwargsa))
-        kwargsa = {'field1D' : 77, 'field2D' : TestModelA.objects.all()}
+        kwargsa = {'field1D': 77, 'field2D': TestModelA.objects.all()}
         dtest = create_model(TestModelD, kwargsa.items())
         self.assertEqual(dtest, TestModelD.objects.get(**kwargsa))
 
@@ -222,37 +226,39 @@ class TestCreateModel(TestCase):
 class TestDependencies(TestCase):
     def test(self):
         self.assertEqual(dependencies(TestModelD), [])
-        self.assertEqual(set(dependencies(TestModelE)), 
+        self.assertEqual(set(dependencies(TestModelE)),
                          set([TestModelB, TestModelC]))
         self.assertEqual(dependencies(TestModelC), [TestModelB])
         self.assertEqual(dependencies(TestModelB), [TestModelA])
         self.assertEqual(dependencies(CycleD), [CycleC])
         self.assertFalse(dependencies(CycleC))
-        self.assertEqual(set(dependencies(TestModelFields)), 
+        self.assertEqual(set(dependencies(TestModelFields)),
                          set([TestModelY, TestModelX]))
 
 
 class TestTopologicalSorting(TestCase):
     def test(self):
-        self.assertEqual(topological_sort([ExtendingModel, TestModel1, 
-                                            TestModel0]), 
+        self.assertEqual(topological_sort([ExtendingModel, TestModel1,
+                                            TestModel0]),
                          [ExtendingModel, TestModel0, TestModel1])
-        self.assertEqual(topological_sort([TestModel1, TestModel0]), 
+        self.assertEqual(topological_sort([TestModel1, TestModel0]),
                                           [TestModel0, TestModel1])
-        self.assertEqual(topological_sort([TestModel0, TestModel1]), 
+        self.assertEqual(topological_sort([TestModel0, TestModel1]),
                                           [TestModel0, TestModel1])
+
         def assertions(sorted_list):
-            self.assertTrue(sorted_list.index(TestModelA) < 
+            self.assertTrue(sorted_list.index(TestModelA) <
                             sorted_list.index(TestModelB))
-            self.assertTrue(sorted_list.index(TestModelB) < 
+            self.assertTrue(sorted_list.index(TestModelB) <
                             sorted_list.index(TestModelC))
-            self.assertTrue(sorted_list.index(TestModelB) < 
+            self.assertTrue(sorted_list.index(TestModelB) <
                             sorted_list.index(TestModelE))
-            self.assertTrue(sorted_list.index(TestModelC) < 
+            self.assertTrue(sorted_list.index(TestModelC) <
                             sorted_list.index(TestModelE))
             self.assertTrue(ExtendingModel in sorted_list)
-        for perm in itertools.permutations([TestModelA, TestModelB, TestModelD, 
-                                            TestModelC, TestModelE, 
+
+        for perm in itertools.permutations([TestModelA, TestModelB, TestModelD,
+                                            TestModelC, TestModelE,
                                             ExtendingModel]):
             assertions(topological_sort(list(perm)))
 
@@ -260,8 +266,8 @@ class TestTopologicalSorting(TestCase):
 class TestUniqueConstraints(TestCase):
     def test(self):
         constraint = unique_items(('fieldA', 'fieldD',))
-        model = TestModelFieldsTwo(fieldA='A', fieldD=5, fieldB=10, 
-                                   fieldC='Winner', fieldE=True, fieldF=6, 
+        model = TestModelFieldsTwo(fieldA='A', fieldD=5, fieldB=10,
+                                   fieldC='Winner', fieldE=True, fieldF=6,
                                    fieldG='Mathematics', fieldH=False)
         model.save()
         fields = list_of_fields(TestModelFields)
@@ -273,9 +279,9 @@ class TestUniqueConstraints(TestCase):
                                     TestModelFieldsTwo, fields[5]))
         self.assertTrue(constraint([('fieldA', 'A'), ('fieldD', 3)],
                                    TestModelFieldsTwo, fields[5]))
-        self.assertTrue(constraint([('fieldA', 'A')], 
+        self.assertTrue(constraint([('fieldA', 'A')],
                                    TestModelFieldsTwo, fields[5]))
-        self.assertTrue(constraint([('fieldA', 'A'), ('fieldD', 3)], 
+        self.assertTrue(constraint([('fieldA', 'A'), ('fieldD', 3)],
                                    TestModelFieldsTwo, fields[5]))
 
 
@@ -283,51 +289,51 @@ class TestSortTuple(TestCase):
     def test(self):
         flds = tuple(names_of_fields(TestModelFields))
         self.assertEqual(sort_unique_tuple(('fieldA', 'fieldX', 'fieldG',
-                                            'fieldD'), TestModelFields), 
-                                           ('fieldA', 'fieldD', 'fieldG', 
+                                            'fieldD'), TestModelFields),
+                                           ('fieldA', 'fieldD', 'fieldG',
                                             'fieldX'))
         self.assertEqual(sort_unique_tuple(flds[::-1], TestModelFields), flds)
-        self.assertEqual(sort_unique_tuple(('fieldD', 'fieldH', 'fieldF'), 
-                                           TestModelFields), 
+        self.assertEqual(sort_unique_tuple(('fieldD', 'fieldH', 'fieldF'),
+                                           TestModelFields),
                                            ('fieldD', 'fieldF', 'fieldH'))
 
 
 class TestSortTuples(TestCase):
     def test(self):
         self.assertEqual(sort_unique_tuples((('fieldA',), ('fieldA', 'fieldD'),
-                                             ('fieldC', 'fieldX', 'fieldB'), 
-                                             ('fieldC', 'fieldE', 'fieldH'), 
+                                             ('fieldC', 'fieldX', 'fieldB'),
+                                             ('fieldC', 'fieldE', 'fieldH'),
                                              ('fieldA', 'fieldX', 'fieldC')),
-                                            TestModelFields), 
-                                            (('fieldA',), 
-                                             ('fieldA', 'fieldC', 'fieldX'), 
-                                             ('fieldA', 'fieldD'), 
-                                             ('fieldB', 'fieldC', 'fieldX'), 
+                                            TestModelFields),
+                                            (('fieldA',),
+                                             ('fieldA', 'fieldC', 'fieldX'),
+                                             ('fieldA', 'fieldD'),
+                                             ('fieldB', 'fieldC', 'fieldX'),
                                              ('fieldC', 'fieldE', 'fieldH')))
-        self.assertEqual(sort_unique_tuples((('fieldA', 'fieldD'), 
-                                             ('fieldA', 'fieldE', 'fieldX')), 
-                                            TestModelFields), 
-                                            (('fieldA', 'fieldD'), 
+        self.assertEqual(sort_unique_tuples((('fieldA', 'fieldD'),
+                                             ('fieldA', 'fieldE', 'fieldX')),
+                                            TestModelFields),
+                                            (('fieldA', 'fieldD'),
                                              ('fieldA', 'fieldE', 'fieldX')))
-        self.assertEqual(sort_unique_tuples((('fieldA', 'fieldE', 'fieldX'), 
-                                             ('fieldA', 'fieldD')), 
-                                            TestModelFields), 
-                                            (('fieldA', 'fieldD'), 
+        self.assertEqual(sort_unique_tuples((('fieldA', 'fieldE', 'fieldX'),
+                                             ('fieldA', 'fieldD')),
+                                            TestModelFields),
+                                            (('fieldA', 'fieldD'),
                                              ('fieldA', 'fieldE', 'fieldX')))
-        self.assertEqual(sort_unique_tuples((('fieldA', 'fieldD', 'fieldX'), 
-                                             ('fieldA', 'fieldD')), 
-                                            TestModelFields), 
-                                            (('fieldA', 'fieldD'), 
+        self.assertEqual(sort_unique_tuples((('fieldA', 'fieldD', 'fieldX'),
+                                             ('fieldA', 'fieldD')),
+                                            TestModelFields),
+                                            (('fieldA', 'fieldD'),
                                              ('fieldA', 'fieldD', 'fieldX')))
-        self.assertEqual(sort_unique_tuples((('fieldA', 'fieldE'), 
-                                             ('fieldA', 'fieldE', 'fieldX')), 
-                                            TestModelFields), 
-                                            (('fieldA', 'fieldE'), 
+        self.assertEqual(sort_unique_tuples((('fieldA', 'fieldE'),
+                                             ('fieldA', 'fieldE', 'fieldX')),
+                                            TestModelFields),
+                                            (('fieldA', 'fieldE'),
                                              ('fieldA', 'fieldE', 'fieldX')))
-        self.assertEqual(sort_unique_tuples((('fieldA', 'fieldD'), 
-                                             ('fieldA', 'fieldD')), 
-                                            TestModelFields), 
-                                            (('fieldA', 'fieldD'), 
+        self.assertEqual(sort_unique_tuples((('fieldA', 'fieldD'),
+                                             ('fieldA', 'fieldD')),
+                                            TestModelFields),
+                                            (('fieldA', 'fieldD'),
                                              ('fieldA', 'fieldD')))
 
 
@@ -337,11 +343,11 @@ class TestDFS(TestCase):
             dic = dict(cur_tuple)
             keys = dic.keys()
             if not 'fieldD' in keys:
-               return True
+                return True
             elif dic['fieldD'] % 3 != 1:
                 return False
             if not ('fieldE' in keys and 'fieldH' in keys):
-                return True 
+                return True
             elif dic['fieldE'] ^ dic['fieldH']:
                 return False
             return True
@@ -362,7 +368,8 @@ class TestDFS(TestCase):
             self.assertEqual(mdl.fieldC, 'general')
             self.assertTrue(mdl.fieldD in [13, 19, 31, 43])
             self.assertTrue(mdl.fieldF in [6, 28, 496, 8128, 33550336])
-            self.assertTrue(mdl.fieldG in ['Mathematics', 'Physics', 'Chemistry', 'Biology'])
+            self.assertTrue(mdl.fieldG in ['Mathematics', 'Physics',
+                                           'Chemistry', 'Biology'])
             self.assertTrue(not (mdl.fieldE ^ mdl.fieldH))
 
 
@@ -389,7 +396,7 @@ class TestGenerateModel(TestCase):
         self.assertEqual(TestModelFieldsTwo, to_be_computed_test[0])
         self.assertTrue(to_be_computed_test[1])
         for fld in to_be_computed_test[1]:
-            self.assertTrue(is_related(fld) 
+            self.assertTrue(is_related(fld)
                             and 'ManyToMany' in relation_type(fld))
             self.assertEqual(fld.rel.to, TestModelE)
         generate_model(TestModelE, 2, shuffle=False)[0]
@@ -398,7 +405,7 @@ class TestGenerateModel(TestCase):
             self.assertTrue(isinstance(model, TestModelE))
             self.assertTrue(model.field4E in [1000000009, 1000003, 101])
             self.assertTrue(model.field1E in TestModelB.objects.all())
-            self.assertTrue(all([x in TestModelA.objects.all() 
+            self.assertTrue(all([x in TestModelA.objects.all()
                                  for x in model.field2E.all()]))
             self.assertTrue(model.field3E in TestModelC.objects.all())
 
@@ -431,7 +438,7 @@ class TestGenerateData(TestCase):
         length = len(list_of_models(mdls))
         visited = dict(zip(list_of_models(mdls), length * [False]))
         pairs = []
-        data_base = dict([(mdl, list(mdl.objects.all())) 
+        data_base = dict([(mdl, list(mdl.objects.all()))
                           for mdl in list_of_models(mdls)])
         generated_data = data_base.values()
         nodes = 0
@@ -448,14 +455,14 @@ class TestGenerateData(TestCase):
                             if 'ManyToMany' in relation_type(field):
                                 r = data_base[field.rel.to]
                                 self.assertTrue(list(val.all()))
-                                self.assertTrue(all([x in r 
-                                                     for x in list(val.all())]))
+                                self.assertTrue(all([x in r for
+                                                     x in list(val.all())]))
                             else:
                                 r = data_base[field.rel.to]
                                 self.assertTrue(val in r)
-                            edges += 1 
+                            edges += 1
                         else:
-                            sample_values = map(lambda x : str(x),
+                            sample_values = map(lambda x: str(x),
                                                 field_sample_values(field))
                             val = str(val)
                             self.assertTrue(val in sample_values)
@@ -463,10 +470,10 @@ class TestGenerateData(TestCase):
                 pr = (model.fieldC, model.fieldA)
                 self.assertFalse(pr in pairs)
                 pairs.append(pr)
-                self.assertTrue((model.fieldB < 50) 
+                self.assertTrue((model.fieldB < 50)
                                 or (model.fieldD / 2 % 2 == 1))
-        self.assertTrue(all(visited.values()), 
-                        "Not all of the models with sample data are generated.")
+        self.assertTrue(all(visited.values()),
+                        "Not all the models with sample data are generated.")
 
 
 class TestDjenerator(TestCase):
@@ -476,5 +483,3 @@ class TestDjenerator(TestCase):
         fl.seek(0)
         length = len(fl.read())
         self.assertGreater(length, 600)
-
-

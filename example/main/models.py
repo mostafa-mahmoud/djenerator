@@ -1,8 +1,9 @@
 from django.db import models
 
+
 class Job(models.Model):
     job_name = models.CharField(max_length=50)
-    
+
     class TestData:
         job_name = 'job'
 
@@ -22,7 +23,7 @@ class RelTry(models.Model):
 
     class TestData:
         a = ['Her', 'Her2']
-    
+
     def __unicode__(self):
         return self.a + " " + str([x.id for x in self.b.all()])
 
@@ -30,7 +31,7 @@ class RelTry(models.Model):
 def gender_name(variable, model, field):
     l = dict(variable)
     if 'gender' in l.keys() and 'name' in l.keys():
-        return not ((l['gender'] == 'M') ^ (l['name'] in ['abdallah', 
+        return not ((l['gender'] == 'M') ^ (l['name'] in ['abdallah',
                 'adel', 'adham', 'ahmad', 'ahmed', 'ali', 'amr', 'eslam',
                 'farid', 'hassan', 'hesham', 'hisham', 'ibrahim', 'islam',
                 'kareem', 'karim', 'khalid', 'mahmod', 'mahmoud', 'medhat',
@@ -57,13 +58,13 @@ class Person(models.Model):
     address = models.CharField(max_length=200)
     job = models.ForeignKey(Job)
     gender = models.CharField(max_length=1)
-    
+
     class Meta:
         unique_together = (('name', 'last_name'),)
-    
+
     class Constraints:
         constraints = [gender_name]
-    
+
     class TestData:
         name = 'first_name'
         last_name = names()
@@ -71,7 +72,7 @@ class Person(models.Model):
         gender = ['M', 'F']
 
     def __unicode__(self):
-        return "%s %s %s %s %s" %(self.gender, self.name,
+        return "%s %s %s %s %s" % (self.gender, self.name,
                 self.last_name, self.address, str(self.job))
 
 
@@ -95,15 +96,14 @@ class Course(models.Model):
     course_name = models.CharField(max_length=200)
     course_code = models.IntegerField(unique=True)
     person = models.OneToOneField(Person)
-    
+
     class TestData:
         course_name = course
         course_code = codes
-    
+
     class Meta:
         unique_together = (('course_name', 'course_code'),)
-    
-    def __unicode__(self):
-        return "%s %s by %s" %(str(self.course_code),
-                self.course_name, str(self.person))
 
+    def __unicode__(self):
+        return "%s %s by %s" % (str(self.course_code),
+                self.course_name, str(self.person))

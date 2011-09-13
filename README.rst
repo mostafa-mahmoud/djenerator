@@ -130,7 +130,7 @@ Running the tests
 =================
 Run the tests by running the command.::
 
-    python setup.py test
+    python runtests.py
 
 TODOs and BUGS
 ==============
