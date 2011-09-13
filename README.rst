@@ -118,13 +118,13 @@ How To Use
 
 #. The generation of data are then done by a command using manage.py file in the project::
 
-        python manage.py generate app_name number output_file
+        python manage.py generate number app_name output_file
 
    for example if there is an app called 'main', and I need to generate 20 of each model in the models description file, and put them to a file called 'hello.json', I would run the command ::
    
-        python manage.py generate main 20 hello
+        python manage.py generate 20 main hello
     
-
+   The arguments of the command follow the convention, I want 'number' sample models for each model in the app 'app_name', and store them in 'output_file'.
 
 Running the tests
 =================

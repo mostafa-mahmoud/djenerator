@@ -9,8 +9,8 @@ class Command(BaseCommand):
     help = 'Generates random test data'
 
     def handle(self, *args, **options):
-        app_name = args[0]
-        size = int(args[1])
+        size = int(args[0])
+        app_name = args[1]
         out_put_name = args[2]
         output_file = open(args[2] + '.json', 'w')
         djenerator(app_name, size, output_file)
