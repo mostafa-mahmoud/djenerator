@@ -6,7 +6,7 @@ import inspect
 from django.db.models import Model
 
 
-def is_instance_of_model(reference):
+def is_instance_of_django_model(reference):
     """ Is instance of Model
 
     Tests if a given reference is a reference to a class that extends
@@ -117,7 +117,7 @@ def list_of_models(models_module, keep_abstract=None):
         A list of reference to the classes of the models in
         the imported models file.
     """
-    models = filter(is_instance_of_model, models_module.__dict__.values())
+    models = filter(is_instance_of_django_model, models_module.__dict__.values())
     if keep_abstract:
         return models
     else:

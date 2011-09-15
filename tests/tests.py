@@ -18,7 +18,7 @@ from djenerator.generate_test_data import recompute
 from djenerator.generate_test_data import topological_sort
 from djenerator.model_reader import field_type
 from djenerator.model_reader import is_auto_field
-from djenerator.model_reader import is_instance_of_model
+from djenerator.model_reader import is_instance_of_django_model
 from djenerator.model_reader import is_related
 from djenerator.model_reader import is_required
 from djenerator.model_reader import list_of_fields
@@ -55,19 +55,19 @@ from models import TestModelX
 from models import TestModelY
 
 
-class TestInstanceOfModel(TestCase):
+class TestInstanceOfDjangoModel(TestCase):
     def test(self):
         models = [TestModel0, TestModel1, TestModelA, TestModelB,
                   TestModelC, TestModelD, TestModelE, TestModelX,
                   TestModelY, ExtendingModel]
         for model in models:
-            self.assertTrue(is_instance_of_model(model))
-        self.assertFalse(is_instance_of_model(NotExtendingModel))
+            self.assertTrue(is_instance_of_django_model(model))
+        self.assertFalse(is_instance_of_django_model(NotExtendingModel))
 
         def not_extending_model_function():
             pass
 
-        self.assertFalse(is_instance_of_model(not_extending_model_function))
+        self.assertFalse(is_instance_of_django_model(not_extending_model_function))
 
 
 class TestListOfModels(TestCase):
