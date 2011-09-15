@@ -27,7 +27,7 @@ def unique_items(var_tuple):
     def uniqueness_constraint(variable, model, field):
         keys = dict(variable).keys()
         for key_name in var_tuple:
-            if not key_name in keys:
+            if key_name not in keys:
                 return True
         l = [(val, var) for (val, var) in variable if val in var_tuple]
         while model != Model and not model._meta.abstract:

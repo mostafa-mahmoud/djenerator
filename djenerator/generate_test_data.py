@@ -157,8 +157,8 @@ def generate_model(model, size, shuffle=None):
         A tuple that contains a reference to the class of the given model,
         and list of field that's not computed.
     """
-    unique_fields = [(f.name,) for f in list_of_fields(model)
-                     if f.unique and not is_auto_field(f)]
+    unique_fields = [(field.name,) for field in list_of_fields(model)
+                     if field.unique and not is_auto_field(field)]
     unique_together = model._meta.unique_together
     unique = list(unique_together) + unique_fields
     unique = sort_unique_tuples(unique, model)
@@ -203,7 +203,7 @@ def create_model(model, val):
         for field in flds:
             dict_T[field.name] = relation_type(field)
         for key, val in vals_dictionary.items():
-            if not 'ManyToMany' in dict_T[key]:
+            if 'ManyToMany' not in dict_T[key]:
                 setattr(mdl, key, val)
         mdl.save()
         for key, val in vals_dictionary.items():
@@ -247,7 +247,7 @@ def topological_sort(models):
     S = filter(dependencies, models)
 
     def visit(model):
-        if not model in visited:
+        if model not in visited:
             visited.append(model)
             for dep_model in dependencies(model):
                 visit(dep_model)
@@ -258,7 +258,7 @@ def topological_sort(models):
         visit(model)
     result_singleton = []
     for model in models:
-        if not model in result:
+        if model not in result:
             result_singleton.append(model)
     return result_singleton + result
 
