@@ -26,6 +26,23 @@ def is_instance_of_model(reference):
     return 'django.db.models.base.Model' in bases
 
 
+def is_required(field):
+    """ Is required
+    Test if a given field is required.
+
+    Args :
+        fields : A reference to the class of a given field.
+
+    Returns:
+        A boolean value that is true only if the given field is required.
+    """
+    if hasattr(field, 'required'):
+        return field.required
+    if hasattr(field, 'null'):
+        return not field.null
+    return True
+
+
 def is_related(field):
     """ Is a related field
 
@@ -35,7 +52,7 @@ def is_related(field):
         field : A reference to the class of a given field.
 
     Returns:
-        A boolean value that's is true only if the given field is related.
+        A boolean value that is true only if the given field is related.
 
     """
     return 'django.db.models.fields.related' in field.__module__

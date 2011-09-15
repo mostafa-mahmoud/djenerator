@@ -11,6 +11,7 @@ from django.db import connection
 from django.db.models import Model
 from model_reader import is_auto_field
 from model_reader import is_related
+from model_reader import is_required
 from model_reader import list_of_fields
 from model_reader import list_of_models
 from model_reader import module_import
@@ -115,7 +116,7 @@ def dfs(cur_tuple, index, to_be_computed, constraints, model, to_be_shuffled):
         if not list_field_values:
             many_to_many_related = (is_related(fields[index]) and 'ManyToMany'
                                     in relation_type(fields[index]))
-            optional_field = fields[index].null
+            optional_field = not is_required(fields[index])
             auto_fld = is_auto_field(fields[index])
             if many_to_many_related or optional_field or auto_fld:
                 if not is_auto_field(fields[index]):
@@ -226,8 +227,8 @@ def dependencies(model):
     """
     fields = list_of_fields(model)
     return [field.rel.to for field in fields
-            if ((not field.null) and (is_related(field)
-                and not 'ManyToMany' in relation_type(field)))]
+            if (is_required(field) and (is_related(field)
+                and 'ManyToMany' not in relation_type(field)))]
 
 
 def topological_sort(models):
@@ -281,7 +282,7 @@ def recompute(model, field):
         for index, mdl in enumerate(models):
             if ('ManyToMany' in relation_type(field) and
                 not getattr(mdl, field.name).exists() or
-                field.null and not getattr(mdl, field.name)):
+                not is_required(field) and not getattr(mdl, field.name)):
                 setattr(mdl, field.name, list_field_values[index % n])
                 mdl.save()
 
@@ -328,7 +329,7 @@ def djenerator(app_path, size, output_file, printing=None):
     """
     db_name = connection.creation.create_test_db()
     generate_test_data(app_path + '.models', size)
-    management.call_command("dumpdata", app_path, stdout=output_file)
+    management.call_command("dumpdata", app_path, stdout=output_file, indent=2)
     if printing:
         mdls = module_import(app_path + '.models')
         data_base = [mdl.objects.all() for mdl in list_of_models(mdls)]
