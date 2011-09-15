@@ -20,6 +20,7 @@ from djenerator.model_reader import field_type
 from djenerator.model_reader import is_auto_field
 from djenerator.model_reader import is_instance_of_model
 from djenerator.model_reader import is_related
+from djenerator.model_reader import is_required
 from djenerator.model_reader import list_of_fields
 from djenerator.model_reader import list_of_models
 from djenerator.model_reader import module_import
@@ -162,6 +163,20 @@ class TestRelationType(TestCase):
                          'ManyToManyRel')
         self.assertEqual(relation_type(models.ForeignKey(ExtendingModel)),
                          'ManyToOneRel')
+
+
+class TestIsRequired(TestCase):
+    def test(self):
+        field = models.CharField(max_length=20, null=True)
+        self.assertFalse(is_required(field))
+        field = models.IntegerField(null=True)
+        self.assertFalse(is_required(field))
+        field = models.IntegerField()
+        self.assertTrue(is_required(field))
+        field = models.ForeignKey(ExtendingModel)
+        self.assertTrue(is_required(field))
+        field = models.ForeignKey(ExtendingModel, null=True)
+        self.assertFalse(is_required(field))
 
 
 class TestModuleImport(TestCase):
