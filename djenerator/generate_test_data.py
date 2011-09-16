@@ -159,8 +159,10 @@ def generate_model(model, size, shuffle=None):
     """
     unique_fields = [(field.name,) for field in list_of_fields(model)
                      if field.unique and not is_auto_field(field)]
-    unique_together = model._meta.unique_together
-    unique = list(unique_together) + unique_fields
+    unique_together = []
+    if hasattr(model._meta, 'unique_together'):
+        unique_together = list(model._meta.unique_together)
+    unique = unique_together + unique_fields
     unique = sort_unique_tuples(unique, model)
     unique_constraints = [unique_items(un_tuple) for un_tuple in unique]
     constraints = []
@@ -330,12 +332,3 @@ def djenerator(app_path, size, output_file, printing=None):
     db_name = connection.creation.create_test_db()
     generate_test_data(app_path + '.models', size)
     management.call_command("dumpdata", app_path, stdout=output_file, indent=2)
-    if printing:
-        mdls = module_import(app_path + '.models')
-        data_base = [mdl.objects.all() for mdl in list_of_models(mdls)]
-        for mdls_ls in data_base:
-            for mdl in mdls_ls:
-                if hasattr(mdl, '__unicode__'):
-                    print mdl.__unicode__()
-                else:
-                    print mdl
