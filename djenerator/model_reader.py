@@ -85,7 +85,9 @@ def is_auto_field(field):
         A boolean value that's true only if the given field is an Auto-Field.
 
     """
-    return field.get_internal_type() == 'AutoField'
+    return (field.name == 'id' or
+            hasattr(field, 'get_internal_type') and
+            field.get_internal_type() == 'AutoField')
 
 
 def relation_type(field):
@@ -139,7 +141,11 @@ def list_of_fields(model):
     Returns:
         A list of references to the fields of the given model.
     """
-    fields = model._meta._fields() + model._meta._many_to_many()
+    if (hasattr(model._meta, '_fields')
+            and hasattr(model._meta, '_many_to_many')):
+        fields = model._meta._fields() + model._meta._many_to_many()
+    else:
+        fields = model._fields
     # If the inheritance is multi-table inheritence, the fields of
     # the super class(that should be inherited) will not appear
     # in fields, and they will be replaced by a OneToOneField to the
