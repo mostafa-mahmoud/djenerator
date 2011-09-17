@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from django.db import models
+from mongoengine import *
 
 
 class ExtendingModel(models.Model):
@@ -274,3 +275,14 @@ class CycleE(models.Model):
 class CycleF(models.Model):
     fd = models.ForeignKey(CycleD)
     f = models.IntegerField()
+
+
+class MongoModelA(Document):
+    a = StringField(max_length=20, required=True)
+    b = ListField(StringField(max_length=30))
+    c = IntField(required=False)
+
+    class TestData:
+        a = ['hello World', 'hello Africa!']
+        b = (['h5', 'hv'], ['aax', 'xd'])
+        c = range(5)
