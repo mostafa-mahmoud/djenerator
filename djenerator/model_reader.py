@@ -3,7 +3,6 @@
 This module has utility functions for reading models and their fields.
 """
 import inspect
-from django.db.models import Model
 
 
 def is_instance_of_django_model(reference):
@@ -24,6 +23,29 @@ def is_instance_of_django_model(reference):
     bases = ['%s.%s' % (b.__module__, b.__name__) for b
              in inspect.getmro(reference)]
     return 'django.db.models.base.Model' in bases
+
+
+def is_instance_of_mongo_model(reference):
+    """ Is instance of Model
+
+    Tests if a given reference is a reference to a class that extends
+    mongoengine.document.Document or mongoengine.document.EmbeddedDocument
+
+    Args :
+        reference : A given Anonymous reference.
+
+    Returns :
+        A boolean value that is true only if the given reference is a reference
+        to a class.
+    """
+    if not inspect.isclass(reference):
+        return False
+    bases = ['%s.%s' % (b.__module__, b.__name__) for b
+             in inspect.getmro(reference)]
+    if reference.__module__ == 'mongoengine.document':
+        return False
+    return ('mongoengine.document.Document' in bases
+            or 'mongoengine.document.EmbeddedDocument' in bases)
 
 
 def is_required(field):
@@ -119,13 +141,23 @@ def list_of_models(models_module, keep_abstract=None):
         A list of reference to the classes of the models in
         the imported models file.
     """
-    models = filter(is_instance_of_django_model, models_module.__dict__.values())
+    models = filter(is_instance_of_django_model,
+                    models_module.__dict__.values())
+    models += filter(is_instance_of_mongo_model,
+                     models_module.__dict__.values())
     if keep_abstract:
         return models
     else:
 
         def is_not_abstract(model):
-            return not model._meta.abstract
+            if hasattr(model._meta, 'abstract'):
+                # django model
+                return not model._meta.abstract
+            else:
+                # mongo model
+                if 'abstract' in model._meta.keys():
+                    return not model._meta['abstract']
+            return True
 
         return filter(is_not_abstract, models)
 
@@ -145,14 +177,27 @@ def list_of_fields(model):
             and hasattr(model._meta, '_many_to_many')):
         fields = model._meta._fields() + model._meta._many_to_many()
     else:
-        fields = model._fields
+        fields = model._fields.values()
     # If the inheritance is multi-table inheritence, the fields of
     # the super class(that should be inherited) will not appear
     # in fields, and they will be replaced by a OneToOneField to the
     # super class or ManyToManyField in case of a proxy model, so
     # this block of code will be replace the related field
     # by those of the super class.
-    if Model != model.__base__:
+    my_base = None
+    if is_instance_of_django_model(model):
+        from django.db.models import Model
+        my_base = Model
+    if is_instance_of_mongo_model(model):
+        from mongoengine.document import EmbeddedDocument
+        from mongoengine.document import Document
+        if 'mongoengine.document.Document' in model.__base__.__module__:
+            my_base = Document
+        else:
+            my_base = EmbeddedDocument
+    if not my_base:
+        return my_base
+    if my_base != model.__base__:
         clone = [fld for fld in fields]
         for field in clone:
             if (is_related(field) and ('OneToOne' in relation_type(field)
