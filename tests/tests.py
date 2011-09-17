@@ -26,6 +26,7 @@ from djenerator.model_reader import is_related
 from djenerator.model_reader import is_required
 from djenerator.model_reader import list_of_fields
 from djenerator.model_reader import list_of_models
+from djenerator.model_reader import model_of_field
 from djenerator.model_reader import module_import
 from djenerator.model_reader import names_of_fields
 from djenerator.model_reader import relation_type
@@ -200,6 +201,18 @@ class TestIsRequired(TestCase):
 class TestModuleImport(TestCase):
     def test(self):
         self.assertEqual(mdls, module_import('tests.models'))
+
+
+class TestModelOfField(TestCase):
+    def test(self):
+        fields = filter(lambda x: not is_auto_field(x),
+                list_of_fields(TestModelFields))
+        for field in fields:
+            self.assertEqual(model_of_field(field), TestModelFields)
+        fields = filter(lambda x: not is_auto_field(x),
+                list_of_fields(MongoModelA))
+        for field in fields:
+            self.assertEqual(model_of_field(field), MongoModelA)
 
 
 class TestListOfSampleFieldValues(TestCase):
