@@ -47,6 +47,22 @@ def is_instance_of_mongo_model(reference):
     return 'mongoengine.document.Document' in bases
 
 
+def model_of_field(field):
+    """ Model of Field
+
+    Retrives the model in which the given field exists.
+
+    Args :
+        field : a reference to the class of the given field.
+
+    Returns :
+        a reference to the class of the model
+
+    """
+    if hasattr(field, 'model'):
+        return field.model
+    if hasattr(field, 'owner_document'):
+        return field.owner_document().__class__
 
 
 def is_required(field):
