@@ -196,6 +196,12 @@ class TestIsRequired(TestCase):
         self.assertTrue(is_required(field))
         field = models.ForeignKey(ExtendingModel, null=True)
         self.assertFalse(is_required(field))
+        field = mongoengine.StringField(required=True)
+        self.assertTrue(is_required(field))
+        field = mongoengine.StringField(required=False)
+        self.assertFalse(is_required(field))
+        field = mongoengine.IntField()
+        self.assertFalse(is_required(field))
 
 
 class TestModuleImport(TestCase):
