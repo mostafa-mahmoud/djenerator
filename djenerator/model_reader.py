@@ -29,7 +29,7 @@ def is_instance_of_mongo_model(reference):
     """ Is instance of Model
 
     Tests if a given reference is a reference to a class that extends
-    mongoengine.document.Document or mongoengine.document.EmbeddedDocument
+    mongoengine.document.Document
 
     Args :
         reference : A given Anonymous reference.
@@ -44,8 +44,9 @@ def is_instance_of_mongo_model(reference):
              in inspect.getmro(reference)]
     if reference.__module__ == 'mongoengine.document':
         return False
-    return ('mongoengine.document.Document' in bases
-            or 'mongoengine.document.EmbeddedDocument' in bases)
+    return 'mongoengine.document.Document' in bases
+
+
 
 
 def is_required(field):
@@ -107,7 +108,7 @@ def is_auto_field(field):
         A boolean value that's true only if the given field is an Auto-Field.
 
     """
-    return (field.name == 'id' or
+    return (field.__class__.__name__ == 'ObjectIdField' or
             hasattr(field, 'get_internal_type') and
             field.get_internal_type() == 'AutoField')
 
@@ -189,12 +190,8 @@ def list_of_fields(model):
         from django.db.models import Model
         my_base = Model
     if is_instance_of_mongo_model(model):
-        from mongoengine.document import EmbeddedDocument
         from mongoengine.document import Document
-        if 'mongoengine.document.Document' in model.__base__.__module__:
-            my_base = Document
-        else:
-            my_base = EmbeddedDocument
+        my_base = Document
     if not my_base:
         return my_base
     if my_base != model.__base__:
