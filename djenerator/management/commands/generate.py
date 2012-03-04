@@ -5,7 +5,7 @@ from django.core.management.base import CommandError
 
 
 class Command(BaseCommand):
-    args = '<app_name size out_name>'
+    args = '<size app_name out_name>'
     help = 'Generates random test data'
 
     def handle(self, *args, **options):
