@@ -115,7 +115,8 @@ def list_of_models(models_module, keep_abstract=None):
         A list of reference to the classes of the models in
         the imported models file.
     """
-    models = filter(is_instance_of_django_model, models_module.__dict__.values())
+    models = filter(is_instance_of_django_model,
+                    models_module.__dict__.values())
     if keep_abstract:
         return models
     else:

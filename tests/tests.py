@@ -64,10 +64,10 @@ class TestInstanceOfDjangoModel(TestCase):
             self.assertTrue(is_instance_of_django_model(model))
         self.assertFalse(is_instance_of_django_model(NotExtendingModel))
 
-        def not_extending_model_function():
+        def not_extending_model_func():
             pass
 
-        self.assertFalse(is_instance_of_django_model(not_extending_model_function))
+        self.assertFalse(is_instance_of_django_model(not_extending_model_func))
 
 
 class TestListOfModels(TestCase):
