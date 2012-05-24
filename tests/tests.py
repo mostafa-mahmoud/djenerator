@@ -4,11 +4,9 @@ This module contains tests for djenerator app.
 """
 import itertools
 import models as mdls
-import mongoengine
 import tempfile
 from django.db import models
 from django.test import TestCase
-from mongoengine import Document
 from djenerator.generate_test_data import create_model
 from djenerator.generate_test_data import dependencies
 from djenerator.generate_test_data import dfs
@@ -21,12 +19,10 @@ from djenerator.generate_test_data import topological_sort
 from djenerator.model_reader import field_type
 from djenerator.model_reader import is_auto_field
 from djenerator.model_reader import is_instance_of_django_model
-from djenerator.model_reader import is_instance_of_mongo_model
 from djenerator.model_reader import is_related
 from djenerator.model_reader import is_required
 from djenerator.model_reader import list_of_fields
 from djenerator.model_reader import list_of_models
-from djenerator.model_reader import model_of_field
 from djenerator.model_reader import module_import
 from djenerator.model_reader import names_of_fields
 from djenerator.model_reader import relation_type
@@ -42,7 +38,6 @@ from models import CycleF
 from models import ExtendAbstract
 from models import ExtendSuperClass
 from models import ExtendingModel
-from models import MongoModelA
 from models import NotExtendingModel
 from models import ProxyExtend
 from models import SuperAbstract
@@ -72,19 +67,7 @@ class TestInstanceOfDjangoModel(TestCase):
         def not_extending_model_function():
             pass
 
-        self.assertFalse(is_instance_of_django_model(
-                not_extending_model_function))
-
-
-class TestInstanceOfMongoModel(TestCase):
-    def test(self):
-        self.assertTrue(is_instance_of_mongo_model(MongoModelA))
-
-        def not_extending_model_function():
-            pass
-
-        self.assertFalse(is_instance_of_mongo_model(
-                not_extending_model_function))
+        self.assertFalse(is_instance_of_django_model(not_extending_model_function))
 
 
 class TestListOfModels(TestCase):
@@ -95,7 +78,7 @@ class TestListOfModels(TestCase):
                               TestModelFields, SuperClass, ExtendAbstract,
                               ExtendSuperClass, ProxyExtend, SuperAbstract,
                               TestModelFieldsTwo, CycleA, CycleB, CycleC,
-                              CycleD, CycleE, CycleF, MongoModelA]),
+                              CycleD, CycleE, CycleF]),
                               set(list_of_models(mdls, keep_abstract=True)))
         self.assertEqual(set([ExtendingModel, TestModel0, TestModel1,
                               TestModelA, TestModelB, TestModelC, TestModelD,
@@ -103,7 +86,7 @@ class TestListOfModels(TestCase):
                               TestModelFields, SuperClass, ExtendAbstract,
                               ExtendSuperClass, TestModelFieldsTwo,
                               ProxyExtend, CycleA, CycleB, CycleC, CycleD,
-                              CycleE, CycleF, MongoModelA]),
+                              CycleE, CycleF]),
                               set(list_of_models(mdls)))
 
 
@@ -132,8 +115,6 @@ class TestNamesOfFields(TestCase):
                           names_of_fields(TestModel1))
         self.assertEqual(['id', 'field1', 'field2'],
                           names_of_fields(TestModel0))
-        self.assertEqual(['a', 'c', 'b', None],
-                names_of_fields(MongoModelA))
 
 
 class TestFieldType(TestCase):
@@ -196,29 +177,11 @@ class TestIsRequired(TestCase):
         self.assertTrue(is_required(field))
         field = models.ForeignKey(ExtendingModel, null=True)
         self.assertFalse(is_required(field))
-        field = mongoengine.StringField(required=True)
-        self.assertTrue(is_required(field))
-        field = mongoengine.StringField(required=False)
-        self.assertFalse(is_required(field))
-        field = mongoengine.IntField()
-        self.assertFalse(is_required(field))
 
 
 class TestModuleImport(TestCase):
     def test(self):
         self.assertEqual(mdls, module_import('tests.models'))
-
-
-class TestModelOfField(TestCase):
-    def test(self):
-        fields = filter(lambda x: not is_auto_field(x),
-                list_of_fields(TestModelFields))
-        for field in fields:
-            self.assertEqual(model_of_field(field), TestModelFields)
-        fields = filter(lambda x: not is_auto_field(x),
-                list_of_fields(MongoModelA))
-        for field in fields:
-            self.assertEqual(model_of_field(field), MongoModelA)
 
 
 class TestListOfSampleFieldValues(TestCase):
