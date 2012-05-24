@@ -14,7 +14,6 @@ from model_reader import is_related
 from model_reader import is_required
 from model_reader import list_of_fields
 from model_reader import list_of_models
-from model_reader import model_of_field
 from model_reader import module_import
 from model_reader import relation_type
 from utility import sort_unique_tuples
@@ -42,8 +41,8 @@ def field_sample_values(field):
                 list_field_values = [random.sample(list_field_values, sz)]
         else:
             found = False
-            if hasattr(model_of_field(field), 'TestData'):
-                model = model_of_field(field)
+            if hasattr(field.model, 'TestData'):
+                model = field.model
                 while (model.__base__ != Model
                        and not hasattr(model.TestData, field.name)):
                     model = model.__base__
@@ -60,8 +59,8 @@ def field_sample_values(field):
                         if inspect.isfunction(input_method):
                             list_field_values = input_method()
             if not found:
-                path = 'TestTemplates/sample__%s__%s' % (
-                        model_of_field(field).__name__, field.name)
+                path = 'TestTemplates/sample__%s__%s' % (field.model.__name__,
+                                                         field.name)
                 input_file = open(path, 'r')
                 list_field_values = [word[:-1] for word in input_file]
             # TODO(mostafa-mahmoud) : Generate totally randomized

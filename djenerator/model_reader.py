@@ -3,6 +3,7 @@
 This module has utility functions for reading models and their fields.
 """
 import inspect
+from django.db.models import Model
 
 
 def is_instance_of_django_model(reference):
@@ -25,46 +26,6 @@ def is_instance_of_django_model(reference):
     return 'django.db.models.base.Model' in bases
 
 
-def is_instance_of_mongo_model(reference):
-    """ Is instance of Model
-
-    Tests if a given reference is a reference to a class that extends
-    mongoengine.document.Document
-
-    Args :
-        reference : A given Anonymous reference.
-
-    Returns :
-        A boolean value that is true only if the given reference is a reference
-        to a class.
-    """
-    if not inspect.isclass(reference):
-        return False
-    bases = ['%s.%s' % (b.__module__, b.__name__) for b
-             in inspect.getmro(reference)]
-    if reference.__module__ == 'mongoengine.document':
-        return False
-    return 'mongoengine.document.Document' in bases
-
-
-def model_of_field(field):
-    """ Model of Field
-
-    Retrives the model in which the given field exists.
-
-    Args :
-        field : a reference to the class of the given field.
-
-    Returns :
-        a reference to the class of the model
-
-    """
-    if hasattr(field, 'model'):
-        return field.model
-    if hasattr(field, 'owner_document'):
-        return field.owner_document().__class__
-
-
 def is_required(field):
     """ Is required
     Test if a given field is required.
@@ -75,11 +36,7 @@ def is_required(field):
     Returns:
         A boolean value that is true only if the given field is required.
     """
-    if hasattr(field, 'required'):
-        return field.required
-    if hasattr(field, 'null'):
-        return not field.null
-    return True
+    return not field.null
 
 
 def is_related(field):
@@ -124,7 +81,7 @@ def is_auto_field(field):
         A boolean value that's true only if the given field is an Auto-Field.
 
     """
-    return (field.__class__.__name__ == 'ObjectIdField' or
+    return (field.name == 'id' or
             hasattr(field, 'get_internal_type') and
             field.get_internal_type() == 'AutoField')
 
@@ -158,23 +115,13 @@ def list_of_models(models_module, keep_abstract=None):
         A list of reference to the classes of the models in
         the imported models file.
     """
-    models = filter(is_instance_of_django_model,
-                    models_module.__dict__.values())
-    models += filter(is_instance_of_mongo_model,
-                     models_module.__dict__.values())
+    models = filter(is_instance_of_django_model, models_module.__dict__.values())
     if keep_abstract:
         return models
     else:
 
         def is_not_abstract(model):
-            if hasattr(model._meta, 'abstract'):
-                # django model
-                return not model._meta.abstract
-            else:
-                # mongo model
-                if 'abstract' in model._meta.keys():
-                    return not model._meta['abstract']
-            return True
+            return not model._meta.abstract
 
         return filter(is_not_abstract, models)
 
@@ -194,23 +141,14 @@ def list_of_fields(model):
             and hasattr(model._meta, '_many_to_many')):
         fields = model._meta._fields() + model._meta._many_to_many()
     else:
-        fields = model._fields.values()
+        fields = model._fields
     # If the inheritance is multi-table inheritence, the fields of
     # the super class(that should be inherited) will not appear
     # in fields, and they will be replaced by a OneToOneField to the
     # super class or ManyToManyField in case of a proxy model, so
     # this block of code will be replace the related field
     # by those of the super class.
-    my_base = None
-    if is_instance_of_django_model(model):
-        from django.db.models import Model
-        my_base = Model
-    if is_instance_of_mongo_model(model):
-        from mongoengine.document import Document
-        my_base = Document
-    if not my_base:
-        return my_base
-    if my_base != model.__base__:
+    if Model != model.__base__:
         clone = [fld for fld in fields]
         for field in clone:
             if (is_related(field) and ('OneToOne' in relation_type(field)
