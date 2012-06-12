@@ -4,17 +4,17 @@ A simple tool to generate test/random data from the model description of django.
 
 At this stage a very simple modification needs to be done to the model descriptions (a change that will not affect the execution of the django app).
 
-Name                             Stmts   Exec  Cover   Missing
+Name                             Stmts   Miss  Cover   Missing
 --------------------------------------------------------------
-djenerator/__init__                  1      1   100%   
-djenerator/generate_test_data      160    160   100%   
-djenerator/management/__init__       1      1   100%   
-djenerator/model_reader             45     44    97%   145
-djenerator/models                    1      1   100%   
-djenerator/utility                  44     44   100%   
-runtests                            23     21    91%   63-64
-tests/__init__                       1      1   100%   
-tests/models                       188    181    96%   48, 59, 70, 85, 98, 108, 121
-tests/tests                        337    335    99%   68, 361
+djenerator/__init__                  0      0   100%   
+djenerator/generate_test_data      160      0   100%   
+djenerator/management/__init__       0      0   100%   
+djenerator/model_reader             45      1    98%   145
+djenerator/models                    0      0   100%   
+djenerator/utility                  44      0   100%   
+runtests                            24      2    92%   67-68
+tests/__init__                       0      0   100%   
+tests/models                       188      7    96%   48, 59, 70, 85, 98, 108, 121
+tests/tests                        337      2    99%   68, 361
 --------------------------------------------------------------
-TOTAL                              801    789    98%   
+TOTAL                              798     12    98%   
