@@ -43,3 +43,9 @@ def generate_positive_integer():
 
 def generate_positive_small_integer():
     return generate_integer(16, False)
+
+
+def generate_boolean(null_allowed=False):
+    res = randint(0, 1 + int(null_allowed))
+    if res < 2:
+        return bool(res)
