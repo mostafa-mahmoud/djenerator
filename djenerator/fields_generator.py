@@ -53,3 +53,10 @@ def generate_boolean(null_allowed=False):
 
 def generate_ip():
     return str.join('.', [str(randint(0, 255)) for _ in xrange(4)])
+
+
+def generate_comma_separated_int(max_length):
+    parts = randint(0, (max_length - 1) / 4)
+    number = ['%.3d' % randint(0, 999) for _ in xrange(parts)]
+    left = randint(1, min(3, max_length - 4 * parts))
+    return '%d,%s' % (randint(1, 10 ** left - 1), str.join(',', number))
