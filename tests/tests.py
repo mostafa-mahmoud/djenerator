@@ -7,7 +7,12 @@ import models as mdls
 import tempfile
 from django.db import models
 from django.test import TestCase
+from djenerator.fields_generator import generate_big_integer
+from djenerator.fields_generator import generate_int
 from djenerator.fields_generator import generate_integer
+from djenerator.fields_generator import generate_positive_integer
+from djenerator.fields_generator import generate_positive_small_integer
+from djenerator.fields_generator import generate_small_integer
 from djenerator.generate_test_data import create_model
 from djenerator.generate_test_data import dependencies
 from djenerator.generate_test_data import dfs
@@ -512,3 +517,25 @@ class TestFieldsGeneratorNumbers(TestCase):
                     self.assertLess(abs(gen_val), 2 ** bits)
                     if not negative_allowed:
                         self.assertGreaterEqual(gen_val, 0)
+
+            gen_val = generate_int()
+            self.assertEqual(gen_val.__class__, int)
+            self.assertLess(abs(gen_val), 2 ** 31)
+
+            gen_val = generate_big_integer()
+            self.assertIn(gen_val.__class__, [int, long])
+            self.assertLess(abs(gen_val), 2 ** 63)
+
+            gen_val = generate_small_integer()
+            self.assertEqual(gen_val.__class__, int)
+            self.assertLess(abs(gen_val), 2 ** 15)
+
+            gen_val = generate_positive_integer()
+            self.assertIn(gen_val.__class__, [int, long])
+            self.assertLess(gen_val, 2 ** 31)
+            self.assertGreaterEqual(gen_val, 0)
+
+            gen_val = generate_positive_small_integer()
+            self.assertEqual(gen_val.__class__, int)
+            self.assertLess(gen_val, 2 ** 15)
+            self.assertGreaterEqual(gen_val, 0)
