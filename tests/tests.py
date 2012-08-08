@@ -8,6 +8,7 @@ import tempfile
 from django.db import models
 from django.test import TestCase
 from djenerator.fields_generator import generate_big_integer
+from djenerator.fields_generator import generate_boolean
 from djenerator.fields_generator import generate_int
 from djenerator.fields_generator import generate_integer
 from djenerator.fields_generator import generate_positive_integer
@@ -539,3 +540,9 @@ class TestFieldsGeneratorNumbers(TestCase):
             self.assertEqual(gen_val.__class__, int)
             self.assertLess(gen_val, 2 ** 15)
             self.assertGreaterEqual(gen_val, 0)
+
+            gen_val = generate_boolean()
+            self.assertEqual(gen_val.__class__, bool)
+
+            gen_val = generate_boolean(True)
+            self.assertTrue((gen_val is None) or (gen_val.__class__ == bool))
