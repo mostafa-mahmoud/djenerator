@@ -4,6 +4,7 @@ This module contains tests for djenerator app.
 """
 import itertools
 import models as mdls
+import re
 import tempfile
 from django.db import models
 from django.test import TestCase
@@ -11,6 +12,7 @@ from djenerator.fields_generator import generate_big_integer
 from djenerator.fields_generator import generate_boolean
 from djenerator.fields_generator import generate_int
 from djenerator.fields_generator import generate_integer
+from djenerator.fields_generator import generate_ip
 from djenerator.fields_generator import generate_positive_integer
 from djenerator.fields_generator import generate_positive_small_integer
 from djenerator.fields_generator import generate_small_integer
@@ -546,3 +548,11 @@ class TestFieldsGeneratorNumbers(TestCase):
 
             gen_val = generate_boolean(True)
             self.assertTrue((gen_val is None) or (gen_val.__class__ == bool))
+
+            gen_val = generate_ip()
+            self.assertEqual(gen_val.__class__, str)
+            match = re.search(r'(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})',
+                              gen_val)
+            self.assertIsNotNone(match)
+            match = map(int, match.groups())
+            self.assertTrue(all([x in range(256) for x in match]))
