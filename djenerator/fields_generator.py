@@ -23,3 +23,23 @@ def generate_integer(bits, negative_allowed=True):
         if high == -2:
             high = -1
         return randint(low, high)
+
+
+def generate_big_integer():
+    return generate_integer(64)
+
+
+def generate_int():
+    return generate_integer(32)
+
+
+def generate_small_integer():
+    return generate_integer(16)
+
+
+def generate_positive_integer():
+    return generate_integer(32, False)
+
+
+def generate_positive_small_integer():
+    return generate_integer(16, False)
