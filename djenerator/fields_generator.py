@@ -49,3 +49,7 @@ def generate_boolean(null_allowed=False):
     res = randint(0, 1 + int(null_allowed))
     if res < 2:
         return bool(res)
+
+
+def generate_ip():
+    return str.join('.', [str(randint(0, 255)) for _ in xrange(4)])
