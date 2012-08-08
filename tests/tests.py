@@ -6,10 +6,12 @@ import itertools
 import models as mdls
 import re
 import tempfile
+from random import randint
 from django.db import models
 from django.test import TestCase
 from djenerator.fields_generator import generate_big_integer
 from djenerator.fields_generator import generate_boolean
+from djenerator.fields_generator import generate_comma_separated_int
 from djenerator.fields_generator import generate_int
 from djenerator.fields_generator import generate_integer
 from djenerator.fields_generator import generate_ip
@@ -556,3 +558,8 @@ class TestFieldsGeneratorNumbers(TestCase):
             self.assertIsNotNone(match)
             match = map(int, match.groups())
             self.assertTrue(all([x in range(256) for x in match]))
+
+            gen_val = generate_comma_separated_int(randint(1, 1000))
+            self.assertEqual(gen_val.__class__, str)
+            match = re.search(r'\d{1,3}(:?,\d{3})*', gen_val)
+            self.assertIsNotNone(match)
