@@ -7,6 +7,7 @@ import models as mdls
 import tempfile
 from django.db import models
 from django.test import TestCase
+from djenerator.fields_generator import generate_integer
 from djenerator.generate_test_data import create_model
 from djenerator.generate_test_data import dependencies
 from djenerator.generate_test_data import dfs
@@ -498,3 +499,16 @@ class TestDjenerator(TestCase):
         fl.seek(0)
         length = len(fl.read())
         self.assertGreater(length, 600)
+
+
+class TestFieldsGeneratorNumbers(TestCase):
+    def test(self):
+        for times in xrange(100):
+            for bits in xrange(2, 64):
+                for negative_allowed in xrange(0, 1):
+                    gen_val = generate_integer(bits, negative_allowed)
+
+                    self.assertIn(gen_val.__class__, [int, long])
+                    self.assertLess(abs(gen_val), 2 ** bits)
+                    if not negative_allowed:
+                        self.assertGreaterEqual(gen_val, 0)
