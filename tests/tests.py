@@ -2,6 +2,7 @@
 """
 This module contains tests for djenerator app.
 """
+import datetime
 import itertools
 import models as mdls
 import random
@@ -13,6 +14,8 @@ from django.test import TestCase
 from djenerator.fields_generator import generate_big_integer
 from djenerator.fields_generator import generate_boolean
 from djenerator.fields_generator import generate_comma_separated_int
+from djenerator.fields_generator import generate_date
+from djenerator.fields_generator import generate_date_time
 from djenerator.fields_generator import generate_decimal
 from djenerator.fields_generator import generate_int
 from djenerator.fields_generator import generate_integer
@@ -21,6 +24,7 @@ from djenerator.fields_generator import generate_positive_integer
 from djenerator.fields_generator import generate_positive_small_integer
 from djenerator.fields_generator import generate_small_integer
 from djenerator.fields_generator import generate_string
+from djenerator.fields_generator import generate_time
 from djenerator.generate_test_data import create_model
 from djenerator.generate_test_data import dependencies
 from djenerator.generate_test_data import dfs
@@ -628,3 +632,40 @@ class TestFieldsGeneratorChar(TestCase):
 
                     self.assertGreaterEqual(len(gen_val), 0)
                     self.assertLessEqual(len(gen_val), length)
+
+
+class TestFieldsGeneratorDateTime(TestCase):
+    def test(self):
+        for _ in xrange(10000):
+            gen_val = generate_date_time()
+            self.assertTrue(gen_val)
+            self.assertEqual(gen_val.__class__, datetime.datetime)
+
+            gen_val = generate_time()
+            self.assertTrue(gen_val)
+            self.assertEqual(gen_val.__class__, datetime.time)
+
+            gen_val = generate_date()
+            self.assertTrue(gen_val)
+            self.assertEqual(gen_val.__class__, datetime.date)
+
+        for _ in xrange(100):
+            gen_val = generate_date_time(True)
+            self.assertTrue(gen_val)
+            self.assertEqual(gen_val.__class__, datetime.datetime)
+            now = datetime.datetime.now()
+            self.assertLess(abs((gen_val - now).total_seconds()), 10e-4)
+
+            gen_val = generate_time(True)
+            self.assertTrue(gen_val)
+            self.assertEqual(gen_val.__class__, datetime.time)
+            now = datetime.datetime.now().time()
+            gen_val_hash = gen_val.hour * 3600 + gen_val.minute * 60 + gen_val.second
+            now_hash = now.hour * 3600 + now.minute * 60 + now.second
+            self.assertLessEqual(gen_val_hash, now_hash + 1)
+
+            gen_val = generate_date(True)
+            self.assertTrue(gen_val)
+            self.assertEqual(gen_val.__class__, datetime.date)
+            now = datetime.datetime.now().date()
+            self.assertEqual(gen_val, now)
