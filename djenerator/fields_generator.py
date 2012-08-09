@@ -2,6 +2,7 @@
 """
 This module has functions that generated random values for django fields.
 """
+from decimal import Decimal
 from random import choice
 from random import randint
 
@@ -87,3 +88,16 @@ def generate_string(max_length, lower=True, upper=True, digits=True,
     if not exact_len:
         length = randint(1 - null_allowed, max_length)
     return str.join('', [choice(allowed_characters) for _ in xrange(length)])
+
+
+def generate_decimal(max_digits, decimal_places):
+    integer_part_len = max_digits - decimal_places
+    integer_part = generate_string(integer_part_len, False, False, True,
+                                          False, False, False)
+    decimal_part = generate_string(decimal_places, False, False, True,
+                                          False, False, False)
+    return Decimal('%s.%s' % (integer_part, decimal_part))
+
+
+def generate_float(max_digits=50, decimal_places=30):
+    return float(generate_decimal(max_digits, decimal_places))
