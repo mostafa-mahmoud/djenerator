@@ -4,9 +4,9 @@ This module contains tests for djenerator app.
 """
 import itertools
 import models as mdls
+import random
 import re
 import tempfile
-from random import randint
 from django.db import models
 from django.test import TestCase
 from djenerator.fields_generator import generate_big_integer
@@ -18,6 +18,7 @@ from djenerator.fields_generator import generate_ip
 from djenerator.fields_generator import generate_positive_integer
 from djenerator.fields_generator import generate_positive_small_integer
 from djenerator.fields_generator import generate_small_integer
+from djenerator.fields_generator import generate_string
 from djenerator.generate_test_data import create_model
 from djenerator.generate_test_data import dependencies
 from djenerator.generate_test_data import dfs
@@ -559,7 +560,51 @@ class TestFieldsGeneratorNumbers(TestCase):
             match = map(int, match.groups())
             self.assertTrue(all([x in range(256) for x in match]))
 
-            gen_val = generate_comma_separated_int(randint(1, 1000))
+            gen_val = generate_comma_separated_int(random.randint(1, 1000))
             self.assertEqual(gen_val.__class__, str)
             match = re.search(r'\d{1,3}(:?,\d{3})*', gen_val)
             self.assertIsNotNone(match)
+
+
+class TestFieldsGeneratorChar(TestCase):
+    def test(self):
+        #Test generate_email, generate_string, generate_sentence, generate_text
+        ascii_val = dict([(chr(n), n) for n in xrange(128)])
+        chr_range = lambda beg, end: [chr(n) for n in xrange(ascii_val[beg], ascii_val[end] + 1)]
+        for log in xrange(1, 6):
+            lengths = random.sample(range(10 ** log, 10 ** (log + 1)), 10)
+            for length in lengths:
+                for tup in itertools.product(*zip(6 * [True], 6 * [False])):
+                    lower, upper, digits, special, null_allowed, exact = tup
+                    if not (lower or upper or digits or special):
+                        continue
+                    gen_val = generate_string(length, *tup)
+                    existing_chars = set([])
+
+                    for char in gen_val:
+                        existing_chars.add(char)
+
+                    excluded = []
+                    if not upper:
+                        excluded.extend(chr_range('A', 'Z'))
+
+                    if not lower:
+                        excluded.extend(chr_range('a', 'z'))
+
+                    if not digits:
+                        excluded.extend(chr_range('0', '9'))
+
+                    if not special:
+                        excluded.extend(chr_range('!', '/'))
+                        excluded.extend(chr_range(':', '@'))
+                        excluded.extend(chr_range('[', '`'))
+                        excluded.extend(chr_range('{', '~'))
+
+                    self.assertFalse(existing_chars & set(excluded), str(existing_chars) + str(tup) + str(excluded))
+                    if exact:
+                        self.assertEqual(len(gen_val), length)
+                    elif not null_allowed:
+                        self.assertGreater(len(gen_val), 0)
+
+                    self.assertGreaterEqual(len(gen_val), 0)
+                    self.assertLessEqual(len(gen_val), length)
