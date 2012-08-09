@@ -7,11 +7,13 @@ import models as mdls
 import random
 import re
 import tempfile
+from decimal import Decimal
 from django.db import models
 from django.test import TestCase
 from djenerator.fields_generator import generate_big_integer
 from djenerator.fields_generator import generate_boolean
 from djenerator.fields_generator import generate_comma_separated_int
+from djenerator.fields_generator import generate_decimal
 from djenerator.fields_generator import generate_int
 from djenerator.fields_generator import generate_integer
 from djenerator.fields_generator import generate_ip
@@ -514,6 +516,7 @@ class TestDjenerator(TestCase):
 
 class TestFieldsGeneratorNumbers(TestCase):
     def test(self):
+        counts = {}
         for times in xrange(100):
             for bits in xrange(2, 64):
                 for negative_allowed in xrange(0, 1):
@@ -564,6 +567,23 @@ class TestFieldsGeneratorNumbers(TestCase):
             self.assertEqual(gen_val.__class__, str)
             match = re.search(r'\d{1,3}(:?,\d{3})*', gen_val)
             self.assertIsNotNone(match)
+
+            for digits in xrange(50):
+                for decimal in xrange(1, digits):
+                    gen_val = generate_decimal(digits, decimal)
+                    self.assertEqual(gen_val.__class__, Decimal)
+
+                    gen_val = str(gen_val)
+                    if 'decimal_contains_dot' in counts.keys():
+                        counts['decimal_contains_dot'] += 1
+                    else:
+                        counts['decimal_contains_dot'] = 1
+
+                    if not gen_val.__contains__('.'):
+                        gen_val == '.0'
+                    self.assertLessEqual(len(gen_val), digits + 1, gen_val)
+                    self.assertLessEqual(len(gen_val.split('.')[1]), decimal + (decimal == 0), gen_val)
+            # Test generate_float
 
 
 class TestFieldsGeneratorChar(TestCase):
