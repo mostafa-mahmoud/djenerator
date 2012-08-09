@@ -60,3 +60,30 @@ def generate_comma_separated_int(max_length):
     number = ['%.3d' % randint(0, 999) for _ in xrange(parts)]
     left = randint(1, min(3, max_length - 4 * parts))
     return '%d,%s' % (randint(1, 10 ** left - 1), str.join(',', number))
+
+
+def generate_string(max_length, lower=True, upper=True, digits=True,
+                           special=True, null_allowed=False, exact_len=False):
+    vascii = dict([(chr(n), n) for n in xrange(128)])
+    allowed_characters = []
+    chars_in_range = lambda beg, end: [chr(n) for n in xrange(vascii[beg],
+                                                              vascii[end] + 1)]
+    if lower:
+        allowed_characters.extend(chars_in_range('a', 'z'))
+    if upper:
+        allowed_characters.extend(chars_in_range('A', 'Z'))
+    if digits:
+        allowed_characters.extend(chars_in_range('0', '9'))
+    if special:
+        if special == True:
+            allowed_characters.extend(chars_in_range('!', '/'))
+            allowed_characters.extend(chars_in_range(':', '@'))
+            allowed_characters.extend(chars_in_range('[', '`'))
+            allowed_characters.extend(chars_in_range('{', '~'))
+        else:
+            if special.__class__ == list:
+                allowed_characters.extend(special)
+    length = max_length
+    if not exact_len:
+        length = randint(1 - null_allowed, max_length)
+    return str.join('', [choice(allowed_characters) for _ in xrange(length)])
