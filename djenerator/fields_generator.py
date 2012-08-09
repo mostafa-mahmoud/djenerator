@@ -2,6 +2,7 @@
 """
 This module has functions that generated random values for django fields.
 """
+import datetime
 from decimal import Decimal
 from random import choice
 from random import randint
@@ -88,6 +89,39 @@ def generate_string(max_length, lower=True, upper=True, digits=True,
     if not exact_len:
         length = randint(1 - null_allowed, max_length)
     return str.join('', [choice(allowed_characters) for _ in xrange(length)])
+
+
+def generate_date_time(auto_now=False):
+    if auto_now:
+        return datetime.datetime.now()
+    else:
+        year = randint(1900, 2100)
+        month = randint(1, 12)
+        long_month = [1, 3, 5, 7, 8, 10, 12]
+        day = 0
+        if month in long_month:
+            day = randint(1, 31)
+        else:
+            if month == 2:
+                x = year
+                leap_year = int((x % 4 == 0 and not x % 100 == 0) or x % 400 == 0)
+                day = randint(1, 28 + leap_year)
+            else:
+                day = randint(1, 30)
+        hour = randint(0, 23)
+        minute = randint(0, 59)
+        second = randint(0, 59)
+        microsecond = randint(0, 999999)
+        return datetime.datetime(year, month, day, hour, minute,
+                                 second, microsecond)
+
+
+def generate_date(auto_now=False):
+    return generate_date_time(auto_now).date()
+
+
+def generate_time(auto_now=False):
+    return generate_date_time(auto_now).time()
 
 
 def generate_decimal(max_digits, decimal_places):
