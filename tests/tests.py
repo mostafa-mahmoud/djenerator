@@ -23,6 +23,7 @@ from djenerator.fields_generator import generate_ip
 from djenerator.fields_generator import generate_positive_integer
 from djenerator.fields_generator import generate_positive_small_integer
 from djenerator.fields_generator import generate_small_integer
+from djenerator.fields_generator import generate_sentence
 from djenerator.fields_generator import generate_string
 from djenerator.fields_generator import generate_time
 from djenerator.generate_test_data import create_model
@@ -588,6 +589,19 @@ class TestFieldsGeneratorNumbers(TestCase):
                     self.assertLessEqual(len(gen_val), digits + 1, gen_val)
                     self.assertLessEqual(len(gen_val.split('.')[1]), decimal + (decimal == 0), gen_val)
             # Test generate_float
+
+
+class TestFieldsGeneratorStringGenerators(TestCase):
+    def test(self):
+        for length in xrange(2, 50):
+            seperators = [['.'], ['-', '_'], ['@']]
+            for sep in seperators:
+                for _ in xrange(20):
+                    gen_val = generate_sentence(length, sep)
+                    self.assertEqual(gen_val.__class__, str)
+                    self.assertLessEqual(len(gen_val), length * 2)
+                    reg = '(?:\w+(?:%s))*\w+\.' % str.join('|', sep)
+                    self.assertRegexpMatches(gen_val, reg)
 
 
 class TestFieldsGeneratorChar(TestCase):
