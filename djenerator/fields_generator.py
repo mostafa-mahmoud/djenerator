@@ -124,6 +124,27 @@ def generate_time(auto_now=False):
     return generate_date_time(auto_now).time()
 
 
+def generate_sentence(max_length, seperators=[' '], end_char=['.'],
+                      exact=False):
+    max_length -= bool(end_char)
+    length = max_length
+    #if not exact:
+    #    length = randint(1, max_length)
+    no_words = randint(1, (length + 1) / 2)
+    average_word_length = (length - no_words + 1) / no_words * 2
+    lengths = [randint(1, average_word_length) for _ in xrange(no_words)]
+    tot = length - no_words + 1 - sum(lengths)
+    if tot < 0:
+        pass
+
+    words = [generate_string(word_length, True, False, False, False,
+                             False, True) for word_length in lengths[:-1]]
+    words = map(lambda x: x + choice(seperators), words)
+    words.append(generate_string(lengths[-1], True, False, False,
+                                 False, False, True) + choice(end_char))
+    return str.join('', words)
+
+
 def generate_decimal(max_digits, decimal_places):
     integer_part_len = max_digits - decimal_places
     integer_part = generate_string(integer_part_len, False, False, True,
