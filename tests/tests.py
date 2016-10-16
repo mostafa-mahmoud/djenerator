@@ -99,7 +99,7 @@ class TestListOfModels(TestCase):
                               ExtendSuperClass, ProxyExtend, SuperAbstract,
                               TestModelFieldsTwo, CycleA, CycleB, CycleC,
                               CycleD, CycleE, CycleF]),
-                              set(list_of_models(mdls, keep_abstract=True)))
+                         set(list_of_models(mdls, keep_abstract=True)))
         self.assertEqual(set([ExtendingModel, TestModel0, TestModel1,
                               TestModelA, TestModelB, TestModelC, TestModelD,
                               TestModelE, TestModelX, TestModelY,
@@ -107,34 +107,38 @@ class TestListOfModels(TestCase):
                               ExtendSuperClass, TestModelFieldsTwo,
                               ProxyExtend, CycleA, CycleB, CycleC, CycleD,
                               CycleE, CycleF]),
-                              set(list_of_models(mdls)))
+                         set(list_of_models(mdls)))
 
 
 class TestListOfFields(TestCase):
     def test(self):
-        self.assertTrue(all([isinstance(*x)
-                             for x in zip(list_of_fields(TestModel1),
-                             [models.AutoField, models.CharField,
-                              models.IntegerField, models.ForeignKey])]))
+        self.assertTrue(all(isinstance(*x)
+                            for x in zip(list_of_fields(TestModel1),
+                                         [models.AutoField, models.CharField,
+                                          models.IntegerField,
+                                          models.ForeignKey])))
         self.assertTrue(all([isinstance(*x)
                              for x in zip(list_of_fields(TestModel0),
-                             [models.AutoField, models.BooleanField,
-                              models.EmailField])]))
+                                          [models.AutoField,
+                                           models.BooleanField,
+                                           models.EmailField])]))
         self.assertTrue(all([isinstance(*x)
                              for x in zip(list_of_fields(TestModelE),
-                             [models.AutoField, models.OneToOneField,
-                              models.ForeignKey, models.IntegerField,
-                              models.ManyToManyField])]))
+                                          [models.AutoField,
+                                           models.OneToOneField,
+                                           models.ForeignKey,
+                                           models.IntegerField,
+                                           models.ManyToManyField])]))
 
 
 class TestNamesOfFields(TestCase):
     def test(self):
         self.assertEqual(['id', 'field1E', 'field3E', 'field4E', 'field2E'],
-                          names_of_fields(TestModelE))
+                         names_of_fields(TestModelE))
         self.assertEqual(['id', 'field1', 'field2', 'field3'],
-                          names_of_fields(TestModel1))
+                         names_of_fields(TestModel1))
         self.assertEqual(['id', 'field1', 'field2'],
-                          names_of_fields(TestModel0))
+                         names_of_fields(TestModel0))
 
 
 class TestFieldType(TestCase):
@@ -274,12 +278,12 @@ class TestDependencies(TestCase):
 class TestTopologicalSorting(TestCase):
     def test(self):
         self.assertEqual(topological_sort([ExtendingModel, TestModel1,
-                                            TestModel0]),
+                                           TestModel0]),
                          [ExtendingModel, TestModel0, TestModel1])
         self.assertEqual(topological_sort([TestModel1, TestModel0]),
-                                          [TestModel0, TestModel1])
+                         [TestModel0, TestModel1])
         self.assertEqual(topological_sort([TestModel0, TestModel1]),
-                                          [TestModel0, TestModel1])
+                         [TestModel0, TestModel1])
 
         def assertions(sorted_list):
             self.assertTrue(sorted_list.index(TestModelA) <
@@ -325,12 +329,11 @@ class TestSortTuple(TestCase):
         flds = tuple(names_of_fields(TestModelFields))
         self.assertEqual(sort_unique_tuple(('fieldA', 'fieldX', 'fieldG',
                                             'fieldD'), TestModelFields),
-                                           ('fieldA', 'fieldD', 'fieldG',
-                                            'fieldX'))
+                         ('fieldA', 'fieldD', 'fieldG', 'fieldX'))
         self.assertEqual(sort_unique_tuple(flds[::-1], TestModelFields), flds)
         self.assertEqual(sort_unique_tuple(('fieldD', 'fieldH', 'fieldF'),
                                            TestModelFields),
-                                           ('fieldD', 'fieldF', 'fieldH'))
+                         ('fieldD', 'fieldF', 'fieldH'))
 
 
 class TestSortTuples(TestCase):
@@ -340,36 +343,33 @@ class TestSortTuples(TestCase):
                                              ('fieldC', 'fieldE', 'fieldH'),
                                              ('fieldA', 'fieldX', 'fieldC')),
                                             TestModelFields),
-                                            (('fieldA',),
-                                             ('fieldA', 'fieldC', 'fieldX'),
-                                             ('fieldA', 'fieldD'),
-                                             ('fieldB', 'fieldC', 'fieldX'),
-                                             ('fieldC', 'fieldE', 'fieldH')))
+                         (('fieldA',), ('fieldA', 'fieldC', 'fieldX'),
+                          ('fieldA', 'fieldD'), ('fieldB', 'fieldC', 'fieldX'),
+                          ('fieldC', 'fieldE', 'fieldH')))
         self.assertEqual(sort_unique_tuples((('fieldA', 'fieldD'),
                                              ('fieldA', 'fieldE', 'fieldX')),
                                             TestModelFields),
-                                            (('fieldA', 'fieldD'),
-                                             ('fieldA', 'fieldE', 'fieldX')))
+                         (('fieldA', 'fieldD'),
+                          ('fieldA', 'fieldE', 'fieldX')))
         self.assertEqual(sort_unique_tuples((('fieldA', 'fieldE', 'fieldX'),
                                              ('fieldA', 'fieldD')),
                                             TestModelFields),
-                                            (('fieldA', 'fieldD'),
-                                             ('fieldA', 'fieldE', 'fieldX')))
+                         (('fieldA', 'fieldD'),
+                          ('fieldA', 'fieldE', 'fieldX')))
         self.assertEqual(sort_unique_tuples((('fieldA', 'fieldD', 'fieldX'),
                                              ('fieldA', 'fieldD')),
                                             TestModelFields),
-                                            (('fieldA', 'fieldD'),
-                                             ('fieldA', 'fieldD', 'fieldX')))
+                         (('fieldA', 'fieldD'),
+                          ('fieldA', 'fieldD', 'fieldX')))
         self.assertEqual(sort_unique_tuples((('fieldA', 'fieldE'),
                                              ('fieldA', 'fieldE', 'fieldX')),
                                             TestModelFields),
-                                            (('fieldA', 'fieldE'),
-                                             ('fieldA', 'fieldE', 'fieldX')))
+                         (('fieldA', 'fieldE'),
+                          ('fieldA', 'fieldE', 'fieldX')))
         self.assertEqual(sort_unique_tuples((('fieldA', 'fieldD'),
                                              ('fieldA', 'fieldD')),
                                             TestModelFields),
-                                            (('fieldA', 'fieldD'),
-                                             ('fieldA', 'fieldD')))
+                         (('fieldA', 'fieldD'), ('fieldA', 'fieldD')))
 
 
 class TestDFS(TestCase):
@@ -598,7 +598,8 @@ class TestFieldsGeneratorNumbers(TestCase):
                     if not gen_val.__contains__('.'):
                         gen_val == '.0'
                     self.assertLessEqual(len(gen_val), digits + 1, gen_val)
-                    self.assertLessEqual(len(gen_val.split('.')[1]), decimal + (decimal == 0), gen_val)
+                    self.assertLessEqual(len(gen_val.split('.')[1]),
+                                         decimal + (decimal == 0), gen_val)
             # Test generate_float
 
 
@@ -619,7 +620,8 @@ class TestFieldsGeneratorChar(TestCase):
     def test(self):
         #Test generate_email, generate_string, generate_sentence, generate_text
         ascii_val = dict([(chr(n), n) for n in xrange(128)])
-        chr_range = lambda beg, end: [chr(n) for n in xrange(ascii_val[beg], ascii_val[end] + 1)]
+        ascii_rng = lambda beg, end: xrange(ascii_val[beg], ascii_val[end] + 1)
+        chr_range = lambda beg, end: map(chr, ascii_rng(beg, end))
         for log in xrange(1, 6):
             lengths = random.sample(range(10 ** log, 10 ** (log + 1)), 10)
             for length in lengths:
@@ -649,7 +651,9 @@ class TestFieldsGeneratorChar(TestCase):
                         excluded.extend(chr_range('[', '`'))
                         excluded.extend(chr_range('{', '~'))
 
-                    self.assertFalse(existing_chars & set(excluded), str(existing_chars) + str(tup) + str(excluded))
+                    self.assertFalse(existing_chars & set(excluded),
+                                     str(existing_chars) + str(tup)
+                                     + str(excluded))
                     if exact:
                         self.assertEqual(len(gen_val), length)
                     elif not null_allowed:
@@ -685,7 +689,8 @@ class TestFieldsGeneratorDateTime(TestCase):
             self.assertTrue(gen_val)
             self.assertEqual(gen_val.__class__, datetime.time)
             now = datetime.datetime.now().time()
-            gen_val_hash = gen_val.hour * 3600 + gen_val.minute * 60 + gen_val.second
+            gen_val_hash = gen_val.second
+            gen_val_hash += gen_val.hour * 3600 + gen_val.minute * 60
             now_hash = now.hour * 3600 + now.minute * 60 + now.second
             self.assertLessEqual(gen_val_hash, now_hash + 1)
 
