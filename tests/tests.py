@@ -40,6 +40,7 @@ from djenerator.model_reader import is_auto_field
 from djenerator.model_reader import is_instance_of_django_model
 from djenerator.model_reader import is_related
 from djenerator.model_reader import is_required
+from djenerator.model_reader import is_reverse_related
 from djenerator.model_reader import list_of_fields
 from djenerator.model_reader import list_of_models
 from djenerator.model_reader import module_import
@@ -483,7 +484,8 @@ class TestGenerateData(TestCase):
                 fields = list_of_fields(model.__class__)
                 nodes += 1
                 for field in fields:
-                    if not is_auto_field(field):
+                    if (not is_auto_field(field) and
+                       not is_reverse_related(field)):
                         val = getattr(model, field.name)
                         if is_related(field):
                             if 'ManyToMany' in relation_type(field):
@@ -496,10 +498,19 @@ class TestGenerateData(TestCase):
                                 self.assertTrue(val in r)
                             edges += 1
                         else:
-                            sample_values = map(lambda x: str(x),
-                                                field_sample_values(field))
-                            val = str(val)
-                            self.assertTrue(val in sample_values)
+                            if (field.__class__.__name__ == 'DecimalField' or
+                               field.__class__.__name__ == 'FloatField'):
+                                sample_values = map(float,
+                                                    field_sample_values(field))
+                                val = float(val)
+                                self.assertTrue(any(abs(val - fld_value) < 1e-5
+                                                    for fld_value in
+                                                    sample_values))
+                            else:
+                                sample_values = map(str,
+                                                    field_sample_values(field))
+                                val = str(val)
+                                self.assertTrue(val in sample_values)
             if model.__class__ == TestModelFields:
                 pr = (model.fieldC, model.fieldA)
                 self.assertFalse(pr in pairs)

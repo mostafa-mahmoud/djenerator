@@ -54,6 +54,20 @@ def is_related(field):
     return 'django.db.models.fields.related' in field.__module__
 
 
+def is_reverse_related(field):
+    """ Is a reverse-related field
+
+    Test if a given field is a reverse related field.
+
+    Args:
+        field : A reference to the class of a given field.
+
+    Returns:
+        A boolean value that is true only if the field is reverse related.
+    """
+    return 'django.db.models.fields.reverse_related' in field.__module__
+
+
 def field_type(field):
     """ Field Type
 
@@ -138,11 +152,15 @@ def list_of_fields(model):
     Returns:
         A list of references to the fields of the given model.
     """
+    fields = list(model._meta._get_fields())
+    fields = list(filter(lambda field: not is_reverse_related(field), fields))
+    """
     if (hasattr(model._meta, '_fields')
             and hasattr(model._meta, '_many_to_many')):
         fields = model._meta._fields() + model._meta._many_to_many()
     else:
         fields = model._fields
+    """
     # If the inheritance is multi-table inheritence, the fields of
     # the super class(that should be inherited) will not appear
     # in fields, and they will be replaced by a OneToOneField to the
@@ -152,9 +170,10 @@ def list_of_fields(model):
     if Model != model.__base__:
         clone = [fld for fld in fields]
         for field in clone:
-            if (is_related(field) and ('OneToOne' in relation_type(field)
-                or 'ManyToMany' in relation_type(field)) and (field.rel.to in
-                model.__bases__) and field.rel.to != model):
+            if (is_related(field) and
+               ('OneToOne' in relation_type(field) or
+                'ManyToMany' in relation_type(field)) and
+               (field.rel.to in model.__bases__) and field.rel.to != model):
                 fields.remove(field)
                 fields += filter(lambda x: not is_auto_field(x),
                                  list_of_fields(field.rel.to))
