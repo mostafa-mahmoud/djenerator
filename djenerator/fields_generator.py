@@ -65,7 +65,7 @@ def generate_comma_separated_int(max_length):
 
 
 def generate_string(max_length, lower=True, upper=True, digits=True,
-                           special=True, null_allowed=False, exact_len=False):
+                    special=True, null_allowed=False, exact_len=False):
     vascii = dict([(chr(n), n) for n in xrange(128)])
     allowed_characters = []
     chars_in_range = lambda beg, end: [chr(n) for n in xrange(vascii[beg],
@@ -77,7 +77,7 @@ def generate_string(max_length, lower=True, upper=True, digits=True,
     if digits:
         allowed_characters.extend(chars_in_range('0', '9'))
     if special:
-        if special == True:
+        if special is True:
             allowed_characters.extend(chars_in_range('!', '/'))
             allowed_characters.extend(chars_in_range(':', '@'))
             allowed_characters.extend(chars_in_range('[', '`'))
@@ -104,7 +104,8 @@ def generate_date_time(auto_now=False):
         else:
             if month == 2:
                 x = year
-                leap_year = int((x % 4 == 0 and not x % 100 == 0) or x % 400 == 0)
+                leap_year = int((x % 4 == 0 and not x % 100 == 0)
+                                or x % 400 == 0)
                 day = randint(1, 28 + leap_year)
             else:
                 day = randint(1, 30)
@@ -148,9 +149,9 @@ def generate_sentence(max_length, seperators=[' '], end_char=['.'],
 def generate_decimal(max_digits, decimal_places):
     integer_part_len = max_digits - decimal_places
     integer_part = generate_string(integer_part_len, False, False, True,
-                                          False, False, False)
+                                   False, False, False)
     decimal_part = generate_string(decimal_places, False, False, True,
-                                          False, False, False)
+                                   False, False, False)
     return Decimal('%s.%s' % (integer_part, decimal_part))
 
 
