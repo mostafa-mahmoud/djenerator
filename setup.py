@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-from distutils.core import setup
+from setuptools import setup
 
 setup(name='Djenerator',
       version='1.0',
       description='A simple app for generating test data for a given django models.',
-      author='Mostafa Mahmoud',
+      author='Mostafa M. Mohamed',
       author_email='mostafa.amin93@gmail.com',
       long_description=open('README.rst', 'r').read(),
       url='https://github.com/aelguindy/djenerator',
