@@ -28,6 +28,8 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
+import django
+import os
 import sys
 from os.path import dirname, abspath
 from optparse import OptionParser
@@ -54,13 +56,16 @@ if not settings.configured:
             'djenerator',
             
             'tests',
+
+            'example',
         ],
         ROOT_URLCONF='',
         DEBUG=False,
         SITE_ID=1,
     )
 
-from django.test.simple import DjangoTestSuiteRunner
+#from django.test.simple import DjangoTestSuiteRunner
+from django.test.runner import DiscoverRunner
 
 def runtests(*test_args, **kwargs):
     if 'south' in settings.INSTALLED_APPS:
@@ -68,16 +73,18 @@ def runtests(*test_args, **kwargs):
         patch_for_test_db_setup()
 
     if not test_args:
-        test_args = ['tests']
+        test_args = ['tests.tests']
     parent = dirname(abspath(__file__))
     sys.path.insert(0, parent)
-    test_runner = DjangoTestSuiteRunner(verbosity=kwargs.get('verbosity', 1), interactive=kwargs.get('interactive', False), failfast=kwargs.get('failfast'))
+    test_runner = DiscoverRunner(verbosity=kwargs.get('verbosity', 1), interactive=kwargs.get('interactive', False), failfast=kwargs.get('failfast'))
     failures = test_runner.run_tests(test_args)
     sys.exit(failures)
 
 if __name__ == '__main__':
     parser = OptionParser()
     parser.add_option('--failfast', action='store_true', default=False, dest='failfast')
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "example.settings")
+    django.setup()
 
     (options, args) = parser.parse_args()
 
