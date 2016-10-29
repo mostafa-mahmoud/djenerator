@@ -283,7 +283,7 @@ class AllFieldsModel(models.Model):
     bool_field = models.BooleanField()
     char_field = models.CharField(max_length=100)
     comma_sep_int_field = models.CommaSeparatedIntegerField(max_length=20)
-    decimal_field = models.DecimalField()
+    decimal_field = models.DecimalField(max_digits=15, decimal_places=8)
     datetime_field = models.DateTimeField()
     date_field = models.DateField()
     duration_field = models.DurationField()
