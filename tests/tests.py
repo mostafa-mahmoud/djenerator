@@ -18,6 +18,7 @@ from djenerator.values_generator import generate_date
 from djenerator.values_generator import generate_date_time
 from djenerator.values_generator import generate_decimal
 from djenerator.values_generator import generate_email
+from djenerator.values_generator import generate_int
 from djenerator.values_generator import generate_integer
 from djenerator.values_generator import generate_ip
 from djenerator.values_generator import generate_positive_integer
@@ -596,12 +597,10 @@ class TestFieldsGeneratorNumbers(TestCase):
                     else:
                         counts['decimal_contains_dot'] = 1
 
-                    if not gen_val.__contains__('.'):
-                        gen_val == '.0'
                     self.assertLessEqual(len(gen_val), digits + 1, gen_val)
                     self.assertLessEqual(len(gen_val.split('.')[1]),
                                          decimal + (decimal == 0), gen_val)
-            # Test generate_float
+            # TODO(mostafa-mahmoud): Test generate_float
 
 
 class TestFieldsGeneratorStringGenerators(TestCase):
@@ -617,14 +616,23 @@ class TestFieldsGeneratorStringGenerators(TestCase):
                     self.assertRegexpMatches(gen_val, reg)
 
             gen_text = generate_text(length)
-            txt_re = '(?:(?:[a-zA-Z0-9]+\s?)+\.)+(?:\s(?:[a-zA-Z0-9]+\s?)+\.)*'
+            txt_re = '(?:(?:\w+\s?)+\.)+(?:\s(?:\w+\s?)+\.)*'
             self.assertLessEqual(len(gen_text), length)
             self.assertRegexpMatches(gen_text, txt_re, gen_text)
+
+            gen_sentence = generate_sentence(length)
+            self.assertLessEqual(len(gen_sentence), length)
+            sent_re = '(?:\w+\s?)+\.'
+            self.assertRegexpMatches(gen_sentence, sent_re, gen_sentence)
+
+            gen_sentence = generate_sentence(length, end_char=['.', ','])
+            self.assertLessEqual(len(gen_sentence), length)
+            sent_re = '(?:\w+\s?)+[\.,]'
+            self.assertRegexpMatches(gen_sentence, sent_re, gen_sentence)
 
 
 class TestFieldsGeneratorChar(TestCase):
     def test(self):
-        #Test generate_email, generate_string, generate_sentence, generate_text
         ascii_val = dict([(chr(n), n) for n in xrange(128)])
         ascii_rng = lambda beg, end: xrange(ascii_val[beg], ascii_val[end] + 1)
         chr_range = lambda beg, end: map(chr, ascii_rng(beg, end))
@@ -683,24 +691,8 @@ class TestFieldsGeneratorChar(TestCase):
 
                 email = generate_email(length)
                 self.assertLessEqual(len(email), length)
-                spt = str.split(email, '@')
-                self.assertEqual(len(spt), 2)
-
-                existing_chars = set([])
-
-                for char in email:
-                    existing_chars.add(char)
-
-                email_chars = []
-                email_chars.extend(chr_range('A', 'Z'))
-                email_chars.extend(chr_range('a', 'z'))
-                email_chars.extend(chr_range('0', '9'))
-                email_chars.extend(('@', '.'))
-                email_chars = set(email_chars)
-
-                self.assertFalse(existing_chars - email_chars,
-                                 "unallowed email characters " +
-                                 str(existing_chars - email_chars))
+                email_regex = '\w+(?:\.\w+)*@(?:[A-Za-z0-9]+\.)+[A-Za-z]+'
+                self.assertRegexpMatches(email, email_regex)
 
 
 class TestFieldsGeneratorDateTime(TestCase):

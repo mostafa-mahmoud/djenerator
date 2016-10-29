@@ -33,7 +33,7 @@ from values_generator import generate_date_time
 from values_generator import generate_decimal
 from values_generator import generate_email
 from values_generator import generate_float
-from values_generator import generate_integer
+from values_generator import generate_int
 from values_generator import generate_ip
 from values_generator import generate_positive_integer
 from values_generator import generate_small_integer
@@ -41,11 +41,15 @@ from values_generator import generate_string
 from values_generator import generate_text
 
 
+def generate_values(field, size=100):
+    return list(set([generate_value(field) for _ in xrange(size)]))
+
+
 def generate_value(field):
     if isinstance(field, BigIntegerField):
         return generate_big_integer()
     elif isinstance(field, IntegerField):
-        return generate_integer()
+        return generate_int()
     elif isinstance(field, EmailField):
         return generate_email(field.max_length)
     elif isinstance(field, BooleanField):
