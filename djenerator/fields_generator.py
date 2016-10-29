@@ -41,11 +41,37 @@ from values_generator import generate_string
 from values_generator import generate_text
 
 
-def generate_values(field, size=100):
-    return list(set([generate_value(field) for _ in xrange(size)]))
+def generate_random_values(field, size=100):
+    """ Generate random values
+
+    Generate a list of random values for a given field.
+
+    Args:
+        field : The field to get values for.
+        size : The size of the output list.
+
+    Note:
+        The size of the output list might be less than 'size', if the total
+        number of the possible values are less than 'size', like in Booleans.
+
+    Returns:
+        A list of random values generated for the given field.
+    """
+    return list(set([generate_random_value(field) for _ in xrange(size)]))
 
 
-def generate_value(field):
+def generate_random_value(field):
+    """ Generate random value
+
+    Generate a random value for a given field, by matching to the corresponding
+    random generator in values_generator.
+
+    Args:
+        field : The field to get values for.
+
+    Returns:
+        A random value generated for the given field.
+    """
     if isinstance(field, BigIntegerField):
         return generate_big_integer()
     elif isinstance(field, EmailField):

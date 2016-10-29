@@ -30,7 +30,7 @@ from django.db.models.fields import SmallIntegerField
 from django.db.models.fields import TextField
 from django.db.models.fields import TimeField
 from django.test import TestCase
-from djenerator.fields_generator import generate_values
+from djenerator.fields_generator import generate_random_values
 from djenerator.generate_test_data import create_model
 from djenerator.generate_test_data import dependencies
 from djenerator.generate_test_data import dfs
@@ -113,8 +113,9 @@ class TestFieldToRandomGeneratorMatcher(TestCase):
                          "All types should be present." +
                          str(set(field_types) - set(present_types)))
         for field in fields:
-            values = generate_values(field, 5)
-            self.assertLessEqual(len(values), 5)
+            sample_siz = 10
+            values = generate_random_values(field, sample_siz)
+            self.assertLessEqual(len(values), sample_siz)
             self.assertGreaterEqual(len(values), 1)
             for val in values:
                 if isinstance(field, IntegerField):

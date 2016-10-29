@@ -8,7 +8,7 @@ At this stage a very simple modification needs to be done to the model descripti
 Name                             Stmts   Miss  Cover   Missing
 --------------------------------------------------------------
 djenerator/__init__                  0      0   100%   
-djenerator/fields_generator         90      5    94%   91, 93, 95, 97, 99
+djenerator/fields_generator         90      5    94%   117, 119, 121, 123, 125
 djenerator/generate_test_data      170      1    99%   41
 djenerator/management/__init__       0      0   100%   
 djenerator/model_reader             46      0   100%   
@@ -22,6 +22,6 @@ runtests                            28      2    93%   72-73
 tests/__init__                       0      0   100%   
 tests/admin                          1      0   100%   
 tests/models                       207      7    97%   48, 59, 70, 85, 98, 108, 121
-tests/tests                        608      2    99%   179, 472
+tests/tests                        609      2    99%   180, 473
 --------------------------------------------------------------
-TOTAL                             1388     28    98%   
+TOTAL                             1389     28    98%   

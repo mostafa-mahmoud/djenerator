@@ -10,7 +10,7 @@ from django.core import management
 from django.core import serializers
 from django.db import connection
 from django.db.models import Model
-from fields_generator import generate_values
+from fields_generator import generate_random_values
 from model_reader import is_auto_field
 from model_reader import is_related
 from model_reader import is_required
@@ -74,7 +74,7 @@ def field_sample_values(field):
                     input_file = open(path, 'r')
                     list_field_values = [word[:-1] for word in input_file]
                 else:
-                    list_field_values = generate_values(field)
+                    list_field_values = generate_random_values(field)
     return list(list_field_values)
 
 
