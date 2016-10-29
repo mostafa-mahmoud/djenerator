@@ -32,13 +32,13 @@ def gender_name(variable, model, field):
     l = dict(variable)
     if 'gender' in l.keys() and 'name' in l.keys():
         return not ((l['gender'] == 'M') ^ (l['name'] in ['abdallah',
-                'adel', 'adham', 'ahmad', 'ahmed', 'ali', 'amr', 'eslam',
-                'farid', 'hassan', 'hesham', 'hisham', 'ibrahim', 'islam',
-                'kareem', 'karim', 'khalid', 'mahmod', 'mahmoud', 'medhat',
-                'michel', 'mina', "mo'men", 'mohamed', 'mohammed', 'mostafa',
-                'moustafa', 'muhammed', 'mustafa', 'nader', 'omar', 'ramy',
-                'ramzi', 'seif', 'tamer', 'usif',
-                'waleed', 'walid', 'youssef']))
+                    'adel', 'adham', 'ahmad', 'ahmed', 'ali', 'amr', 'eslam',
+                    'farid', 'hassan', 'hesham', 'hisham', 'ibrahim', 'islam',
+                    'kareem', 'karim', 'khalid', 'mahmod', 'mahmoud', 'medhat',
+                    'michel', 'mina', "mo'men", 'mohamed', 'mark', 'mostafa',
+                    'jakob', 'muhammed', 'mustafa', 'nader', 'omar', 'ramy',
+                    'ramzi', 'seif', 'tamer', 'usif', 'max', 'moritz',
+                    'waleed', 'walid', 'youssef']))
     else:
         return True
 
@@ -73,7 +73,7 @@ class Person(models.Model):
 
     def __unicode__(self):
         return "%s %s %s %s %s" % (self.gender, self.name,
-                self.last_name, self.address, str(self.job))
+                                   self.last_name, self.address, str(self.job))
 
 
 class Student(Person):
@@ -106,4 +106,4 @@ class Course(models.Model):
 
     def __unicode__(self):
         return "%s %s by %s" % (str(self.course_code),
-                self.course_name, str(self.person))
+                                self.course_name, str(self.person))

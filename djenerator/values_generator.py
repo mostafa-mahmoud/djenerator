@@ -139,7 +139,6 @@ def generate_text(max_length, exact=False):
     return str.join(' ', text)
 
 
-
 def generate_sentence(max_length, seperators=[' '], end_char=['.'],
                       exact=False):
     max_length -= bool(end_char)

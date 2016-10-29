@@ -18,7 +18,6 @@ from djenerator.values_generator import generate_date
 from djenerator.values_generator import generate_date_time
 from djenerator.values_generator import generate_decimal
 from djenerator.values_generator import generate_email
-from djenerator.values_generator import generate_int
 from djenerator.values_generator import generate_integer
 from djenerator.values_generator import generate_ip
 from djenerator.values_generator import generate_positive_integer
@@ -618,10 +617,9 @@ class TestFieldsGeneratorStringGenerators(TestCase):
                     self.assertRegexpMatches(gen_val, reg)
 
             gen_text = generate_text(length)
-            text_reg = '(?:(?:[a-zA-Z0-9]+\s?)+\.)+(?:\s(?:[a-zA-Z0-9]+\s?)+\.)*'
+            txt_re = '(?:(?:[a-zA-Z0-9]+\s?)+\.)+(?:\s(?:[a-zA-Z0-9]+\s?)+\.)*'
             self.assertLessEqual(len(gen_text), length)
-
-            self.assertRegexpMatches(gen_text, text_reg, gen_text)
+            self.assertRegexpMatches(gen_text, txt_re, gen_text)
 
 
 class TestFieldsGeneratorChar(TestCase):
@@ -701,10 +699,8 @@ class TestFieldsGeneratorChar(TestCase):
                 email_chars = set(email_chars)
 
                 self.assertFalse(existing_chars - email_chars,
-                                 "unallowed email characters " + 
+                                 "unallowed email characters " +
                                  str(existing_chars - email_chars))
-
-
 
 
 class TestFieldsGeneratorDateTime(TestCase):

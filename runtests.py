@@ -6,10 +6,10 @@ All rights reserved.
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
-    1. Redistributions of source code must retain the above copyright notice, 
+    1. Redistributions of source code must retain the above copyright notice,
        this list of conditions and the following disclaimer.
-    
-    2. Redistributions in binary form must reproduce the above copyright 
+
+    2. Redistributions in binary form must reproduce the above copyright
        notice, this list of conditions and the following disclaimer in the
        documentation and/or other materials provided with the distribution.
 
@@ -54,7 +54,7 @@ if not settings.configured:
             'django.contrib.sites',
 
             'djenerator',
-            
+
             'tests',
 
             'example',
@@ -64,8 +64,8 @@ if not settings.configured:
         SITE_ID=1,
     )
 
-#from django.test.simple import DjangoTestSuiteRunner
 from django.test.runner import DiscoverRunner
+
 
 def runtests(*test_args, **kwargs):
     if 'south' in settings.INSTALLED_APPS:
@@ -76,13 +76,16 @@ def runtests(*test_args, **kwargs):
         test_args = ['tests.tests']
     parent = dirname(abspath(__file__))
     sys.path.insert(0, parent)
-    test_runner = DiscoverRunner(verbosity=kwargs.get('verbosity', 1), interactive=kwargs.get('interactive', False), failfast=kwargs.get('failfast'))
+    test_runner = DiscoverRunner(verbosity=kwargs.get('verbosity', 1),
+                                 interactive=kwargs.get('interactive', False),
+                                 failfast=kwargs.get('failfast'))
     failures = test_runner.run_tests(test_args)
     sys.exit(failures)
 
 if __name__ == '__main__':
     parser = OptionParser()
-    parser.add_option('--failfast', action='store_true', default=False, dest='failfast')
+    parser.add_option('--failfast', action='store_true',
+                      default=False, dest='failfast')
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "example.settings")
     django.setup()
 
