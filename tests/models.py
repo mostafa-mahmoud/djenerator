@@ -274,3 +274,24 @@ class CycleE(models.Model):
 class CycleF(models.Model):
     fd = models.ForeignKey(CycleD)
     f = models.IntegerField()
+
+
+class AllFieldsModel(models.Model):
+    bigint_field = models.BigIntegerField()
+    int_field = models.IntegerField()
+    email_field = models.EmailField(max_length=40)
+    bool_field = models.BooleanField()
+    char_field = models.CharField(max_length=100)
+    comma_sep_int_field = models.CommaSeparatedIntegerField(max_length=20)
+    decimal_field = models.DecimalField()
+    datetime_field = models.DateTimeField()
+    date_field = models.DateField()
+    duration_field = models.DurationField()
+    float_field = models.FloatField()
+    null_bool_field = models.NullBooleanField()
+    pos_int_field = models.PositiveIntegerField()
+    small_pos_int_field = models.PositiveSmallIntegerField()
+    small_int_field = models.SmallIntegerField()
+    text_field = models.TextField(max_length=500)
+    time_field = models.TimeField()
+    gen_ip_field = models.GenericIPAddressField()

@@ -4,30 +4,33 @@ This module contains tests for djenerator app.
 """
 import datetime
 import itertools
-import models as mdls
+import os
 import random
 import re
 import tempfile
 from decimal import Decimal
 from django.db import models
+from django.db.models import Model
+from django.db.models.fields import BigIntegerField
+from django.db.models.fields import BooleanField
+from django.db.models.fields import CharField
+from django.db.models.fields import CommaSeparatedIntegerField
+from django.db.models.fields import DateField
+from django.db.models.fields import DateTimeField
+from django.db.models.fields import DecimalField
+from django.db.models.fields import DurationField
+from django.db.models.fields import EmailField
+from django.db.models.fields import FloatField
+from django.db.models.fields import GenericIPAddressField
+from django.db.models.fields import IntegerField
+from django.db.models.fields import NullBooleanField
+from django.db.models.fields import PositiveIntegerField
+from django.db.models.fields import PositiveSmallIntegerField
+from django.db.models.fields import SmallIntegerField
+from django.db.models.fields import TextField
+from django.db.models.fields import TimeField
 from django.test import TestCase
-from djenerator.values_generator import generate_big_integer
-from djenerator.values_generator import generate_boolean
-from djenerator.values_generator import generate_comma_separated_int
-from djenerator.values_generator import generate_date
-from djenerator.values_generator import generate_date_time
-from djenerator.values_generator import generate_decimal
-from djenerator.values_generator import generate_email
-from djenerator.values_generator import generate_int
-from djenerator.values_generator import generate_integer
-from djenerator.values_generator import generate_ip
-from djenerator.values_generator import generate_positive_integer
-from djenerator.values_generator import generate_positive_small_integer
-from djenerator.values_generator import generate_small_integer
-from djenerator.values_generator import generate_sentence
-from djenerator.values_generator import generate_string
-from djenerator.values_generator import generate_text
-from djenerator.values_generator import generate_time
+from djenerator.fields_generator import generate_values
 from djenerator.generate_test_data import create_model
 from djenerator.generate_test_data import dependencies
 from djenerator.generate_test_data import dfs
@@ -48,9 +51,28 @@ from djenerator.model_reader import list_of_models
 from djenerator.model_reader import module_import
 from djenerator.model_reader import names_of_fields
 from djenerator.model_reader import relation_type
+from djenerator.values_generator import generate_big_integer
+from djenerator.values_generator import generate_boolean
+from djenerator.values_generator import generate_comma_separated_int
+from djenerator.values_generator import generate_date
+from djenerator.values_generator import generate_date_time
+from djenerator.values_generator import generate_decimal
+from djenerator.values_generator import generate_email
+from djenerator.values_generator import generate_int
+from djenerator.values_generator import generate_integer
+from djenerator.values_generator import generate_ip
+from djenerator.values_generator import generate_positive_integer
+from djenerator.values_generator import generate_positive_small_integer
+from djenerator.values_generator import generate_small_integer
+from djenerator.values_generator import generate_sentence
+from djenerator.values_generator import generate_string
+from djenerator.values_generator import generate_text
+from djenerator.values_generator import generate_time
 from djenerator.utility import sort_unique_tuple
 from djenerator.utility import sort_unique_tuples
 from djenerator.utility import unique_items
+import models as mdls
+from models import AllFieldsModel
 from models import CycleA
 from models import CycleB
 from models import CycleC
@@ -77,6 +99,73 @@ from models import TestModelX
 from models import TestModelY
 
 
+class TestFieldToRandomGeneratorMatcher(TestCase):
+    def test(self):
+        fields = list_of_fields(AllFieldsModel)
+        present_types = list(map(lambda field: field.__class__, fields))
+        field_types = [BigIntegerField, BooleanField, CharField,
+                       CommaSeparatedIntegerField, DateField, DateTimeField,
+                       DecimalField, DurationField, EmailField, FloatField,
+                       GenericIPAddressField, IntegerField, NullBooleanField,
+                       PositiveIntegerField, PositiveSmallIntegerField,
+                       SmallIntegerField, TextField, TimeField]
+        self.assertFalse(set(field_types) - set(present_types),
+                         "All types should be present." +
+                         str(set(field_types) - set(present_types)))
+        for field in fields:
+            values = generate_values(field, 5)
+            self.assertLessEqual(len(values), 5)
+            self.assertGreaterEqual(len(values), 1)
+            for val in values:
+                if isinstance(field, IntegerField):
+                    self.assertTrue(isinstance(val, int), val)
+                if isinstance(field, EmailField):
+                    self.assertTrue(isinstance(val, str), val)
+                    email_reg = '\w+(?:\.\w+)*@(?:[A-Za-z0-9]+\.)+[A-Za-z]+'
+                    self.assertRegexpMatches(val, email_reg, val)
+                if isinstance(field, BooleanField):
+                    self.assertTrue(isinstance(val, bool), val)
+                if isinstance(field, CharField):
+                    self.assertTrue(isinstance(val, str), val)
+                    self.assertLessEqual(len(val), field.max_length)
+                if isinstance(field, CommaSeparatedIntegerField):
+                    self.assertTrue(isinstance(val, str), val)
+                    comma_sep_int_re = '\d{1,3}(?:,\d{3})*'
+                    self.assertRegexpMatches(val, comma_sep_int_re, val)
+                if isinstance(field, DateField):
+                    self.assertTrue(isinstance(val, datetime.date), val)
+                if isinstance(field, DateTimeField):
+                    self.assertTrue(isinstance(val, datetime.datetime), val)
+                if isinstance(field, DecimalField):
+                    self.assertTrue(isinstance(val, Decimal), val)
+                if isinstance(field, FloatField):
+                    self.assertTrue(isinstance(val, float), val)
+                if isinstance(field, GenericIPAddressField):
+                    self.assertTrue(isinstance(val, str), val)
+                    # TODO(mostafa-mahmoud): generate_ip_regex
+                if isinstance(field, PositiveIntegerField):
+                    self.assertTrue(isinstance(val, int), val)
+                    self.assertLessEqual(val, 2147483647, val)
+                    self.assertGreaterEqual(val, 0, val)
+                if isinstance(field, PositiveSmallIntegerField):
+                    self.assertTrue(isinstance(val, int), val)
+                    self.assertLessEqual(val, 32767, val)
+                    self.assertGreaterEqual(val, 0, val)
+                if isinstance(field, SmallIntegerField):
+                    self.assertTrue(isinstance(val, int), val)
+                    self.assertLessEqual(val, 32767, val)
+                    self.assertGreaterEqual(val, -32768, val)
+                if isinstance(field, TimeField):
+                    self.assertTrue(isinstance(val, datetime.time), val)
+                if isinstance(field, TextField):
+                    self.assertTrue(isinstance(val, str), val)
+                    self.assertLessEqual(len(val), field.max_length)
+                    text_re = '(?:(?:\w+\s?)+.)+'
+                    self.assertRegexpMatches(val, text_re, val)
+                if isinstance(field, DurationField):
+                    self.assertTrue(isinstance(val, datetime.timedelta), val)
+
+
 class TestInstanceOfDjangoModel(TestCase):
     def test(self):
         models = [TestModel0, TestModel1, TestModelA, TestModelB,
@@ -100,7 +189,7 @@ class TestListOfModels(TestCase):
                               TestModelFields, SuperClass, ExtendAbstract,
                               ExtendSuperClass, ProxyExtend, SuperAbstract,
                               TestModelFieldsTwo, CycleA, CycleB, CycleC,
-                              CycleD, CycleE, CycleF]),
+                              CycleD, CycleE, CycleF, AllFieldsModel]),
                          set(list_of_models(mdls, keep_abstract=True)))
         self.assertEqual(set([ExtendingModel, TestModel0, TestModel1,
                               TestModelA, TestModelB, TestModelC, TestModelD,
@@ -108,7 +197,7 @@ class TestListOfModels(TestCase):
                               TestModelFields, SuperClass, ExtendAbstract,
                               ExtendSuperClass, TestModelFieldsTwo,
                               ProxyExtend, CycleA, CycleB, CycleC, CycleD,
-                              CycleE, CycleF]),
+                              CycleE, CycleF, AllFieldsModel]),
                          set(list_of_models(mdls)))
 
 
@@ -500,6 +589,25 @@ class TestGenerateData(TestCase):
                                 self.assertTrue(val in r)
                             edges += 1
                         else:
+                            this_model = field.model
+                            while (this_model != Model and not
+                                   (hasattr(this_model, 'TestData') and
+                                    hasattr(this_model.TestData, field.name))
+                                   and not os.path.exists(
+                                    '%s/TestTemplates/sample__%s__%s' %
+                                    (this_model._meta.app_label,
+                                     this_model.__name__, field.name))):
+                                this_model = this_model.__base__
+                            if this_model == Model:
+                                self.assertEqual(model.__class__,
+                                                 AllFieldsModel)
+                                sample_values = field_sample_values(field)
+                                if val.__class__ == unicode:
+                                    val = str(val)
+                                self.assertTrue(val.__class__ in
+                                                map(lambda val: val.__class__,
+                                                    sample_values))
+                                continue
                             if (field.__class__.__name__ == 'DecimalField' or
                                field.__class__.__name__ == 'FloatField'):
                                 sample_values = map(float,
@@ -513,12 +621,12 @@ class TestGenerateData(TestCase):
                                                     field_sample_values(field))
                                 val = str(val)
                                 self.assertTrue(val in sample_values)
-            if model.__class__ == TestModelFields:
-                pr = (model.fieldC, model.fieldA)
-                self.assertFalse(pr in pairs)
-                pairs.append(pr)
-                self.assertTrue((model.fieldB < 50)
-                                or (model.fieldD / 2 % 2 == 1))
+                if model.__class__ == TestModelFields:
+                    pr = (model.fieldC, model.fieldA)
+                    self.assertFalse(pr in pairs)
+                    pairs.append(pr)
+                    self.assertTrue((model.fieldB < 50)
+                                    or (model.fieldD / 2 % 2 == 1))
         self.assertTrue(all(visited.values()),
                         "Not all the models with sample data are generated.")
 

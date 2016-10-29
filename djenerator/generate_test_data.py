@@ -4,11 +4,13 @@ This file generates random test data from sample given data for
 given models.
 """
 import inspect
+import os
 import random
 from django.core import management
 from django.core import serializers
 from django.db import connection
 from django.db.models import Model
+from fields_generator import generate_values
 from model_reader import is_auto_field
 from model_reader import is_related
 from model_reader import is_required
@@ -41,8 +43,8 @@ def field_sample_values(field):
             model = field.rel.to
             list_field_values = list(model.objects.all())
             if 'ManyToMany' in relation_type(field) and list_field_values:
-                sz = random.randint(1, len(list_field_values))
-                list_field_values = [random.sample(list_field_values, sz)]
+                siz = random.randint(1, len(list_field_values))
+                list_field_values = [random.sample(list_field_values, siz)]
         else:
             found = False
             if hasattr(field.model, 'TestData'):
@@ -68,10 +70,11 @@ def field_sample_values(field):
                 app_name = field.model._meta.app_label
                 path = '%s/TestTemplates/sample__%s__%s' % (app_name,
                        field.model.__name__, field.name)
-                input_file = open(path, 'r')
-                list_field_values = [word[:-1] for word in input_file]
-            # TODO(mostafa-mahmoud) : Generate totally randomized
-            #                         objects if the file is not found.
+                if os.path.exists(path):
+                    input_file = open(path, 'r')
+                    list_field_values = [word[:-1] for word in input_file]
+                else:
+                    list_field_values = generate_values(field)
     return list(list_field_values)
 
 

@@ -11,6 +11,7 @@ from django.db.models.fields import CommaSeparatedIntegerField
 from django.db.models.fields import DateField
 from django.db.models.fields import DateTimeField
 from django.db.models.fields import DecimalField
+from django.db.models.fields import DurationField
 from django.db.models.fields import EmailField
 from django.db.models.fields import FilePathField
 from django.db.models.fields import FloatField
@@ -25,7 +26,6 @@ from django.db.models.fields import TextField
 from django.db.models.fields import TimeField
 from django.db.models.fields import URLField
 from django.db.models.fields import UUIDField
-
 from values_generator import generate_big_integer
 from values_generator import generate_boolean
 from values_generator import generate_comma_separated_int
@@ -48,22 +48,18 @@ def generate_values(field, size=100):
 def generate_value(field):
     if isinstance(field, BigIntegerField):
         return generate_big_integer()
-    elif isinstance(field, IntegerField):
-        return generate_int()
     elif isinstance(field, EmailField):
         return generate_email(field.max_length)
     elif isinstance(field, BooleanField):
         return generate_boolean(field.null)
-    elif isinstance(field, CharField):
-        return generate_string(field.max_length)
     elif isinstance(field, CommaSeparatedIntegerField):
         return generate_comma_separated_int(field.max_length)
     elif isinstance(field, DecimalField):
         return generate_decimal(32, 8)
-    elif isinstance(field, DateField):
-        return generate_date_time().date()
     elif isinstance(field, DateTimeField):
         return generate_date_time()
+    elif isinstance(field, DateField):
+        return generate_date_time().date()
     elif isinstance(field, FloatField):
         return generate_float()
     elif isinstance(field, NullBooleanField):
@@ -78,8 +74,19 @@ def generate_value(field):
         return generate_small_integer()
     elif isinstance(field, TimeField):
         return generate_date_time().time()
+    elif isinstance(field, IntegerField):
+        return generate_int()
     elif isinstance(field, GenericIPAddressField):
         return generate_ip()
+    elif isinstance(field, DurationField):
+        t1 = generate_date_time()
+        t2 = generate_date_time()
+        if t1 < t2:
+            return t2 - t1
+        else:
+            return t1 - t2
+    elif isinstance(field, CharField):
+        return generate_string(field.max_length)
     elif isinstance(field, BinaryField):
         pass
     elif isinstance(field, URLField):

@@ -59,9 +59,10 @@ def generate_ip():
 
 def generate_comma_separated_int(max_length):
     parts = randint(0, (max_length - 1) / 4)
-    number = ['%.3d' % randint(0, 999) for _ in xrange(parts)]
     left = randint(1, min(3, max_length - 4 * parts))
-    return '%d,%s' % (randint(1, 10 ** left - 1), str.join(',', number))
+    number = [str(randint(1, 10 ** left - 1))]
+    number.extend('%.3d' % randint(0, 999) for _ in xrange(parts))
+    return str.join(',', number)
 
 
 def generate_string(max_length, lower=True, upper=True, digits=True,
