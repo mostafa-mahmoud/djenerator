@@ -8,7 +8,7 @@ from random import choice
 from random import randint
 
 
-def generate_integer(bits, negative_allowed=True):
+def generate_integer(bits=32, negative_allowed=True):
     length = randint(1, bits - 1) - 1
     positive = True
     if negative_allowed:
@@ -77,14 +77,14 @@ def generate_string(max_length, lower=True, upper=True, digits=True,
     if digits:
         allowed_characters.extend(chars_in_range('0', '9'))
     if special:
-        if special is True:
+        if (isinstance(special, list) or isinstance(special, tuple) or
+           isinstance(special, set)):
+            allowed_characters.extend(special)
+        elif special is True:
             allowed_characters.extend(chars_in_range('!', '/'))
             allowed_characters.extend(chars_in_range(':', '@'))
             allowed_characters.extend(chars_in_range('[', '`'))
             allowed_characters.extend(chars_in_range('{', '~'))
-        else:
-            if special.__class__ == list:
-                allowed_characters.extend(special)
     length = max_length
     if not exact_len:
         length = randint(1 - null_allowed, max_length)
@@ -125,6 +125,21 @@ def generate_time(auto_now=False):
     return generate_date_time(auto_now).time()
 
 
+def generate_text(max_length, exact=False):
+    sentences = randint(1, (max_length + 39) / 40)
+    rem_length = max_length
+    text = []
+    for idx in xrange(sentences):
+        length = rem_length / (sentences - idx)
+        length = min((rem_length) / (sentences - idx) + int(bool(idx)),
+                     randint(2, 7) * 6, rem_length - int(bool(idx)))
+        if length > 0:
+            text.append(generate_sentence(length, exact=exact))
+            rem_length -= len(text[-1]) + int(bool(idx))
+    return str.join(' ', text)
+
+
+
 def generate_sentence(max_length, seperators=[' '], end_char=['.'],
                       exact=False):
     max_length -= bool(end_char)
@@ -134,9 +149,15 @@ def generate_sentence(max_length, seperators=[' '], end_char=['.'],
     no_words = randint(1, (length + 1) / 2)
     average_word_length = (length - no_words + 1) / no_words * 2
     lengths = [randint(1, average_word_length) for _ in xrange(no_words)]
+    lengths.sort()
     tot = length - no_words + 1 - sum(lengths)
-    if tot < 0:
-        pass
+    while tot < 0 and lengths:
+        tot += lengths.pop()
+        tot += int(bool(lengths))
+        no_words -= 1
+    if tot > 1:
+        lengths.append(tot - 1)
+        no_words += 1
 
     words = [generate_string(word_length, True, False, False, False,
                              False, True) for word_length in lengths[:-1]]
@@ -150,6 +171,7 @@ def generate_decimal(max_digits, decimal_places):
     integer_part_len = max_digits - decimal_places
     integer_part = generate_string(integer_part_len, False, False, True,
                                    False, False, False)
+    integer_part = str(int(integer_part))
     decimal_part = generate_string(decimal_places, False, False, True,
                                    False, False, False)
     return Decimal('%s.%s' % (integer_part, decimal_part))
@@ -157,3 +179,13 @@ def generate_decimal(max_digits, decimal_places):
 
 def generate_float(max_digits=50, decimal_places=30):
     return float(generate_decimal(max_digits, decimal_places))
+
+
+def generate_email(max_length, exact_len=False):
+    dom = ['com', 'de', 'it', 'uk', 'edu', 'es', 'fr', 'eg']
+    tot_length = (max_length - 5) / 2
+    parts = [generate_string(tot_length, lower=True, upper=False, digits=True,
+                             special=False, null_allowed=False,
+                             exact_len=exact_len) for _ in xrange(2)]
+
+    return '%s@%s.%s' % (parts[0], parts[1], choice(dom))

@@ -17,6 +17,7 @@ from djenerator.values_generator import generate_comma_separated_int
 from djenerator.values_generator import generate_date
 from djenerator.values_generator import generate_date_time
 from djenerator.values_generator import generate_decimal
+from djenerator.values_generator import generate_email
 from djenerator.values_generator import generate_int
 from djenerator.values_generator import generate_integer
 from djenerator.values_generator import generate_ip
@@ -25,6 +26,7 @@ from djenerator.values_generator import generate_positive_small_integer
 from djenerator.values_generator import generate_small_integer
 from djenerator.values_generator import generate_sentence
 from djenerator.values_generator import generate_string
+from djenerator.values_generator import generate_text
 from djenerator.values_generator import generate_time
 from djenerator.generate_test_data import create_model
 from djenerator.generate_test_data import dependencies
@@ -605,7 +607,7 @@ class TestFieldsGeneratorNumbers(TestCase):
 
 class TestFieldsGeneratorStringGenerators(TestCase):
     def test(self):
-        for length in xrange(2, 50):
+        for length in xrange(3, 50):
             seperators = [['.'], ['-', '_'], ['@']]
             for sep in seperators:
                 for _ in xrange(20):
@@ -614,6 +616,12 @@ class TestFieldsGeneratorStringGenerators(TestCase):
                     self.assertLessEqual(len(gen_val), length * 2)
                     reg = '(?:\w+(?:%s))*\w+\.' % str.join('|', sep)
                     self.assertRegexpMatches(gen_val, reg)
+
+            gen_text = generate_text(length)
+            text_reg = '(?:(?:[a-zA-Z0-9]+\s?)+\.)+(?:\s(?:[a-zA-Z0-9]+\s?)+\.)*'
+            self.assertLessEqual(len(gen_text), length)
+
+            self.assertRegexpMatches(gen_text, text_reg, gen_text)
 
 
 class TestFieldsGeneratorChar(TestCase):
@@ -627,9 +635,12 @@ class TestFieldsGeneratorChar(TestCase):
             for length in lengths:
                 for tup in itertools.product(*zip(6 * [True], 6 * [False])):
                     lower, upper, digits, special, null_allowed, exact = tup
+                    if log < 3:
+                        special = ['@', '!', '~']
                     if not (lower or upper or digits or special):
                         continue
-                    gen_val = generate_string(length, *tup)
+                    gen_val = generate_string(length, lower, upper, digits,
+                                              special, null_allowed, exact)
                     existing_chars = set([])
 
                     for char in gen_val:
@@ -650,10 +661,20 @@ class TestFieldsGeneratorChar(TestCase):
                         excluded.extend(chr_range(':', '@'))
                         excluded.extend(chr_range('[', '`'))
                         excluded.extend(chr_range('{', '~'))
+                    else:
+                        if isinstance(special, list):
+                            special_excluded = []
+                            special_excluded.extend(chr_range('!', '/'))
+                            special_excluded.extend(chr_range(':', '@'))
+                            special_excluded.extend(chr_range('[', '`'))
+                            special_excluded.extend(chr_range('{', '~'))
+                            special_excluded = set(special_excluded)
+                            special_excluded = special_excluded - set(special)
+                            excluded.extend(list(special_excluded))
 
                     self.assertFalse(existing_chars & set(excluded),
-                                     str(existing_chars) + str(tup)
-                                     + str(excluded))
+                                     str(existing_chars) +
+                                     str(set(excluded) & existing_chars))
                     if exact:
                         self.assertEqual(len(gen_val), length)
                     elif not null_allowed:
@@ -661,6 +682,29 @@ class TestFieldsGeneratorChar(TestCase):
 
                     self.assertGreaterEqual(len(gen_val), 0)
                     self.assertLessEqual(len(gen_val), length)
+
+                email = generate_email(length)
+                self.assertLessEqual(len(email), length)
+                spt = str.split(email, '@')
+                self.assertEqual(len(spt), 2)
+
+                existing_chars = set([])
+
+                for char in email:
+                    existing_chars.add(char)
+
+                email_chars = []
+                email_chars.extend(chr_range('A', 'Z'))
+                email_chars.extend(chr_range('a', 'z'))
+                email_chars.extend(chr_range('0', '9'))
+                email_chars.extend(('@', '.'))
+                email_chars = set(email_chars)
+
+                self.assertFalse(existing_chars - email_chars,
+                                 "unallowed email characters " + 
+                                 str(existing_chars - email_chars))
+
+
 
 
 class TestFieldsGeneratorDateTime(TestCase):
