@@ -55,7 +55,7 @@ def generate_value(field):
     elif isinstance(field, CommaSeparatedIntegerField):
         return generate_comma_separated_int(field.max_length)
     elif isinstance(field, DecimalField):
-        return generate_decimal(32, 8)
+        return generate_decimal(field.max_digits, field.decimal_places)
     elif isinstance(field, DateTimeField):
         return generate_date_time()
     elif isinstance(field, DateField):
