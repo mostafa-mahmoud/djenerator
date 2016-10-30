@@ -27,8 +27,10 @@ from django.db.models.fields import NullBooleanField
 from django.db.models.fields import PositiveIntegerField
 from django.db.models.fields import PositiveSmallIntegerField
 from django.db.models.fields import SmallIntegerField
+from django.db.models.fields import SlugField
 from django.db.models.fields import TextField
 from django.db.models.fields import TimeField
+from django.db.models.fields import URLField
 from django.test import TestCase
 from djenerator.fields_generator import generate_random_values
 from djenerator.generate_test_data import create_model
@@ -128,7 +130,7 @@ class TestFieldToRandomGeneratorMatcher(TestCase):
                     self.assertTrue(isinstance(val, bool), val)
                 if isinstance(field, CharField):
                     self.assertTrue(isinstance(val, str), val)
-                    self.assertLessEqual(len(val), field.max_length)
+                    self.assertLessEqual(len(val), field.max_length, val)
                 if isinstance(field, CommaSeparatedIntegerField):
                     self.assertTrue(isinstance(val, str), val)
                     comma_sep_int_re = '\d{1,3}(?:,\d{3})*'
@@ -165,6 +167,15 @@ class TestFieldToRandomGeneratorMatcher(TestCase):
                     self.assertRegexpMatches(val, text_re, val)
                 if isinstance(field, DurationField):
                     self.assertTrue(isinstance(val, datetime.timedelta), val)
+                if isinstance(field, SlugField):
+                    self.assertTrue(isinstance(val, str), val)
+                    slug_re = '[a-zA-Z0-9_\-]+'
+                    self.assertRegexpMatches(val, slug_re, val)
+                if isinstance(field, URLField):
+                    url_re = '(?:http|ftp|https)://(?:[a-z0-9_\-]+\.?)+/?'
+                    url_re += '(?:/[a-z0-9_\-]+)*/?'
+                    self.assertTrue(isinstance(val, str), val)
+                    self.assertRegexpMatches(val, url_re, val)
 
 
 class TestInstanceOfDjangoModel(TestCase):

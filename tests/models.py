@@ -295,3 +295,5 @@ class AllFieldsModel(models.Model):
     text_field = models.TextField(max_length=500)
     time_field = models.TimeField()
     gen_ip_field = models.GenericIPAddressField()
+    url_field = models.URLField()
+    slug_field = models.SlugField()

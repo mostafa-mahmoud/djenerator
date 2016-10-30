@@ -140,8 +140,8 @@ def generate_text(max_length, exact=False):
     return str.join(' ', text)
 
 
-def generate_sentence(max_length, seperators=[' '], end_char=['.'],
-                      exact=False):
+def generate_sentence(max_length, lower=True, upper=False, digits=False,
+                      seperators=[' '], end_char=['.'], exact=False):
     max_length -= bool(end_char)
     length = max_length
     #if not exact:
@@ -159,11 +159,13 @@ def generate_sentence(max_length, seperators=[' '], end_char=['.'],
         lengths.append(tot - 1)
         no_words += 1
 
-    words = [generate_string(word_length, True, False, False, False,
-                             False, True) for word_length in lengths[:-1]]
-    words = map(lambda x: x + choice(seperators), words)
-    words.append(generate_string(lengths[-1], True, False, False,
-                                 False, False, True) + choice(end_char))
+    words = [generate_string(word_length, lower, upper, digits, False,
+                             False, True) for word_length in lengths]
+    words_endings = [choice(seperators) for _ in xrange(len(lengths) - 1)]
+    if not end_char:
+        end_char = ['']
+    words_endings.extend(choice(end_char))
+    words = map(lambda t: t[0] + t[1], zip(words, words_endings))
     return str.join('', words)
 
 
@@ -182,10 +184,32 @@ def generate_float(max_digits=50, decimal_places=30):
 
 
 def generate_email(max_length, exact_len=False):
-    dom = ['com', 'de', 'it', 'uk', 'edu', 'es', 'fr', 'eg']
+    dom = ['com', 'de', 'it', 'uk', 'edu', 'es', 'fr', 'eg', 'ru', 'pl', 'org',
+           'es', 'pk', 'jo', 'fe', 'se', 'tr', 'ch']
     tot_length = (max_length - 5) / 2
     parts = [generate_string(tot_length, lower=True, upper=False, digits=True,
                              special=False, null_allowed=False,
                              exact_len=exact_len) for _ in xrange(2)]
 
     return '%s@%s.%s' % (parts[0], parts[1], choice(dom))
+
+
+def generate_url(max_length):
+    dom = ['com', 'de', 'it', 'uk', 'edu', 'es', 'fr', 'eg', 'ru', 'pl', 'org',
+           'es', 'pk', 'jo', 'fe', 'se', 'tr', 'ch']
+    #domain = str.join('.', [generate_string(6, special=False)
+    #                        for _ in xrange(randint(2, 4))] + choice(dom))
+    domain = generate_sentence(randint(3, max_length - 11), lower=True,
+                               digits=True, seperators=['.'], end_char=['.'])
+    domain += choice(dom)
+    suburl = ''
+    if len(domain) + 8 < max_length:
+        suburl = choice(['', '/'])
+    if randint(1, 6) > 2 and len(domain) + len(suburl) + 10 < max_length:
+        suburl = '/'
+        suburl += generate_sentence(max_length - len(domain) - 8 - len(suburl),
+                                    digits=True, seperators=['.'],
+                                    end_char=['/', ''])
+        #suburl = str.join('', ['/' + generate_string(6, special=False)
+        #                       for _ in xrange(randint(2, 4))])
+    return '%s://%s%s' % (choice(['http', 'ftp', 'https']), domain, suburl)

@@ -39,6 +39,7 @@ from values_generator import generate_positive_integer
 from values_generator import generate_small_integer
 from values_generator import generate_string
 from values_generator import generate_text
+from values_generator import generate_url
 
 
 def generate_random_values(field, size=100):
@@ -94,6 +95,10 @@ def generate_random_value(field):
         return generate_positive_integer()
     elif isinstance(field, PositiveSmallIntegerField):
         return abs(generate_small_integer())
+    elif isinstance(field, URLField):
+        return generate_url(field.max_length)
+    elif isinstance(field, SlugField):
+        return generate_string(field.max_length, special=['_', '-'])
     elif isinstance(field, TextField):
         return generate_text(field.max_length)
     elif isinstance(field, SmallIntegerField):
@@ -115,11 +120,7 @@ def generate_random_value(field):
         return generate_string(field.max_length)
     elif isinstance(field, BinaryField):
         pass
-    elif isinstance(field, URLField):
-        pass
     elif isinstance(field, UUIDField):
-        pass
-    elif isinstance(field, SlugField):
         pass
     elif isinstance(field, FilePathField):
         pass
