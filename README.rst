@@ -14,10 +14,10 @@ How To Use
 ==========
 #. The app 'djenerator' needs to be added to the installed apps in the settings of the project.
 
-    * Note : when the data are generated, they are stored in a temporary database until they are serialized to a .json file.
+    * Note : when the data is being generated, it is stored in a temporary database until they are serialized to a JSON file.
 
 #. Sample data should be added for every field that is not a related field.
-   The sample data can be added by two ways.
+   The sample data can be added in two ways, if both didn't work, then djenerator will generate random values.
    The first way is by adding a class called TestData to the model description, such that for each non-related field in the model there's a corresponding variable with the same name should be added to the class TestData, the value of such variable will be the sample data, the sample data can be either a list/tuple of the sample values, or string containing a name of file(a sample value in each line) or a generator function with no arguments, as an example  
 
    Sample data given as a list ::
@@ -58,7 +58,7 @@ How To Use
           name = models.CharField(max_length=50)
 
           class TestData:
-              name = 'list_of_names'
+              name = 'file_list_of_names'
  
    The second way is by adding a file that contains the sample data with the signature 'sample__modelname__fieldname'; in this method there's no need for adding the class TestData.
     
@@ -67,7 +67,7 @@ How To Use
 
         class Course(models.Model):
             course_name = models.CharField(max_length=200)
-            course_code = models.IntegerField(unique=True)
+            course_code = models.IntegerField(unique=True) # here
             person = models.OneToOneField(Person, null=True)
             
             class TestData:
@@ -75,14 +75,14 @@ How To Use
                 course_code = codes
             
             class Meta:
-                unique_together = (('course_name', 'course_code'),)
+                unique_together = (('course_name', 'course_code'),) # here
 
-   Such constraints are handled in the application, but if there are custom constraints that needs to be added, then a function that returns true if and only if the required constraints are satisfied should be added.
+   Such constraints are handled in the application, but if there are custom constraints that need to be added, then a function that returns true if and only if the required constraints are satisfied should be added.
    The signature of the function will be as :: 
 
         predicate(current_values, reference_model, reference_field) 
 
-   where current_values is a list of ordered pairs in the form (field name, field value), reference_model is a reference to the class of the model being filled and reference_field is a reference to the class of field being filled. The function also should handle that some of the fields might not be found in current_values as they are not filled yet, in such a case the constraint shouldn't return false unless the field as already filled with a value that doesn't satisfy the constraints.
+   Where current_values is a list of ordered pairs in the form (field name, field value) which is a partial field assignment for the model, reference_model is a reference to the class of the model being filled and reference_field is a reference to the class of field being filled. The function also should handle that some of the fields might not be found in current_values as they are not filled yet, in such case the constraint shouldn't return false unless the partial field assignment doesn't satisfy the constraint.
    All the constraints functions should be added to a list, this list will be the value of a variable called 'constraints' that is nested in a class called 'Constraints' that is added for the description of the model, for example ::
         
         def gender_names(current_values, reference_model, reference_field):
@@ -134,5 +134,5 @@ Run the tests by running the command.::
 
 TODOs and BUGS
 ==============
-See: https://github.com/aelguindy/djenerator/issues 
+See: https://github.com/aelguindy/djenerator/issues
 

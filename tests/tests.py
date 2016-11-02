@@ -619,9 +619,8 @@ class TestGenerateData(TestCase):
                                 self.assertTrue(val.__class__ in
                                                 map(lambda val: val.__class__,
                                                     sample_values))
-                                continue
-                            if (field.__class__.__name__ == 'DecimalField' or
-                               field.__class__.__name__ == 'FloatField'):
+                            elif (field.__class__.__name__ == 'DecimalField' or
+                                  field.__class__.__name__ == 'FloatField'):
                                 sample_values = map(float,
                                                     field_sample_values(field))
                                 val = float(val)

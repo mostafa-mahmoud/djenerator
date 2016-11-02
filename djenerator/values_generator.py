@@ -197,8 +197,6 @@ def generate_email(max_length, exact_len=False):
 def generate_url(max_length):
     dom = ['com', 'de', 'it', 'uk', 'edu', 'es', 'fr', 'eg', 'ru', 'pl', 'org',
            'es', 'pk', 'jo', 'fe', 'se', 'tr', 'ch']
-    #domain = str.join('.', [generate_string(6, special=False)
-    #                        for _ in xrange(randint(2, 4))] + choice(dom))
     domain = generate_sentence(randint(3, max_length - 11), lower=True,
                                digits=True, seperators=['.'], end_char=['.'])
     domain += choice(dom)
@@ -210,6 +208,4 @@ def generate_url(max_length):
         suburl += generate_sentence(max_length - len(domain) - 8 - len(suburl),
                                     digits=True, seperators=['.'],
                                     end_char=['/', ''])
-        #suburl = str.join('', ['/' + generate_string(6, special=False)
-        #                       for _ in xrange(randint(2, 4))])
     return '%s://%s%s' % (choice(['http', 'ftp', 'https']), domain, suburl)
