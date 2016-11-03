@@ -1,0 +1,13 @@
+[run]
+branch = True
+
+[report]
+omit = 
+    *django*
+    *dist-packages*
+    example*
+
+exclude_lines =
+    pass
+    
+show_missing = True

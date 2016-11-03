@@ -5,23 +5,20 @@ A simple tool to generate test/random data from the model description of django.
 At this stage a very simple modification needs to be done to the model descriptions (a change that will not affect the execution of the django app).
 
 
-Name                             Stmts   Miss  Cover   Missing
---------------------------------------------------------------
-djenerator/__init__                  0      0   100%   
-djenerator/fields_generator         91      3    97%   122, 124, 126
-djenerator/generate_test_data      170      1    99%   41
-djenerator/management/__init__       0      0   100%   
-djenerator/model_reader             46      0   100%   
-djenerator/models                    0      0   100%   
-djenerator/utility                  44      0   100%   
-djenerator/values_generator        145      1    99%   166
-example/__init__                     0      0   100%   
-example/admin                        1      0   100%   
-example/models                      62     11    82%   11, 28, 32-43, 47, 75, 86, 90, 108
-runtests                            28      2    93%   72-73
-tests/__init__                       0      0   100%   
-tests/admin                          1      0   100%   
-tests/models                       209      7    97%   48, 59, 70, 85, 98, 108, 121
-tests/tests                        619      2    99%   191, 484
---------------------------------------------------------------
-TOTAL                             1416     27    98%   
+Name                             Stmts   Miss Branch BrMiss  Cover   Missing
+----------------------------------------------------------------------------
+djenerator/__init__                  0      0      0      0   100%   
+djenerator/fields_generator         88      0     42      0   100%   
+djenerator/generate_test_data      169      0     93      4    98%   
+djenerator/management/__init__       0      0      0      0   100%   
+djenerator/model_reader             46      0     21      0   100%   
+djenerator/models                    0      0      0      0   100%   
+djenerator/utility                  44      0     22      0   100%   
+djenerator/values_generator        145      1     53      4    97%   166
+runtests                            28      2      8      4    83%   72-73
+tests/__init__                       0      0      0      0   100%   
+tests/admin                          1      0      0      0   100%   
+tests/models                       207      7      2      0    97%   48, 59, 70, 85, 98, 108, 121
+tests/tests                        618      1    153      2    99%   484
+----------------------------------------------------------------------------
+TOTAL                             1346     11    394     14    99%   
