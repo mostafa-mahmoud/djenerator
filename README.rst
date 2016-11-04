@@ -134,5 +134,4 @@ Run the tests by running the command.::
 
 TODOs and BUGS
 ==============
-See: https://github.com/aelguindy/djenerator/issues
-
+See: https://github.com/mostafa-mahmoud/djenerator/issues

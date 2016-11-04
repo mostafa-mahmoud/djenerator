@@ -8,6 +8,7 @@ import os
 import random
 import re
 import tempfile
+import uuid
 from decimal import Decimal
 from django.db import models
 from django.db.models import Model
@@ -20,6 +21,7 @@ from django.db.models.fields import DateTimeField
 from django.db.models.fields import DecimalField
 from django.db.models.fields import DurationField
 from django.db.models.fields import EmailField
+from django.db.models.fields import FilePathField
 from django.db.models.fields import FloatField
 from django.db.models.fields import GenericIPAddressField
 from django.db.models.fields import IntegerField
@@ -31,6 +33,7 @@ from django.db.models.fields import SlugField
 from django.db.models.fields import TextField
 from django.db.models.fields import TimeField
 from django.db.models.fields import URLField
+from django.db.models.fields import UUIDField
 from django.test import TestCase
 from djenerator.fields_generator import generate_random_values
 from djenerator.generate_test_data import create_model
@@ -70,6 +73,7 @@ from djenerator.values_generator import generate_sentence
 from djenerator.values_generator import generate_string
 from djenerator.values_generator import generate_text
 from djenerator.values_generator import generate_time
+from djenerator.values_generator import generate_url
 from djenerator.utility import sort_unique_tuple
 from djenerator.utility import sort_unique_tuples
 from djenerator.utility import unique_items
@@ -124,7 +128,7 @@ class TestFieldToRandomGeneratorMatcher(TestCase):
                     self.assertTrue(isinstance(val, int), val)
                 if isinstance(field, EmailField):
                     self.assertTrue(isinstance(val, str), val)
-                    email_reg = '\w+(?:\.\w+)*@(?:[A-Za-z0-9]+\.)+[A-Za-z]+'
+                    email_reg = r'^\w+(?:\.\w+)*@(?:[A-Za-z0-9]+\.)+[A-Za-z]+$'
                     self.assertRegexpMatches(val, email_reg, val)
                 if isinstance(field, BooleanField):
                     self.assertTrue(isinstance(val, bool), val)
@@ -133,7 +137,7 @@ class TestFieldToRandomGeneratorMatcher(TestCase):
                     self.assertLessEqual(len(val), field.max_length, val)
                 if isinstance(field, CommaSeparatedIntegerField):
                     self.assertTrue(isinstance(val, str), val)
-                    comma_sep_int_re = '\d{1,3}(?:,\d{3})*'
+                    comma_sep_int_re = r'^\d{1,3}(?:,\d{3})*$'
                     self.assertRegexpMatches(val, comma_sep_int_re, val)
                 if isinstance(field, DateField):
                     self.assertTrue(isinstance(val, datetime.date), val)
@@ -145,7 +149,8 @@ class TestFieldToRandomGeneratorMatcher(TestCase):
                     self.assertTrue(isinstance(val, float), val)
                 if isinstance(field, GenericIPAddressField):
                     self.assertTrue(isinstance(val, str), val)
-                    # TODO(mostafa-mahmoud): generate_ip_regex
+                    ip_regex = r'^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$'
+                    self.assertRegexpMatches(val, ip_regex, val)
                 if isinstance(field, PositiveIntegerField):
                     self.assertTrue(isinstance(val, int), val)
                     self.assertLessEqual(val, 2147483647, val)
@@ -163,19 +168,24 @@ class TestFieldToRandomGeneratorMatcher(TestCase):
                 if isinstance(field, TextField):
                     self.assertTrue(isinstance(val, str), val)
                     self.assertLessEqual(len(val), field.max_length)
-                    text_re = '(?:(?:\w+\s?)+.)+'
+                    text_re = r'^(?:(?:\w+\s?)+\.\s?)+$'
                     self.assertRegexpMatches(val, text_re, val)
                 if isinstance(field, DurationField):
                     self.assertTrue(isinstance(val, datetime.timedelta), val)
                 if isinstance(field, SlugField):
                     self.assertTrue(isinstance(val, str), val)
-                    slug_re = '[a-zA-Z0-9_\-]+'
+                    slug_re = r'^[a-zA-Z0-9_\-]+$'
                     self.assertRegexpMatches(val, slug_re, val)
                 if isinstance(field, URLField):
-                    url_re = '(?:http|ftp|https)://(?:[a-z0-9_\-]+\.?)+/?'
-                    url_re += '(?:/[a-z0-9_\-]+)*/?'
+                    url_re = r'^(?:http|ftp|https)://(?:[a-z0-9_\-]+\.?)+/?'
+                    url_re += r'(?:/[a-z0-9_\-]+)*/?$'
                     self.assertTrue(isinstance(val, str), val)
                     self.assertRegexpMatches(val, url_re, val)
+                if isinstance(field, UUIDField):
+                    self.assertTrue(isinstance(val, uuid.UUID), val)
+                if isinstance(field, FilePathField):
+                    self.assertTrue(isinstance(val, str), val)
+                    self.assertTrue(os.path.exists(val), val)
 
 
 class TestInstanceOfDjangoModel(TestCase):
@@ -656,25 +666,31 @@ class TestFieldsGeneratorNumbers(TestCase):
         counts = {}
         for times in xrange(100):
             for bits in xrange(2, 64):
-                for negative_allowed in xrange(0, 1):
+                for negative_allowed in xrange(0, 2):
                     gen_val = generate_integer(bits, negative_allowed)
 
                     self.assertIn(gen_val.__class__, [int, long])
-                    self.assertLess(abs(gen_val), 2 ** bits)
                     if not negative_allowed:
                         self.assertGreaterEqual(gen_val, 0)
+                        self.assertLess(gen_val, 2 ** (bits - 1))
+                    else:
+                        self.assertGreaterEqual(gen_val, -2 ** (bits - 1))
+                        self.assertLess(gen_val, 2 ** (bits - 1))
 
             gen_val = generate_int()
             self.assertEqual(gen_val.__class__, int)
-            self.assertLess(abs(gen_val), 2 ** 31)
+            self.assertLessEqual(abs(gen_val), 2 ** 31)
+            self.assertLess(gen_val, 2 ** 31)
 
             gen_val = generate_big_integer()
             self.assertIn(gen_val.__class__, [int, long])
-            self.assertLess(abs(gen_val), 2 ** 63)
+            self.assertLessEqual(abs(gen_val), 2 ** 63)
+            self.assertLess(gen_val, 2 ** 63)
 
             gen_val = generate_small_integer()
             self.assertEqual(gen_val.__class__, int)
-            self.assertLess(abs(gen_val), 2 ** 15)
+            self.assertLessEqual(abs(gen_val), 2 ** 15)
+            self.assertLess(gen_val, 2 ** 15)
 
             gen_val = generate_positive_integer()
             self.assertIn(gen_val.__class__, [int, long])
@@ -694,16 +710,17 @@ class TestFieldsGeneratorNumbers(TestCase):
 
             gen_val = generate_ip()
             self.assertEqual(gen_val.__class__, str)
-            match = re.search(r'(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})',
-                              gen_val)
+            ip_regex = r'^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$'
+            match = re.search(ip_regex, gen_val)
+            self.assertRegexpMatches(gen_val, ip_regex)
             self.assertIsNotNone(match)
             match = map(int, match.groups())
             self.assertTrue(all([x in range(256) for x in match]))
 
             gen_val = generate_comma_separated_int(random.randint(1, 1000))
             self.assertEqual(gen_val.__class__, str)
-            match = re.search(r'\d{1,3}(:?,\d{3})*', gen_val)
-            self.assertIsNotNone(match)
+            comma_sep_regex = r'^\d{1,3}(?:,\d{3})*$'
+            self.assertRegexpMatches(gen_val, comma_sep_regex)
 
             for digits in xrange(50):
                 for decimal in xrange(1, digits):
@@ -719,34 +736,47 @@ class TestFieldsGeneratorNumbers(TestCase):
                     self.assertLessEqual(len(gen_val), digits + 1, gen_val)
                     self.assertLessEqual(len(gen_val.split('.')[1]),
                                          decimal + (decimal == 0), gen_val)
-            # TODO(mostafa-mahmoud): Test generate_float
 
 
 class TestFieldsGeneratorStringGenerators(TestCase):
     def test(self):
+        for length in xrange(1, 3):
+            gen_sentence = generate_sentence(length)
+            self.assertEqual(len(gen_sentence), length)
+
         for length in xrange(3, 50):
             seperators = [['.'], ['-', '_'], ['@']]
             for sep in seperators:
                 for _ in xrange(20):
-                    gen_val = generate_sentence(length, sep)
+                    gen_val = generate_sentence(length, seperators=sep)
                     self.assertEqual(gen_val.__class__, str)
                     self.assertLessEqual(len(gen_val), length * 2)
-                    reg = '(?:\w+(?:%s))*\w+\.' % str.join('|', sep)
+                    reg = r'^(?:\w+(?:%s))*\w+\.$' % str.join('|', sep)
                     self.assertRegexpMatches(gen_val, reg)
 
             gen_text = generate_text(length)
-            txt_re = '(?:(?:\w+\s?)+\.)+(?:\s(?:\w+\s?)+\.)*'
+            txt_re = r'^(?:(?:\w+\s?)+\.)+(?:\s(?:\w+\s?)+\.)*$'
             self.assertLessEqual(len(gen_text), length)
             self.assertRegexpMatches(gen_text, txt_re, gen_text)
 
             gen_sentence = generate_sentence(length)
             self.assertLessEqual(len(gen_sentence), length)
-            sent_re = '(?:\w+\s?)+\.'
+            sent_re = r'^(?:\w+\s?)+\.$'
+            self.assertRegexpMatches(gen_sentence, sent_re, gen_sentence)
+
+            gen_sentence = generate_sentence(length, end_char=['', '.'])
+            self.assertLessEqual(len(gen_sentence), length)
+            sent_re = r'^(?:\w+\s?)+\.?$'
+            self.assertRegexpMatches(gen_sentence, sent_re, gen_sentence)
+
+            gen_sentence = generate_sentence(length, end_char=None)
+            self.assertLessEqual(len(gen_sentence), length)
+            sent_re = r'^(?:\w+\s?)+$'
             self.assertRegexpMatches(gen_sentence, sent_re, gen_sentence)
 
             gen_sentence = generate_sentence(length, end_char=['.', ','])
             self.assertLessEqual(len(gen_sentence), length)
-            sent_re = '(?:\w+\s?)+[\.,]'
+            sent_re = r'^(?:\w+\s?)+[\.,]$'
             self.assertRegexpMatches(gen_sentence, sent_re, gen_sentence)
 
 
@@ -755,12 +785,13 @@ class TestFieldsGeneratorChar(TestCase):
         ascii_val = dict([(chr(n), n) for n in xrange(128)])
         ascii_rng = lambda beg, end: xrange(ascii_val[beg], ascii_val[end] + 1)
         chr_range = lambda beg, end: map(chr, ascii_rng(beg, end))
-        for log in xrange(1, 6):
-            lengths = random.sample(range(10 ** log, 10 ** (log + 1)), 10)
+        for log in xrange(0, 6):
+            lengths = random.sample(range(10 ** log,
+                                          10 ** (log + 1) + 1 - bool(log)), 10)
             for length in lengths:
                 for tup in itertools.product(*zip(6 * [True], 6 * [False])):
                     lower, upper, digits, special, null_allowed, exact = tup
-                    if log < 3:
+                    if random.randint(1, 6) < 3:
                         special = ['@', '!', '~']
                     if not (lower or upper or digits or special):
                         continue
@@ -809,9 +840,19 @@ class TestFieldsGeneratorChar(TestCase):
                     self.assertLessEqual(len(gen_val), length)
 
                 email = generate_email(length)
+                self.assertTrue(isinstance(email, str), email)
                 self.assertLessEqual(len(email), length)
-                email_regex = '\w+(?:\.\w+)*@(?:[A-Za-z0-9]+\.)+[A-Za-z]+'
-                self.assertRegexpMatches(email, email_regex)
+                if length >= 7:
+                    email_reg = r'^\w+(?:\.\w+)*@(?:[A-Za-z0-9]+\.)+[A-Za-z]+$'
+                    self.assertRegexpMatches(email, email_reg)
+
+                url = generate_url(length)
+                self.assertTrue(isinstance(url, str), url)
+                self.assertLessEqual(len(url), length)
+                if length >= 16:
+                    url_re = r'^(?:http|ftp|https)://(?:[a-z0-9_\-]+\.?)+/?'
+                    url_re += r'(?:/[a-z0-9_\-]+)*/?$'
+                    self.assertRegexpMatches(url, url_re)
 
 
 class TestFieldsGeneratorDateTime(TestCase):

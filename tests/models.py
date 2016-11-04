@@ -297,3 +297,5 @@ class AllFieldsModel(models.Model):
     gen_ip_field = models.GenericIPAddressField()
     url_field = models.URLField()
     slug_field = models.SlugField()
+    uuid_field = models.UUIDField()
+    file_path_field = models.FilePathField()

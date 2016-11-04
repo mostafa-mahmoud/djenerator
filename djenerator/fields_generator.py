@@ -32,6 +32,7 @@ from values_generator import generate_comma_separated_int
 from values_generator import generate_date_time
 from values_generator import generate_decimal
 from values_generator import generate_email
+from values_generator import generate_file_path
 from values_generator import generate_float
 from values_generator import generate_int
 from values_generator import generate_ip
@@ -40,6 +41,7 @@ from values_generator import generate_small_integer
 from values_generator import generate_string
 from values_generator import generate_text
 from values_generator import generate_url
+from values_generator import generate_uuid
 
 
 def generate_random_values(field, size=100):
@@ -72,7 +74,11 @@ def generate_random_value(field):
 
     Returns:
         A random value generated for the given field.
+
+    Note:
+        The fields ImageField, FileField, BinaryField are not handled yet.
     """
+    # TODO(mostafa-mahmoud): ImageField, FileField, BinaryField
     if isinstance(field, BigIntegerField):
         return generate_big_integer()
     elif isinstance(field, EmailField):
@@ -91,10 +97,10 @@ def generate_random_value(field):
         return generate_float()
     elif isinstance(field, NullBooleanField):
         return generate_boolean(null_allowed=True)
-    elif isinstance(field, PositiveIntegerField):
-        return generate_positive_integer()
     elif isinstance(field, PositiveSmallIntegerField):
         return abs(generate_small_integer())
+    elif isinstance(field, PositiveIntegerField):
+        return generate_positive_integer()
     elif isinstance(field, URLField):
         return generate_url(field.max_length)
     elif isinstance(field, SlugField):
@@ -118,10 +124,7 @@ def generate_random_value(field):
             return t1 - t2
     elif isinstance(field, CharField):
         return generate_string(field.max_length)
-    elif isinstance(field, BinaryField):
-        pass
     elif isinstance(field, UUIDField):
-        pass
+        return generate_uuid()
     elif isinstance(field, FilePathField):
-        pass
-    # TODO(mostafa-mahmoud): ImageField, FileField
+        return generate_file_path()

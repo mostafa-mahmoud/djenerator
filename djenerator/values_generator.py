@@ -3,16 +3,22 @@
 This module has functions that generated random values for django fields.
 """
 import datetime
+import os
+import uuid
 from decimal import Decimal
+from itertools import ifilter
+from itertools import imap
+from itertools import islice
 from random import choice
 from random import randint
+from random import shuffle
 
 
 def generate_integer(bits=32, negative_allowed=True):
     length = randint(1, bits - 1) - 1
     positive = True
     if negative_allowed:
-        positive = bool(randint(0, 1))
+        positive = choice([True, False])
     if positive:
         low = (1 << length)
         high = 2 * low - 1
@@ -60,7 +66,7 @@ def generate_ip():
 def generate_comma_separated_int(max_length):
     parts = randint(0, (max_length - 1) / 4)
     left = randint(1, min(3, max_length - 4 * parts))
-    number = [str(randint(1, 10 ** left - 1))]
+    number = [str(randint(int(bool(parts)), 10 ** left - 1))]
     number.extend('%.3d' % randint(0, 999) for _ in xrange(parts))
     return str.join(',', number)
 
@@ -127,7 +133,7 @@ def generate_time(auto_now=False):
 
 
 def generate_text(max_length, exact=False):
-    sentences = randint(1, (max_length + 39) / 40)
+    sentences = randint(1, max((max_length + 39) / 60, (max_length + 39) / 40))
     rem_length = max_length
     text = []
     for idx in xrange(sentences):
@@ -142,29 +148,34 @@ def generate_text(max_length, exact=False):
 
 def generate_sentence(max_length, lower=True, upper=False, digits=False,
                       seperators=[' '], end_char=['.'], exact=False):
-    max_length -= bool(end_char)
+    if max_length < 3:
+        return generate_string(max_length, lower, upper, digits, special=False,
+                               null_allowed=True, exact_len=True)
+    if not end_char:
+        end_char = ['']
+    max_length -= bool(end_char) and bool(any(char for char in end_char))
     length = max_length
-    #if not exact:
-    #    length = randint(1, max_length)
-    no_words = randint(1, (length + 1) / 2)
-    average_word_length = (length - no_words + 1) / no_words * 2
-    lengths = [randint(1, average_word_length) for _ in xrange(no_words)]
+    if not exact and length >= 5:
+        length = randint(1, max_length)
+    a = 5.0 / 6.0
+    no_words = randint(1, int(2 * length * (1 - a) + 1 - 2 * a) + 1)
+    max_word_length = int((length + 1) / no_words * a)
+    lengths = [randint(1, max_word_length) for _ in xrange(no_words)]
     lengths.sort()
     tot = length - no_words + 1 - sum(lengths)
     while tot < 0 and lengths:
         tot += lengths.pop()
         tot += int(bool(lengths))
         no_words -= 1
-    if tot > 1:
+    if tot > 1 and (exact or randint(0, 1) == 0 or not lengths):
         lengths.append(tot - 1)
         no_words += 1
+    shuffle(lengths)
 
     words = [generate_string(word_length, lower, upper, digits, False,
                              False, True) for word_length in lengths]
     words_endings = [choice(seperators) for _ in xrange(len(lengths) - 1)]
-    if not end_char:
-        end_char = ['']
-    words_endings.extend(choice(end_char))
+    words_endings.append(choice(end_char))
     words = map(lambda t: t[0] + t[1], zip(words, words_endings))
     return str.join('', words)
 
@@ -184,6 +195,8 @@ def generate_float(max_digits=50, decimal_places=30):
 
 
 def generate_email(max_length, exact_len=False):
+    if max_length < 7:
+        return ''
     dom = ['com', 'de', 'it', 'uk', 'edu', 'es', 'fr', 'eg', 'ru', 'pl', 'org',
            'es', 'pk', 'jo', 'fe', 'se', 'tr', 'ch']
     tot_length = (max_length - 5) / 2
@@ -195,6 +208,8 @@ def generate_email(max_length, exact_len=False):
 
 
 def generate_url(max_length):
+    if max_length < 16:
+        return ''
     dom = ['com', 'de', 'it', 'uk', 'edu', 'es', 'fr', 'eg', 'ru', 'pl', 'org',
            'es', 'pk', 'jo', 'fe', 'se', 'tr', 'ch']
     domain = generate_sentence(randint(3, max_length - 11), lower=True,
@@ -206,6 +221,19 @@ def generate_url(max_length):
     if randint(1, 6) > 2 and len(domain) + len(suburl) + 10 < max_length:
         suburl = '/'
         suburl += generate_sentence(max_length - len(domain) - 8 - len(suburl),
-                                    digits=True, seperators=['.'],
+                                    digits=True, seperators=[''],
                                     end_char=['/', ''])
     return '%s://%s%s' % (choice(['http', 'ftp', 'https']), domain, suburl)
+
+
+def generate_uuid():
+    return uuid.uuid4()
+
+
+def generate_file_path():
+    walk = os.walk(os.getcwd())
+    flt = ifilter(lambda path: not any(p.startswith('.')
+                                       for p in path[0]), walk)
+    flt = imap(lambda path: path[0], flt)
+    flt = islice(flt, 1000)
+    return choice(list(flt))
