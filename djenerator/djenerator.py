@@ -19,6 +19,10 @@ def djenerator(app_path, size, output_file, **size_options):
         app_path : A string that contains the path of the app.
         size : The number of models generated for each model in the models.
         output_file : A file object in which the data will be dumped.
+        size_options : A dictionary that maps model_names to an integer,
+                       which is the number of generated instances for
+                       the model. If a model isn't in size_options, then the
+                       default 'size' will be used.
 
     Returns:
         None
