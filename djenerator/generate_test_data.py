@@ -298,7 +298,7 @@ def recompute(model, field):
                 mdl.save()
 
 
-def generate_test_data(app_models, size):
+def generate_test_data(app_models, size, **size_options):
     """ Generate test data
     Generates a list of 'size' random data for each model in the models module
     in the given path, If the sample data is not enough for generating 'size'
@@ -314,7 +314,10 @@ def generate_test_data(app_models, size):
         None.
     """
     models = topological_sort(list_of_models(module_import(app_models)))
-    to_be_computed = [generate_model(model, size) for model in models]
+    to_be_computed = [generate_model(model,
+                      (model.__name__ in size_options.keys()
+                       and size_options[model.__name__]) or size,
+                      True) for model in models]
     precomp = set([])
     for mdl, flds in to_be_computed:
         for fld in flds:

@@ -655,7 +655,8 @@ class TestGenerateData(TestCase):
 class TestDjenerator(TestCase):
     def test(self):
         fl = tempfile.TemporaryFile()
-        djenerator('tests', 1, fl)
+        djenerator('tests', 1, fl, **{'AllFieldsModel': 20})
+        self.assertEqual(len(AllFieldsModel.objects.all()), 20)
         fl.seek(0)
         length = len(fl.read())
         self.assertGreater(length, 600)
