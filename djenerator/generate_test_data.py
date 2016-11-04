@@ -6,9 +6,7 @@ given models.
 import inspect
 import os
 import random
-from django.core import management
 from django.core import serializers
-from django.db import connection
 from django.db.models import Model
 from fields_generator import generate_random_values
 from model_reader import is_auto_field
@@ -318,28 +316,8 @@ def generate_test_data(app_models, size):
     models = topological_sort(list_of_models(module_import(app_models)))
     to_be_computed = [generate_model(model, size) for model in models]
     precomp = set([])
-    for mdlfld in to_be_computed:
-        mdl = mdlfld[0]
-        for fld in mdlfld[1]:
+    for mdl, flds in to_be_computed:
+        for fld in flds:
             if (mdl, fld.name) not in precomp:
                 precomp.add((mdl, fld.name))
                 recompute(mdl, fld)
-
-
-def djenerator(app_path, size, output_file, printing=None):
-    """ djenerator
-    Generates a sample data for all models in a given app
-    and export the data to a .json file.
-
-    Args :
-        app_path : A string that contains the path of the app.
-        size : The number of models generated for each model in the models.
-        output_file : a file object in which the data will be dumped.
-
-    Returns:
-        None
-
-    """
-    db_name = connection.creation.create_test_db()
-    generate_test_data(app_path + '.models', size)
-    management.call_command("dumpdata", app_path, stdout=output_file, indent=2)

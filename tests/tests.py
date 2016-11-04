@@ -35,11 +35,11 @@ from django.db.models.fields import TimeField
 from django.db.models.fields import URLField
 from django.db.models.fields import UUIDField
 from django.test import TestCase
+from djenerator.djenerator import djenerator
 from djenerator.fields_generator import generate_random_values
 from djenerator.generate_test_data import create_model
 from djenerator.generate_test_data import dependencies
 from djenerator.generate_test_data import dfs
-from djenerator.generate_test_data import djenerator
 from djenerator.generate_test_data import field_sample_values
 from djenerator.generate_test_data import generate_model
 from djenerator.generate_test_data import generate_test_data
@@ -655,7 +655,7 @@ class TestGenerateData(TestCase):
 class TestDjenerator(TestCase):
     def test(self):
         fl = tempfile.TemporaryFile()
-        djenerator('tests', 1, fl, printing=False)
+        djenerator('tests', 1, fl)
         fl.seek(0)
         length = len(fl.read())
         self.assertGreater(length, 600)

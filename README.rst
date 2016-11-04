@@ -118,13 +118,26 @@ How To Use
 
 #. The generation of data are then done by a command using manage.py file in the project::
 
-        python manage.py generate number app_name output_file
+        python manage.py jenerate size app_name output_file
+   
+   There's another command that can be used for data generation, in this case the generated data will be dumped in the database::
+
+        python manage.py jendb size app_name
 
    for example if there is an app called 'example', and I need to generate 20 of each model in the models description file, and put them to a file called 'hello.json', I would run the command ::
    
-        python manage.py generate 20 example hello
+        python manage.py jenerate 20 example hello
+        python manage.py jendb 20 example
     
    The arguments of the command follow the convention, I want 'number' sample models for each model in the app 'app_name', and store them in 'output_file'.
+
+#. Djenerator can be used inside code as well, one needs to call the function 'djenerator' located in the module djenerator.djenerator. (Those are 3 djenerator's inside djenerator, yes) ::
+    
+        from djenerator.djenerator import djenerator
+        djenerator(app_path, size, output_file)
+    
+   where 'app_path' is the app name, 'size' is the sample size to be generated for each model, and 'output_file' is a file object in which the data will be dumped. If the file is None, then the data will be dumped into the database.
+   
 
 Running the tests
 =================
