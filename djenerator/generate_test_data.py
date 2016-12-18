@@ -76,7 +76,8 @@ def field_sample_values(field):
     return list(list_field_values)
 
 
-def dfs(cur_tuple, index, to_be_computed, constraints, model, to_be_shuffled):
+def dfs(instances, cur_tuple, index, to_be_computed, constraints,
+        model, to_be_shuffled):
     """ Depth first search
 
     Generates values for the fields of a given model by simulating
@@ -114,11 +115,10 @@ def dfs(cur_tuple, index, to_be_computed, constraints, model, to_be_shuffled):
 
     """
     fields = list_of_fields(model)
-    if dfs.size <= 0:
-        return True
     if index >= len(fields):
-        dfs.size -= 1
+        dfs.total += 1
         create_model(model, cur_tuple)
+        return 1
     else:
         list_field_values = field_sample_values(fields[index])
         if not list_field_values:
@@ -129,12 +129,13 @@ def dfs(cur_tuple, index, to_be_computed, constraints, model, to_be_shuffled):
             if many_to_many_related or optional_field or auto_fld:
                 if not is_auto_field(fields[index]):
                     to_be_computed.append(fields[index])
-                return dfs(cur_tuple, index + 1, to_be_computed,
+                return dfs(instances, cur_tuple, index + 1, to_be_computed,
                            constraints, model, to_be_shuffled)
         else:
             if to_be_shuffled:
                 random.shuffle(list_field_values)
-            for nxt_field in list_field_values:
+            instances_so_far = 0
+            for field_id, nxt_field in enumerate(list_field_values):
                 new_tuple = cur_tuple[:]
                 new_tuple.append((fields[index].name, nxt_field))
                 are_constraints_satisfied = True
@@ -143,10 +144,17 @@ def dfs(cur_tuple, index, to_be_computed, constraints, model, to_be_shuffled):
                         are_constraints_satisfied = False
                         break
                 if are_constraints_satisfied:
-                    is_done = dfs(new_tuple, index + 1, to_be_computed,
-                                  constraints, model, to_be_shuffled)
-                    if is_done:
-                        return True
+                    instances_remaining = instances - instances_so_far
+                    remaining_values = len(list_field_values) - field_id
+                    value_instances = ((instances_remaining - 1 +
+                                       remaining_values) / remaining_values)
+                    new_instances = dfs(value_instances, new_tuple, index + 1,
+                                        to_be_computed, constraints, model,
+                                        to_be_shuffled)
+                    instances_so_far += new_instances
+                    if instances_so_far >= instances or dfs.total >= dfs.size:
+                        return instances_so_far
+            return instances_so_far
 
 
 def generate_model(model, size, shuffle=None):
@@ -182,7 +190,8 @@ def generate_model(model, size, shuffle=None):
         shuffle = True
     to_be_computed = []
     dfs.size = size
-    dfs([], 0, to_be_computed, constraints, model, shuffle)
+    dfs.total = 0
+    dfs(size, [], 0, to_be_computed, constraints, model, shuffle)
     return model, to_be_computed
 
 

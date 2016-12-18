@@ -501,6 +501,7 @@ class TestDFS(TestCase):
             return True
 
         dfs.size = 30
+        dfs.total = 0
         to_be_computed = []
         cur_tup = [('fieldA', 'X'), ('fieldB', 199), ('fieldC', 'general')]
         unique_together = TestModelFieldsTwo._meta.unique_together
@@ -508,7 +509,8 @@ class TestDFS(TestCase):
         unique = sort_unique_tuples(unique, TestModelFieldsTwo)
         unique_constraints = [unique_items(un_tuple) for un_tuple in unique]
         constraints = [func] + unique_constraints
-        dfs(cur_tup, 4, to_be_computed, constraints, TestModelFieldsTwo, False)
+        dfs(30, cur_tup, 4, to_be_computed, constraints,
+            TestModelFieldsTwo, False)
         self.assertEqual(len(list(TestModelFieldsTwo.objects.all())), 30)
         for mdl in list(TestModelFieldsTwo.objects.all()):
             self.assertEqual(mdl.fieldA, 'X')
@@ -524,10 +526,11 @@ class TestDFS(TestCase):
 class TestGenerateModel(TestCase):
     def test(self):
         generate_model(TestModelX, 5)
+        self.assertEqual(len(TestModelX.objects.all()), 5)
         generate_model(TestModelY, 95)
         generated_models = list(TestModelY.objects.all())
         length = len(generated_models)
-        self.assertTrue(len(TestModelX.objects.all()) * 18 == length)
+        self.assertEqual(len(TestModelX.objects.all()) * 18, length)
         generate_model(TestModelA, 7)
         self.assertEqual(len(TestModelA.objects.all()), 6)
         generate_model(TestModelB, 17)
