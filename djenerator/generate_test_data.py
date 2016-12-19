@@ -21,13 +21,12 @@ from utility import unique_items
 
 
 def field_sample_values(field):
-    """ Field sample values
-
+    """
     Retrieves the list of sample values for a given field.
 
-    :param field: a reference to the class of the field.
-
-    :returns: a list of sample values for the given field.
+    :param DjangoField field: A reference to the class of the field.
+    :rtype: List
+    :returns: A list of sample values for the given field.
     """
     list_field_values = []
     if not is_auto_field(field):
@@ -75,40 +74,39 @@ def field_sample_values(field):
 
 def dfs(instances, cur_tuple, index, to_be_computed, constraints,
         model, to_be_shuffled):
-    """ Depth first search
+    """
+    Value generator for the fields of a given model by simulating
+    a depth first search. The model will be saved in a (temporary) database.
 
-    Generates values for the fields of a given model by simulating
-    a depth first search.
-
-    The model will be saved in a temporary database.
-
-    The interface of the predicate should be :
-        predicate(cur_tuple, model, field)
-            where:
-                - cur_tuple : list of tuples of the filled values of the field
-                              being filled, in the
-                              format (field name , field value).
-
-                - model : a reference to the class of the given model.
-
-                - field : A reference to the class of the field being generated
+    The interface of the predicate should be:
+        boolean predicate(cur_tuple, model, field)
+         - cur_tuple: List of tuples of the filled values of the field being
+                      filled, in the format (str:field_name , field_value).
+         - model: A reference to the class of the given model.
+         - field: A reference to the class of the field being generated
 
          The function should handle that the given tuple might be not full,
          and it should depend that the previously generated models are stored
          in the temporary database, and it should return a boolean value that's
          true only if the required constraint is satisfied.
 
-
-    :param cur_tuple: current tuple, a tuple of the values of the filled fields.
-    :param index: the index of the field being filled in the list of fields.
-    :param to_be_computed:  A list used for accumulation of the ignored fields.
-    :param constraints: a list of utility, that will constraint the output.
-    :param model: A reference to the class of the given model.
-    :param to_be_shuffled:
+    :param int instances:
+        The target number of generated instances of the model.
+    :param cur_tuple:
+        A list of pairs str:field_name, field_value of the values of
+        the filled fields.
+    :type cur_tuple: List(pair(str, .))
+    :param int index:
+        The index of the field being filled in the list of fields.
+    :param List to_be_computed:
+        A list used for accumulation of the ignored fields.
+    :param List constraints:
+        A list of predicate functions that will constraint the output.
+    :param DjangoModel model: A reference to the class of the given model.
+    :param boolean to_be_shuffled:
         A boolean variable that will determine if the sample data
         will be shuffled or not.
-
-    :returns: None
+    :rtype: None
     """
     fields = list_of_fields(model)
     if index >= len(fields):
@@ -154,17 +152,17 @@ def dfs(instances, cur_tuple, index, to_be_computed, constraints,
 
 
 def generate_model(model, size, shuffle=None):
-    """ Generate model
-
+    """
     Generate 'size' sample models given a model and stores them in a temporary
     data base.
 
-    :param model: A reference to the class of the given model.
-    :param size: An integer of the size of the sample models to be generated.
-    :param shuffle:
-        An optional boolean variable that will determine if the sample
-        input will be shuffled or not.
-
+    :param DjangoModel model: A reference to the class of the given model.
+    :param int size:
+        An integer of the size of the sample models to be generated.
+    :param boolean shuffle:
+        An boolean to decide if the sample input will be shuffled or not.
+        Shuffles by default.
+    :rtype: tuple
     :returns:
         A tuple that contains a reference to the class of the given model,
         and list of field that's not computed.
@@ -192,14 +190,14 @@ def generate_model(model, size, shuffle=None):
 
 
 def create_model(model, val):
-    """ Create models
-
+    """
     Creates a new model given a reference to it's class and a list of
     the values of it's variables.
 
-    :param model: A reference to the class of the model that will be created.
-    :param val: A list of tuples having the format (field name, field value)
-
+    :param DjangoModel model:
+        A reference to the class of the model that will be created.
+    :param val: A list of pairs having the format(field name, field value).
+    :type val: tuple(pair(str, .))
     :returns: A model with the values given.
     """
     vals_dictionary = dict(val)
@@ -229,12 +227,12 @@ def create_model(model, val):
 
 
 def dependencies(model):
-    """ Dependencies
-
+    """
     Retrieves the models the must be generated before a given model.
 
-    :param model: A reference to the class of the given model.
+    :param DjangoModel model: A reference to the class of the given model.
 
+    :rtype: List
     :returns: list of references to the classes of the models.
     """
     fields = list_of_fields(model)
@@ -244,13 +242,13 @@ def dependencies(model):
 
 
 def topological_sort(models):
-    """ Topological sorting
-
+    """
     Sort a given list of models according to the dependencies of the
     relations between the models.
 
-    :param models: A list of references to the classes of the given models.
-
+    :param List models:
+        A list of references to the classes of the given models.
+    :rtype: List
     :returns: A list of references to the classes of the given models.
     """
     result = []
@@ -275,14 +273,13 @@ def topological_sort(models):
 
 
 def recompute(model, field):
-    """ Recompute
-
+    """
     Recompute the previously ignored fields in the models.
 
-    :param model: A reference to the class of the given model.
-    :param field: A reference to the class of the non-computed field.
-
-    :returns: None
+    :param DjangoModel model: A reference to the class of the given model.
+    :param DjangoField field:
+        A reference to the class of the non-computed field.
+    :rtype: None
     """
     if is_related(field):
         models = model.objects.all()
@@ -298,18 +295,21 @@ def recompute(model, field):
 
 
 def generate_test_data(app_models, size, **size_options):
-    """ Generate test data
-
+    """
     Generates a list of 'size' random data for each model in the models module
     in the given path, If the sample data is not enough for generating 'size'
     models, then all of the sample data will be used. If the models are
     inconsistent then no data will be generated. The data will be stored in
     a temporary database used for generation.
 
-    :param app_models: A string that contains the path of the models module.
-    :param size: An integer that specifies the size of the generated data.
-
-    :returns: None.
+    :param str app_models:
+        A string that contains the path of the models module.
+    :param int size: An integer that specifies the size of the generated data.
+    :param dict size_options:
+        A dictionary of that maps a str:model_name to int:model_size, that will
+        be used as a size of the generated models. If a model is not in
+        size_options then the default value 'size' will be used.
+    :rtype: None
     """
     models = topological_sort(list_of_models(module_import(app_models)))
     to_be_computed = [generate_model(model,

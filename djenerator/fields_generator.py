@@ -45,32 +45,28 @@ from values_generator import generate_uuid
 
 
 def generate_random_values(field, size=100):
-    """ Generate random values
+    """
+    Generate a list of random values for a given field. The size of the output
+    list might be less than 'size', if the total number of the possible values
+    are less than 'size', like in Booleans.
 
-    Generate a list of random values for a given field.
-
-    Note:
-        The size of the output list might be less than 'size', if the total
-        number of the possible values are less than 'size', like in Booleans.
-
-    :param field: The field to get values for.
-    :param size: The size of the output list.
-
+    :param DjangoField field:
+        A reference to the class of the field to get values for.
+    :param int size: The size of the output list.
+    :rtype: List
     :returns: A list of random values generated for the given field.
     """
     return list(set([generate_random_value(field) for _ in xrange(size)]))
 
 
 def generate_random_value(field):
-    """ Generate random value
-
+    """
     Generate a random value for a given field, by matching to the corresponding
-    random generator in values_generator.
+    random generator in values_generator. Note: The fields ImageField,
+    FileField, BinaryField are not handled yet.
 
-    Note: The fields ImageField, FileField, BinaryField are not handled yet.
-
-    :param field: The field to get values for.
-
+    :param DjangoField field:
+        A reference to the class of the field to get values for.
     :returns: A random value generated for the given field.
     """
     # TODO(mostafa-mahmoud): ImageField, FileField, BinaryField

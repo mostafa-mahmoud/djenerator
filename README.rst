@@ -13,7 +13,17 @@ Run the setup.py script using the following command:
 
 Usage
 =====
+Full documentation: https://github.com/mostafa-mahmoud/djenerator/blob/master/docs/usage.rst
+
 Add 'djenerator' to your `INSTALLED_APPS`:
+
+.. code-block:: python
+
+    INSTALLED_APPS = (
+        ...
+        'djenerator',
+        ...
+    )
 
 The generation of data are then done by a command using manage.py file in your project:
 

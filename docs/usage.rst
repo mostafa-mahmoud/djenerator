@@ -2,8 +2,8 @@
 Usage
 =====
 
-Adding to installed apps:
--------------------------
+Adding to installed apps
+------------------------
 
    To use djenerator in your project, add it to your `INSTALLED_APPS`:
 
@@ -18,8 +18,8 @@ Adding to installed apps:
 
     * Note : when the data is being generated, it is stored in a temporary database until they are serialized to a JSON file.
 
-Adding sources of values:
--------------------------
+Adding sources of values
+------------------------
 
    Sample data are randomly generated for each (not related) field unless there are sample values that are added. The sample data can be added in two ways.
 
@@ -63,7 +63,7 @@ Adding sources of values:
            class TestData:
                amount = values
 
-     Sample data given as a string contains the name of a file:
+   Sample data given as a string contains the name of a file:
 
     .. code-block:: python
 
@@ -77,8 +77,8 @@ Adding sources of values:
 
    Files added for sample data must be stored in a folder called `TestTemplates` that's located inside the app directory, as shown in example app.
 
-Adding constraints:
--------------------
+Adding constraints
+------------------
 
    Constraints may be added, such that the models will be created only if they satisfy the given constraints. There are constraints that already exists in django, like unique field and unique_together, for example:
 
@@ -139,8 +139,8 @@ Adding constraints:
 
    If the previously created models are required and since there's a reference to the model in the constraint function, then they can be simply accessed by reference_model.objects.all()
 
-Generating commands:
---------------------
+Generating commands
+-------------------
 
    The generation of data are then done by a command using manage.py file in your project:
 
@@ -178,8 +178,8 @@ Generating commands:
         $ python manage.py jendb 20 example --model_sizes Student:1 Course:2
 
 
-Use inside python:
-------------------
+Use inside python
+-----------------
 
    Djenerator can be used inside python as well, one needs to call the function 'djenerator' located in the module djenerator.djenerator. (Those are 3 djenerator's, yes) :
 

@@ -23,7 +23,6 @@ parent = os.path.dirname(cwd)
 sys.path.append(parent)
 
 import djenerator
-print(djenerator)
 
 # -- General configuration -----------------------------------------------------
 

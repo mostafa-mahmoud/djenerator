@@ -8,19 +8,17 @@ from model_reader import names_of_fields
 
 
 def unique_items(var_tuple):
-    """ Unique items
+    """
+    Generate a function that can be used to check the uniqueness constraint.
 
-    generate a function that can be used to check the uniqueness constraint.
-
-    :param var_tuple:
+    :param tuple var_tuple:
         A tuple of the names of the fields that should be unique together
-
+    :rtype: function
     :returns:
-        A function (variable, model, field);
-            variable : A list of tuples in the form (field name, field value)
-            model : A reference to the class of the given model.
-            field : A reference to the class of the given field.
-
+        boolean function(variable, model, field):
+            variable: A list of tuples in the form (field name, field value)
+            model: A reference to the class of the given model.
+            field: A reference to the class of the given field.
     """
     def uniqueness_constraint(variable, model, field):
         keys = dict(variable).keys()
@@ -38,16 +36,15 @@ def unique_items(var_tuple):
 
 
 def sort_unique_tuple(var_tuple, model):
-    """ Sort unique tuple
-
+    """
     Sorts a tuple of names of a fields for a given model, in the order of
     which field comes first.
 
-    :param var_tuple: A tuple of strings of the names of some fields in the
-                given model.
-    :param model: A reference to the class of the given model.
-
-    :returns: A tuple of strings of names of the names of the fields.
+    :param tuple var_tuple:
+        A tuple of strings of the names of some fields in the given model.
+    :param DjangoModel model: A reference to the class of the given model.
+    :rtype: tuple(str)
+    :returns: A tuple of the names of the fields.
     """
     result = []
     fields = list_of_fields(model)
@@ -58,17 +55,15 @@ def sort_unique_tuple(var_tuple, model):
 
 
 def sort_unique_tuples(var_tuples, model):
-    """ sort unique tuples
+    """
     Sort lexicographically the tuples of fields according to what appears first
     in the model.
 
-    Args :
-        var_tuples : a list of tuples of names of some fields.
-        model : A reference to the class of the given model.
-
-    Returns :
-        a list of tuples of names of some fields.
-
+    :param var_tuples: a list of tuples of names of some fields.
+    :type var_tuples: List(tuple(str))
+    :param model: A reference to the class of the given model.
+    :rtype: List(tuple(str))
+    :returns: A list of tuples of names of some fields.
     """
     fields = names_of_fields(model)
     var_tuples = [sort_unique_tuple(var_tup, model) for var_tup in var_tuples]
