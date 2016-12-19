@@ -14,4 +14,5 @@ Contents:
    readme
    installation
    usage
+   modules
    authors

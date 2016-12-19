@@ -8,25 +8,25 @@ from generate_test_data import generate_test_data
 
 
 def djenerator(app_path, size, output_file, **size_options):
-    """ djenerator
+    """ Djenerator
+
     Generates a sample data for all models in a given app
     and export the data to a .json file. If the file object given is None,
     then the data will be dumped in the current database. (A temporary database
     is created otherwise, while generating the data.)
 
+    :param app_path:
+        A string that contains the path of the app.
+    :param size:
+        The number of models generated for each model in the models.
+    :param output_file:
+        A file object in which the data will be dumped.
+    :param size_options:
+        A dictionary that maps model_names to an integer, which is the number
+        of generated instances for the model. If a model isn't in size_options,
+        then the default 'size' will be used.
 
-    Args :
-        app_path : A string that contains the path of the app.
-        size : The number of models generated for each model in the models.
-        output_file : A file object in which the data will be dumped.
-        size_options : A dictionary that maps model_names to an integer,
-                       which is the number of generated instances for
-                       the model. If a model isn't in size_options, then the
-                       default 'size' will be used.
-
-    Returns:
-        None
-
+    :returns: None
     """
     if output_file:
         db_name = connection.creation.create_test_db()

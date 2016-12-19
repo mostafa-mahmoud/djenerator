@@ -25,11 +25,9 @@ def field_sample_values(field):
 
     Retrieves the list of sample values for a given field.
 
-    Args :
-        field : a reference to the class of the field.
+    :param field: a reference to the class of the field.
 
-    Returns :
-    a list of sample values for the given field.
+    :returns: a list of sample values for the given field.
     """
     list_field_values = []
     if not is_auto_field(field):
@@ -82,18 +80,6 @@ def dfs(instances, cur_tuple, index, to_be_computed, constraints,
     Generates values for the fields of a given model by simulating
     a depth first search.
 
-    Args :
-        cur_tuple : current tuple, a tuple of the values of the filled fields.
-        index : the index of the field being filled in the list of fields.
-        to_be_computed : A list used for accumulation of the ignored fields.
-        constraints : a list of utility, that will constraint the output.
-        model : a reference to the class of the given model.
-        to_be_shuffled : A boolean variable that will determine if the sample
-                         data will be shuffled or not.
-
-    Returns:
-        None
-
     The model will be saved in a temporary database.
 
     The interface of the predicate should be :
@@ -112,6 +98,17 @@ def dfs(instances, cur_tuple, index, to_be_computed, constraints,
          in the temporary database, and it should return a boolean value that's
          true only if the required constraint is satisfied.
 
+
+    :param cur_tuple: current tuple, a tuple of the values of the filled fields.
+    :param index: the index of the field being filled in the list of fields.
+    :param to_be_computed:  A list used for accumulation of the ignored fields.
+    :param constraints: a list of utility, that will constraint the output.
+    :param model: A reference to the class of the given model.
+    :param to_be_shuffled:
+        A boolean variable that will determine if the sample data
+        will be shuffled or not.
+
+    :returns: None
     """
     fields = list_of_fields(model)
     if index >= len(fields):
@@ -162,13 +159,13 @@ def generate_model(model, size, shuffle=None):
     Generate 'size' sample models given a model and stores them in a temporary
     data base.
 
-    Args :
-        model : A reference to the class of the given model.
-        size : An integer of the size of the sample models to be generated.
-        shuffle : An optional boolean variable that will determine if
-                  the sample input will be shuffled or not.
+    :param model: A reference to the class of the given model.
+    :param size: An integer of the size of the sample models to be generated.
+    :param shuffle:
+        An optional boolean variable that will determine if the sample
+        input will be shuffled or not.
 
-    Returns :
+    :returns:
         A tuple that contains a reference to the class of the given model,
         and list of field that's not computed.
     """
@@ -200,12 +197,10 @@ def create_model(model, val):
     Creates a new model given a reference to it's class and a list of
     the values of it's variables.
 
-    Args :
-        model : A reference to the class of the model that will be created.
-        val : A list of tuples having the format (field name, field value)
+    :param model: A reference to the class of the model that will be created.
+    :param val: A list of tuples having the format (field name, field value)
 
-    Returns :
-        A model with the values given.
+    :returns: A model with the values given.
     """
     vals_dictionary = dict(val)
     have_many_to_many_relation = any(x for x in list_of_fields(model)
@@ -235,14 +230,12 @@ def create_model(model, val):
 
 def dependencies(model):
     """ Dependencies
+
     Retrieves the models the must be generated before a given model.
 
-    Args :
-        model : a reference to the class of the given model.
+    :param model: A reference to the class of the given model.
 
-    Returns :
-        list of references to the classes of the models.
-
+    :returns: list of references to the classes of the models.
     """
     fields = list_of_fields(model)
     return [field.rel.to for field in fields
@@ -252,14 +245,13 @@ def dependencies(model):
 
 def topological_sort(models):
     """ Topological sorting
+
     Sort a given list of models according to the dependencies of the
     relations between the models.
 
-    Args :
-        models : A list of references to the classes of the given models.
+    :param models: A list of references to the classes of the given models.
 
-    Return :
-        A list of references to the classes of the given models.
+    :returns: A list of references to the classes of the given models.
     """
     result = []
     visited = []
@@ -283,15 +275,14 @@ def topological_sort(models):
 
 
 def recompute(model, field):
-    """ recompute
-    Recompute the ignored fields in the models.
+    """ Recompute
 
-    Args :
-        model : A reference to the class of the given model.
-        field : A reference to the class of the non-computed field.
+    Recompute the previously ignored fields in the models.
 
-    Returns :
-        None
+    :param model: A reference to the class of the given model.
+    :param field: A reference to the class of the non-computed field.
+
+    :returns: None
     """
     if is_related(field):
         models = model.objects.all()
@@ -308,18 +299,17 @@ def recompute(model, field):
 
 def generate_test_data(app_models, size, **size_options):
     """ Generate test data
+
     Generates a list of 'size' random data for each model in the models module
     in the given path, If the sample data is not enough for generating 'size'
     models, then all of the sample data will be used. If the models are
     inconsistent then no data will be generated. The data will be stored in
     a temporary database used for generation.
 
-    Args:
-        app_models : A string that contains the path of the models module.
-        size : An integer that specifies the size of the generated data.
+    :param app_models: A string that contains the path of the models module.
+    :param size: An integer that specifies the size of the generated data.
 
-    Returns:
-        None.
+    :returns: None.
     """
     models = topological_sort(list_of_models(module_import(app_models)))
     to_be_computed = [generate_model(model,

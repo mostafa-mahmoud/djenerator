@@ -9,13 +9,13 @@ from model_reader import names_of_fields
 
 def unique_items(var_tuple):
     """ Unique items
+
     generate a function that can be used to check the uniqueness constraint.
 
-    Args :
-        var_tuple : A tuple of the names of the fields that should be unique
-                    together
+    :param var_tuple:
+        A tuple of the names of the fields that should be unique together
 
-    Returns :
+    :returns:
         A function (variable, model, field);
             variable : A list of tuples in the form (field name, field value)
             model : A reference to the class of the given model.
@@ -39,17 +39,15 @@ def unique_items(var_tuple):
 
 def sort_unique_tuple(var_tuple, model):
     """ Sort unique tuple
+
     Sorts a tuple of names of a fields for a given model, in the order of
     which field comes first.
 
-    Args :
-        var_tuple : A tuple of strings of the names of some fields in the
-                    given model.
-        model : A reference to the class of the given model.
+    :param var_tuple: A tuple of strings of the names of some fields in the
+                given model.
+    :param model: A reference to the class of the given model.
 
-    Returns :
-        A tuple of strings of names of the names of the fields.
-
+    :returns: A tuple of strings of names of the names of the fields.
     """
     result = []
     fields = list_of_fields(model)

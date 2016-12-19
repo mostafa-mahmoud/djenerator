@@ -12,10 +12,9 @@ def is_instance_of_django_model(reference):
     Tests if a given reference is a reference to a class that extends
     django.db.models.Model
 
-    Args :
-        reference : A given Anonymous reference.
+    :param reference: A given Anonymous reference.
 
-    Returns :
+    :returns:
         A boolean value that is true only if the given reference is a reference
         to a class.
     """
@@ -28,12 +27,12 @@ def is_instance_of_django_model(reference):
 
 def is_required(field):
     """ Is required
+
     Test if a given field is required.
 
-    Args :
-        fields : A reference to the class of a given field.
+    :param fields: A reference to the class of a given field.
 
-    Returns:
+    :returns:
         A boolean value that is true only if the given field is required.
     """
     return not field.null
@@ -44,12 +43,10 @@ def is_related(field):
 
     Test if a given field is a related field.
 
-    Args :
-        field : A reference to the class of a given field.
+    :param field: A reference to the class of a given field.
 
-    Returns:
+    :returns:
         A boolean value that is true only if the given field is related.
-
     """
     return 'django.db.models.fields.related' in field.__module__
 
@@ -59,10 +56,9 @@ def is_reverse_related(field):
 
     Test if a given field is a reverse related field.
 
-    Args:
-        field : A reference to the class of a given field.
+    :param field: A reference to the class of a given field.
 
-    Returns:
+    :returns:
         A boolean value that is true only if the field is reverse related.
     """
     return 'django.db.models.fields.reverse_related' in field.__module__
@@ -88,10 +84,9 @@ def is_auto_field(field):
 
     Test if a given field is an Auto-Field or not.
 
-    Args :
-        field : A reference to the class of a given field.
+    :param field: A reference to the class of a given field.
 
-    Returns:
+    :returns:
         A boolean value that's true only if the given field is an Auto-Field.
 
     """
@@ -120,12 +115,11 @@ def list_of_models(models_module, keep_abstract=None):
 
     This function filters the models from the instances in given module.
 
-    Args:
-        models_module : A reference to a given models module.
-        abstact(optional) : A boolean value that decides filtering of abstract
-                            models.
+    :param models_module: A reference to a given models module.
+    :param abstact(optional):
+        A boolean value that decides filtering of abstract models.
 
-    Returns:
+    :returns:
         A list of reference to the classes of the models in
         the imported models file.
     """
@@ -146,11 +140,9 @@ def list_of_fields(model):
 
     Retrieves the fields of a given model.
 
-    Args:
-        model : A reference to the class of a given model.
+    :param model: A reference to the class of a given model.
 
-    Returns:
-        A list of references to the fields of the given model.
+    :returns: A list of references to the fields of the given model.
     """
     fields = list(model._meta._get_fields())
     fields = list(filter(lambda field: not is_reverse_related(field), fields))
@@ -185,10 +177,9 @@ def names_of_fields(model):
 
     Retrieves the names of the fields of a given model.
 
-    Args :
-        model : A reference to the class of a given model.
+    :param model: A reference to the class of a given model.
 
-    Returns :
+    :returns:
         A list of strings of the attributes' names of the field of
         the given model.
     """
@@ -203,11 +194,9 @@ def module_import(app_path):
 
     Imports a module in a given path.
 
-    Args :
-        app_path : A string that contains the path of the module and it's name.
+    :param app_path: A string that contains the path of the module and it's name.
 
-    Returns :
-        A reference to the module in the given path.
+    :returns: A reference to the module in the given path.
     """
     module = __import__(app_path)
     for part in app_path.split('.')[1:]:
