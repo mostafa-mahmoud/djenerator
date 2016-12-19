@@ -6,7 +6,6 @@ given models.
 import inspect
 import os
 import random
-from django.core import serializers
 from django.db.models import Model
 from fields_generator import generate_random_values
 from model_reader import is_auto_field

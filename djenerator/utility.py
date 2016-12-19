@@ -2,8 +2,6 @@
 """
 This module contains utiltiy functions that are used in generating data.
 """
-import itertools
-from django.db import models
 from django.db.models import Model
 from model_reader import list_of_fields
 from model_reader import names_of_fields

@@ -5,7 +5,6 @@ random value generator.
 """
 from django.conf import settings
 from django.db.models.fields import BigIntegerField
-from django.db.models.fields import BinaryField
 from django.db.models.fields import BooleanField
 from django.db.models.fields import CharField
 from django.db.models.fields import CommaSeparatedIntegerField

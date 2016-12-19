@@ -1,0 +1,32 @@
+*~HEAD
+*.py[cod]
+__pycache__
+
+# C extensions
+*.sp
+
+# Packages
+*.egg
+*.egg-info
+dist
+build
+eggs
+parts
+bin
+var
+sdist
+develop-eggs
+.installed.cfg
+lib
+lib64
+
+# Unit test / coverage reports
+.coverage
+htmlcov
+
+# Example run
+*.json
+*.sqlite3
+
+# Editor
+*.sw[op]

@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 from djenerator.djenerator import djenerator
 from django.core.management.base import BaseCommand
-from django.core.management.base import CommandError
 
 
 class Command(BaseCommand):
