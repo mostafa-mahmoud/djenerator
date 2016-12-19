@@ -62,6 +62,8 @@ if not settings.configured:
         ROOT_URLCONF='',
         DEBUG=False,
         SITE_ID=1,
+        TIME_ZONE='UTC',
+        USE_TZ=True,
     )
 
 from django.test.runner import DiscoverRunner

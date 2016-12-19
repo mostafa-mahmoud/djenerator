@@ -3,6 +3,7 @@
 This module has a function that matches django fields to the corresponding
 random value generator.
 """
+from django.conf import settings
 from django.db.models.fields import BigIntegerField
 from django.db.models.fields import BinaryField
 from django.db.models.fields import BooleanField
@@ -90,9 +91,11 @@ def generate_random_value(field):
     elif isinstance(field, DecimalField):
         return generate_decimal(field.max_digits, field.decimal_places)
     elif isinstance(field, DateTimeField):
-        return generate_date_time()
+        timezone = settings.USE_TZ and settings.TIME_ZONE
+        return generate_date_time(tz=timezone)
     elif isinstance(field, DateField):
-        return generate_date_time().date()
+        timezone = settings.USE_TZ and settings.TIME_ZONE
+        return generate_date_time(tz=timezone).date()
     elif isinstance(field, FloatField):
         return generate_float()
     elif isinstance(field, NullBooleanField):
@@ -110,14 +113,16 @@ def generate_random_value(field):
     elif isinstance(field, SmallIntegerField):
         return generate_small_integer()
     elif isinstance(field, TimeField):
-        return generate_date_time().time()
+        timezone = settings.USE_TZ and settings.TIME_ZONE
+        return generate_date_time(tz=timezone).time()
     elif isinstance(field, IntegerField):
         return generate_int()
     elif isinstance(field, GenericIPAddressField):
         return generate_ip()
     elif isinstance(field, DurationField):
-        t1 = generate_date_time()
-        t2 = generate_date_time()
+        timezone = settings.USE_TZ and settings.TIME_ZONE
+        t1 = generate_date_time(tz=timezone)
+        t2 = generate_date_time(tz=timezone)
         if t1 < t2:
             return t2 - t1
         else:

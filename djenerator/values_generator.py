@@ -3,6 +3,7 @@
 This module has functions that generated random values for django fields.
 """
 import datetime
+import pytz
 import os
 import uuid
 from decimal import Decimal
@@ -98,9 +99,12 @@ def generate_string(max_length, lower=True, upper=True, digits=True,
     return str.join('', [choice(allowed_characters) for _ in xrange(length)])
 
 
-def generate_date_time(auto_now=False):
+def generate_date_time(auto_now=False, tz=None):
     if auto_now:
-        return datetime.datetime.now()
+        if tz:
+            return datetime.datetime.now(tzinfo=pytz.timezone(tz))
+        else:
+            return datetime.datetime.now()
     else:
         year = randint(1900, 2100)
         month = randint(1, 12)
@@ -120,16 +124,21 @@ def generate_date_time(auto_now=False):
         minute = randint(0, 59)
         second = randint(0, 59)
         microsecond = randint(0, 999999)
-        return datetime.datetime(year, month, day, hour, minute,
-                                 second, microsecond)
+        if tz:
+            return datetime.datetime(year, month, day, hour, minute,
+                                     second, microsecond,
+                                     tzinfo=pytz.timezone(tz))
+        else:
+            return datetime.datetime(year, month, day, hour, minute,
+                                     second, microsecond)
 
 
-def generate_date(auto_now=False):
-    return generate_date_time(auto_now).date()
+def generate_date(auto_now=False, tz=None):
+    return generate_date_time(auto_now, tz).date()
 
 
-def generate_time(auto_now=False):
-    return generate_date_time(auto_now).time()
+def generate_time(auto_now=False, tz=None):
+    return generate_date_time(auto_now, tz).time()
 
 
 def generate_text(max_length, exact=False):
