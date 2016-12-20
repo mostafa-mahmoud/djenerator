@@ -299,3 +299,6 @@ class AllFieldsModel(models.Model):
     slug_field = models.SlugField()
     uuid_field = models.UUIDField()
     file_path_field = models.FilePathField()
+    binary_field = models.BinaryField(max_length=200)
+    file_field = models.FileField()
+    image_field = models.ImageField()

@@ -10,10 +10,12 @@ import re
 import tempfile
 import uuid
 from decimal import Decimal
+from django.core.files import File
 from django.db import models
 from django.db.models import Model
 from django.db.models.fields import BigIntegerField
 from django.db.models.fields import BooleanField
+from django.db.models.fields import BinaryField
 from django.db.models.fields import CharField
 from django.db.models.fields import CommaSeparatedIntegerField
 from django.db.models.fields import DateField
@@ -34,6 +36,8 @@ from django.db.models.fields import TextField
 from django.db.models.fields import TimeField
 from django.db.models.fields import URLField
 from django.db.models.fields import UUIDField
+from django.db.models.fields.files import FileField
+from django.db.models.fields.files import ImageField
 from django.test import TestCase
 from djenerator.djenerator import djenerator
 from djenerator.fields_generator import generate_random_values
@@ -63,9 +67,12 @@ from djenerator.values_generator import generate_date
 from djenerator.values_generator import generate_date_time
 from djenerator.values_generator import generate_decimal
 from djenerator.values_generator import generate_email
+from djenerator.values_generator import generate_file_name
+from djenerator.values_generator import generate_file_path
 from djenerator.values_generator import generate_int
 from djenerator.values_generator import generate_integer
 from djenerator.values_generator import generate_ip
+from djenerator.values_generator import generate_png
 from djenerator.values_generator import generate_positive_integer
 from djenerator.values_generator import generate_positive_small_integer
 from djenerator.values_generator import generate_small_integer
@@ -186,6 +193,21 @@ class TestFieldToRandomGeneratorMatcher(TestCase):
                 if isinstance(field, FilePathField):
                     self.assertTrue(isinstance(val, str), val)
                     self.assertTrue(os.path.exists(val), val)
+                if isinstance(field, ImageField):
+                    self.assertTrue(isinstance(val, File), val)
+                    beg = b'\x89\x50\x4e\x47\x0d\x0a\x1a\x0a'
+                    img = val.read()
+                    self.assertTrue(img.startswith(beg))
+                    self.assertTrue(val.name.endswith('.png'))
+                if isinstance(field, FileField):
+                    self.assertTrue(isinstance(val, File), val)
+                    if not isinstance(field, ImageField):
+                        content = val.read()
+                        text_re = r'^(?:(?:\w+\s?)+\.\s?)+$'
+                        self.assertRegexpMatches(content, text_re, content)
+                        self.assertTrue(val.name.endswith('.txt'))
+                if isinstance(field, BinaryField):
+                    self.assertTrue(isinstance(val, str), val)
 
 
 class TestInstanceOfDjangoModel(TestCase):
@@ -895,3 +917,21 @@ class TestFieldsGeneratorDateTime(TestCase):
             self.assertEqual(gen_val.__class__, datetime.date)
             now = datetime.datetime.now().date()
             self.assertEqual(gen_val, now)
+
+
+class TestFileGenerators(TestCase):
+    def test(self):
+        for _ in xrange(20):
+            ext = random.choice(['txt', 'rst', 'md'])
+            name = generate_file_name(12, ext)
+            self.assertTrue(isinstance(name, str), name)
+            self.assertLessEqual(len(name), 12, name)
+            self.assertRegexpMatches(name, r'[a-zA-Z_]*\.' + ext, name)
+
+            path = generate_file_path()
+            self.assertTrue(os.path.exists(path), path)
+
+            img = generate_png(500, 120)
+            beg = b'\x89\x50\x4e\x47\x0d\x0a\x1a\x0a'
+            # TODO(mostafa-mahmoud): More tests for png format
+            self.assertTrue(img.startswith(beg))

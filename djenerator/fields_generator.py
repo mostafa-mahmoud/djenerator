@@ -3,8 +3,12 @@
 This module has a function that matches django fields to the corresponding
 random value generator.
 """
+import base64
 from django.conf import settings
+from django.core.files import File
+from django.core.files.base import ContentFile
 from django.db.models.fields import BigIntegerField
+from django.db.models.fields import BinaryField
 from django.db.models.fields import BooleanField
 from django.db.models.fields import CharField
 from django.db.models.fields import CommaSeparatedIntegerField
@@ -26,16 +30,20 @@ from django.db.models.fields import TextField
 from django.db.models.fields import TimeField
 from django.db.models.fields import URLField
 from django.db.models.fields import UUIDField
+from django.db.models.fields.files import FileField
+from django.db.models.fields.files import ImageField
 from values_generator import generate_big_integer
 from values_generator import generate_boolean
 from values_generator import generate_comma_separated_int
 from values_generator import generate_date_time
 from values_generator import generate_decimal
 from values_generator import generate_email
+from values_generator import generate_file_name
 from values_generator import generate_file_path
 from values_generator import generate_float
 from values_generator import generate_int
 from values_generator import generate_ip
+from values_generator import generate_png
 from values_generator import generate_positive_integer
 from values_generator import generate_small_integer
 from values_generator import generate_string
@@ -51,7 +59,7 @@ def generate_random_values(field, size=100):
     are less than 'size', like in Booleans.
 
     :param DjangoField field:
-        A reference to the class of the field to get values for.
+        A reference to the field to get values for.
     :param int size: The size of the output list.
     :rtype: List
     :returns: A list of random values generated for the given field.
@@ -66,10 +74,9 @@ def generate_random_value(field):
     FileField, BinaryField are not handled yet.
 
     :param DjangoField field:
-        A reference to the class of the field to get values for.
+        A reference to the field to get values for.
     :returns: A random value generated for the given field.
     """
-    # TODO(mostafa-mahmoud): ImageField, FileField, BinaryField
     if isinstance(field, BigIntegerField):
         return generate_big_integer()
     elif isinstance(field, EmailField):
@@ -96,6 +103,11 @@ def generate_random_value(field):
         return generate_positive_integer()
     elif isinstance(field, URLField):
         return generate_url(field.max_length)
+    elif isinstance(field, BinaryField):
+        length = field.max_length
+        if not length:
+            length = 100
+        return base64.b64encode(generate_string(length))
     elif isinstance(field, SlugField):
         return generate_string(field.max_length, special=['_', '-'])
     elif isinstance(field, TextField):
@@ -123,3 +135,11 @@ def generate_random_value(field):
         return generate_uuid()
     elif isinstance(field, FilePathField):
         return generate_file_path()
+    elif isinstance(field, ImageField):
+        name = generate_file_name(12, extension='png')
+        image = generate_png()
+        return File(ContentFile(image), name)
+    elif isinstance(field, FileField):
+        name = generate_file_name(12, extension='txt')
+        txt = generate_text(field.max_length)
+        return File(ContentFile(txt), name)

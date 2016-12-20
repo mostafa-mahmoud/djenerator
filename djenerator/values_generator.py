@@ -5,7 +5,9 @@ This module has functions that generated random values for django fields.
 import datetime
 import pytz
 import os
+import struct
 import uuid
+import zlib
 from decimal import Decimal
 from itertools import ifilter
 from itertools import imap
@@ -246,3 +248,34 @@ def generate_file_path():
     flt = imap(lambda path: path[0], flt)
     flt = islice(flt, 1000)
     return choice(list(flt))
+
+
+def generate_file_name(length=15, extension=''):
+    return "%s.%s" % (generate_string(length - len(extension) - 1,
+                                      digits=False, special=['_']), extension)
+
+
+def generate_png(width=128, height=128):
+    """
+    source: https://developer.blender.org/diffusion/B/browse/
+                master/release/bin/blender-thumbnailer.py
+    """
+    buf = b''.join([struct.pack('>I', (randint(0, (1 << 24) - 1) << 8) | 0xff)
+                    for _ in xrange(width * height)])
+
+    width_byte_4 = width * 4
+    raw_data = b''.join(b'\x00' + buf[span:span + width_byte_4]
+                        for span in range((height - 1) * width_byte_4, -1,
+                                          - width_byte_4))
+
+    def png_pack(png_tag, data):
+        chunk_head = png_tag + data
+        return (struct.pack("!I", len(data)) +
+                chunk_head +
+                struct.pack("!I", 0xFFFFFFFF & zlib.crc32(chunk_head)))
+
+    return b''.join([
+        b'\x89PNG\r\n\x1a\n',
+        png_pack(b'IHDR', struct.pack("!2I5B", width, height, 8, 6, 0, 0, 0)),
+        png_pack(b'IDAT', zlib.compress(raw_data, 9)),
+        png_pack(b'IEND', b'')])
