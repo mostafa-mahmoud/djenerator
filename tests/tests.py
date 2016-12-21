@@ -10,7 +10,6 @@ import re
 import tempfile
 import uuid
 from decimal import Decimal
-from django.core.files import File
 from django.db import models
 from django.db.models import Model
 from django.db.models.fields import BigIntegerField
@@ -36,8 +35,10 @@ from django.db.models.fields import TextField
 from django.db.models.fields import TimeField
 from django.db.models.fields import URLField
 from django.db.models.fields import UUIDField
+from django.db.models.fields.files import FieldFile
 from django.db.models.fields.files import FileField
 from django.db.models.fields.files import ImageField
+from django.db.models.fields.files import ImageFieldFile
 from django.test import TestCase
 from djenerator.djenerator import djenerator
 from djenerator.fields_generator import generate_random_values
@@ -194,20 +195,24 @@ class TestFieldToRandomGeneratorMatcher(TestCase):
                     self.assertTrue(isinstance(val, str), val)
                     self.assertTrue(os.path.exists(val), val)
                 if isinstance(field, ImageField):
-                    self.assertTrue(isinstance(val, File), val)
+                    self.assertTrue(isinstance(val, ImageFieldFile), val)
                     beg = b'\x89\x50\x4e\x47\x0d\x0a\x1a\x0a'
-                    img = val.read()
+                    img = val.instance.read()
+                    self.assertTrue(isinstance(val.field, ImageField))
+                    self.assertTrue(isinstance(img, str))
                     self.assertTrue(img.startswith(beg))
                     self.assertTrue(val.name.endswith('.png'))
                 if isinstance(field, FileField):
-                    self.assertTrue(isinstance(val, File), val)
+                    self.assertTrue(isinstance(val, FieldFile), val)
+                    self.assertTrue(isinstance(val.field, FileField))
+                    content = val.instance.read()
+                    self.assertTrue(isinstance(content, str))
                     if not isinstance(field, ImageField):
-                        content = val.read()
                         text_re = r'^(?:(?:\w+\s?)+\.\s?)+$'
                         self.assertRegexpMatches(content, text_re, content)
                         self.assertTrue(val.name.endswith('.txt'))
                 if isinstance(field, BinaryField):
-                    self.assertTrue(isinstance(val, str), val)
+                    self.assertTrue(isinstance(val, buffer), val)
 
 
 class TestInstanceOfDjangoModel(TestCase):

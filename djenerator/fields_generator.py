@@ -5,7 +5,6 @@ random value generator.
 """
 import base64
 from django.conf import settings
-from django.core.files import File
 from django.core.files.base import ContentFile
 from django.db.models.fields import BigIntegerField
 from django.db.models.fields import BinaryField
@@ -30,8 +29,10 @@ from django.db.models.fields import TextField
 from django.db.models.fields import TimeField
 from django.db.models.fields import URLField
 from django.db.models.fields import UUIDField
+from django.db.models.fields.files import FieldFile
 from django.db.models.fields.files import FileField
 from django.db.models.fields.files import ImageField
+from django.db.models.fields.files import ImageFieldFile
 from values_generator import generate_big_integer
 from values_generator import generate_boolean
 from values_generator import generate_comma_separated_int
@@ -70,8 +71,7 @@ def generate_random_values(field, size=50):
 def generate_random_value(field):
     """
     Generate a random value for a given field, by matching to the corresponding
-    random generator in values_generator. Note: The fields ImageField,
-    FileField, BinaryField are not handled yet.
+    random generator in values_generator.
 
     :param DjangoField field:
         A reference to the field to get values for.
@@ -107,7 +107,7 @@ def generate_random_value(field):
         length = field.max_length
         if not length:
             length = 100
-        return base64.b64encode(generate_string(length))
+        return buffer(base64.b64encode(generate_string(length)))
     elif isinstance(field, SlugField):
         return generate_string(field.max_length, special=['_', '-'])
     elif isinstance(field, TextField):
@@ -138,8 +138,8 @@ def generate_random_value(field):
     elif isinstance(field, ImageField):
         name = generate_file_name(12, extension='png')
         image = generate_png()
-        return File(ContentFile(image), name)
+        return ImageFieldFile(ContentFile(image), field, name)
     elif isinstance(field, FileField):
         name = generate_file_name(12, extension='txt')
         txt = generate_text(field.max_length)
-        return File(ContentFile(txt), name)
+        return FieldFile(ContentFile(txt), field, name)
