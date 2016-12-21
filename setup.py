@@ -1,25 +1,32 @@
 #!/usr/bin/env python
 from setuptools import setup
 
+VERSION = __import__('djenerator').__version__
+
+install_requires = [
+    'django>=1.10',
+]
+
 setup(name='Djenerator',
-      version='1.0',
+      version=VERSION,
       description='A simple app for generating test data for a given django models.',
       author='Mostafa M. Mohamed',
       author_email='mostafa.amin93@gmail.com',
       long_description=open('README.rst', 'r').read(),
-      url='https://github.com/aelguindy/djenerator',
-      download_url='https://nodeload.github.com/aelguindy/djenerator/zipball/master',
+      url='https://github.com/mostafa-mahmoud/djenerator',
+      download_url='https://github.com/mostafa-mahmoud/djenerator/archive/master.zip',
       license='MIT',
       packages=['djenerator', 'djenerator.management', 'djenerator.management.commands'],
-      test_suite='runtests.runtests',
+      test_suite='runtests',
+      install_requires=install_requires,
       classifiers=[
           'Development Status :: 4 - Beta',
           'Environment :: Web Environment',
-          'Framework :: Django',
+          'Framework :: Django :: 1.10',
           'Intended Audience :: Developers',
-          'License :: OSI Approved :: BSD License',
+          'License :: OSI Approved :: MIT License',
           'Operating System :: OS Independent',
-          'Programming Language :: Python',
+          'Programming Language :: Python :: 2.7',
           'Topic :: Software Development :: Libraries :: Python Modules',
       ],
       )
