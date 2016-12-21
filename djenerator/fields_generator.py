@@ -52,7 +52,7 @@ from values_generator import generate_url
 from values_generator import generate_uuid
 
 
-def generate_random_values(field, size=100):
+def generate_random_values(field, size=50):
     """
     Generate a list of random values for a given field. The size of the output
     list might be less than 'size', if the total number of the possible values

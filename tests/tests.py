@@ -933,5 +933,7 @@ class TestFileGenerators(TestCase):
 
             img = generate_png(500, 120)
             beg = b'\x89\x50\x4e\x47\x0d\x0a\x1a\x0a'
-            # TODO(mostafa-mahmoud): More tests for png format
             self.assertTrue(img.startswith(beg))
+            self.assertTrue(b'IHDR' in img)
+            self.assertTrue(b'IEND' in img)
+            self.assertTrue(b'IDAT' in img)
