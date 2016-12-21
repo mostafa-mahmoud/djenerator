@@ -138,8 +138,14 @@ def generate_random_value(field):
     elif isinstance(field, ImageField):
         name = generate_file_name(12, extension='png')
         image = generate_png()
-        return ImageFieldFile(ContentFile(image), field, name)
+        content = ContentFile(image)
+        val = ImageFieldFile(content, field, name)
+        val.save(name, content, False)
+        return val
     elif isinstance(field, FileField):
         name = generate_file_name(12, extension='txt')
         txt = generate_text(field.max_length)
-        return FieldFile(ContentFile(txt), field, name)
+        content = ContentFile(txt)
+        val = FieldFile(content, field, name)
+        val.save(name, content, False)
+        return val

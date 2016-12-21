@@ -256,10 +256,6 @@ def generate_file_name(length=15, extension=''):
 
 
 def generate_png(width=128, height=128):
-    """
-    source: https://developer.blender.org/diffusion/B/browse/
-                master/release/bin/blender-thumbnailer.py
-    """
     buf = b''.join([struct.pack('>I', (randint(0, (1 << 24) - 1) << 8) | 0xff)
                     for _ in xrange(width * height)])
 

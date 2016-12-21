@@ -31,10 +31,14 @@ lint: ## check style with pep8
 	pep8 djenerator tests
 
 test: ## run tests quickly with the default Python
+	rm -fr media/
 	python runtests.py
+	rm -fr media/
 
 coverage: ## check code coverage quickly with the default Python
+	rm -fr media/
 	python-coverage run runtests.py
+	rm -fr media/
 	python-coverage report -m
 	python-coverage html
 	open htmlcov/index.html

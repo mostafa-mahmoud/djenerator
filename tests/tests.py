@@ -10,6 +10,7 @@ import re
 import tempfile
 import uuid
 from decimal import Decimal
+from django.conf import settings
 from django.db import models
 from django.db.models import Model
 from django.db.models.fields import BigIntegerField
@@ -122,11 +123,18 @@ class TestFieldToRandomGeneratorMatcher(TestCase):
                        DecimalField, DurationField, EmailField, FloatField,
                        GenericIPAddressField, IntegerField, NullBooleanField,
                        PositiveIntegerField, PositiveSmallIntegerField,
-                       SmallIntegerField, TextField, TimeField]
+                       SmallIntegerField, TextField, TimeField, BinaryField,
+                       FileField, ImageField, FilePathField, SlugField,
+                       URLField, UUIDField]
         self.assertFalse(set(field_types) - set(present_types),
                          "All types should be present." +
                          str(set(field_types) - set(present_types)))
         for field in fields:
+            if isinstance(field, FileField) or isinstance(field, ImageField):
+                path = os.path.join(settings.MEDIA_ROOT, field.upload_to)
+                files = next((filenames for dirpath, dirnames, filenames in
+                             os.walk(path) if dirpath == path), None)
+                files = list(map(lambda file: os.path.join(path, file), files))
             sample_siz = 10
             values = generate_random_values(field, sample_siz)
             self.assertLessEqual(len(values), sample_siz)
@@ -140,6 +148,8 @@ class TestFieldToRandomGeneratorMatcher(TestCase):
                     self.assertRegexpMatches(val, email_reg, val)
                 if isinstance(field, BooleanField):
                     self.assertTrue(isinstance(val, bool), val)
+                if isinstance(field, NullBooleanField):
+                    self.assertTrue(isinstance(val, bool) or val is None, val)
                 if isinstance(field, CharField):
                     self.assertTrue(isinstance(val, str), val)
                     self.assertLessEqual(len(val), field.max_length, val)
@@ -195,17 +205,27 @@ class TestFieldToRandomGeneratorMatcher(TestCase):
                     self.assertTrue(isinstance(val, str), val)
                     self.assertTrue(os.path.exists(val), val)
                 if isinstance(field, ImageField):
-                    self.assertTrue(isinstance(val, ImageFieldFile), val)
                     beg = b'\x89\x50\x4e\x47\x0d\x0a\x1a\x0a'
-                    img = val.instance.read()
+                    full_path = os.path.join(settings.MEDIA_ROOT, val.name)
+                    img = val.file.read()
+                    self.assertTrue(full_path not in files,
+                                    val.name + " shouldnt't already exist")
+                    self.assertTrue(os.path.exists(full_path))
+                    self.assertTrue(isinstance(val, ImageFieldFile), val)
+                    self.assertTrue(val.name.startswith(field.upload_to))
                     self.assertTrue(isinstance(val.field, ImageField))
                     self.assertTrue(isinstance(img, str))
                     self.assertTrue(img.startswith(beg))
                     self.assertTrue(val.name.endswith('.png'))
                 if isinstance(field, FileField):
+                    content = val.file.read()
+                    full_path = os.path.join(settings.MEDIA_ROOT, val.name)
                     self.assertTrue(isinstance(val, FieldFile), val)
                     self.assertTrue(isinstance(val.field, FileField))
-                    content = val.instance.read()
+                    self.assertTrue(full_path not in files,
+                                    val.name + " shouldnt't already exist")
+                    self.assertTrue(os.path.exists(full_path))
+                    self.assertTrue(val.name.startswith(field.upload_to))
                     self.assertTrue(isinstance(content, str))
                     if not isinstance(field, ImageField):
                         text_re = r'^(?:(?:\w+\s?)+\.\s?)+$'

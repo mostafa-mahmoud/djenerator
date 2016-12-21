@@ -64,6 +64,9 @@ if not settings.configured:
         SITE_ID=1,
         TIME_ZONE='UTC',
         USE_TZ=True,
+        BASE_DIR=os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        MEDIA_ROOT=os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                'media'),
     )
 
 from django.test.runner import DiscoverRunner

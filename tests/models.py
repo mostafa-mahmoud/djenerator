@@ -300,5 +300,5 @@ class AllFieldsModel(models.Model):
     uuid_field = models.UUIDField()
     file_path_field = models.FilePathField()
     binary_field = models.BinaryField(max_length=200)
-    file_field = models.FileField()
-    image_field = models.ImageField()
+    file_field = models.FileField(upload_to='files/')
+    image_field = models.ImageField(upload_to='images/')
