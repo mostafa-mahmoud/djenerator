@@ -5,7 +5,7 @@ Djenerator is a simple tool made to generate test/random data from the model des
 
 Installation
 ============
-Using pip, you can install djenerator using this command.
+Using pip, you can install djenerator using this command:
 
 .. code-block:: bash
 
