@@ -7,14 +7,14 @@ install_requires = [
     'django>=1.10',
 ]
 
-setup(name='Djenerator',
+setup(name='djenerator',
       version=VERSION,
-      description='A simple app for generating test data for a given django models.',
+      description='A simple app for generating test data for a given django models description.',
       author='Mostafa M. Mohamed',
       author_email='mostafa.amin93@gmail.com',
-      long_description=open('README.rst', 'r').read(),
+      long_description=('\n%s' % open('README.rst', 'r').read()),
       url='https://github.com/mostafa-mahmoud/djenerator',
-      download_url='https://github.com/mostafa-mahmoud/djenerator/archive/master.zip',
+      download_url='https://github.com/mostafa-mahmoud/djenerator/archive/v1.0.tar.gz',
       license='MIT',
       packages=['djenerator', 'djenerator.management', 'djenerator.management.commands'],
       test_suite='runtests',

@@ -5,15 +5,15 @@ Djenerator is a simple tool made to generate test/random data from the model des
 
 Installation
 ============
-Run the setup.py script using the following command:
+Using pip, you can install djenerator using this command.
 
 .. code-block:: bash
 
-   $ python setup.py install
+   $ pip install djenerator
 
 Usage
 =====
-Full documentation: https://github.com/mostafa-mahmoud/djenerator/blob/master/docs/usage.rst
+Full documentation: http://pythonhosted.org/djenerator/usage.html
 
 Add 'djenerator' to your `INSTALLED_APPS`:
 
