@@ -3,57 +3,64 @@
 This module has a function that matches django fields to the corresponding
 random value generator.
 """
-import base64
+# import base64
 from django.conf import settings
 from django.core.files.base import ContentFile
-from django.db.models.fields import BigIntegerField
-from django.db.models.fields import BinaryField
-from django.db.models.fields import BooleanField
-from django.db.models.fields import CharField
-from django.db.models.fields import CommaSeparatedIntegerField
-from django.db.models.fields import DateField
-from django.db.models.fields import DateTimeField
-from django.db.models.fields import DecimalField
-from django.db.models.fields import DurationField
-from django.db.models.fields import EmailField
-from django.db.models.fields import FilePathField
-from django.db.models.fields import FloatField
-from django.db.models.fields import GenericIPAddressField
-from django.db.models.fields import IntegerField
-from django.db.models.fields import NullBooleanField
-from django.db.models.fields import PositiveIntegerField
-from django.db.models.fields import PositiveSmallIntegerField
-from django.db.models.fields import SlugField
-from django.db.models.fields import SmallIntegerField
-from django.db.models.fields import TextField
-from django.db.models.fields import TimeField
-from django.db.models.fields import URLField
-from django.db.models.fields import UUIDField
-from django.db.models.fields.files import FieldFile
-from django.db.models.fields.files import FileField
-from django.db.models.fields.files import ImageField
-from django.db.models.fields.files import ImageFieldFile
-from values_generator import generate_big_integer
-from values_generator import generate_boolean
-from values_generator import generate_comma_separated_int
-from values_generator import generate_date_time
-from values_generator import generate_decimal
-from values_generator import generate_email
-from values_generator import generate_file_name
-from values_generator import generate_file_path
-from values_generator import generate_float
-from values_generator import generate_int
-from values_generator import generate_ip
-from values_generator import generate_png
-from values_generator import generate_positive_integer
-from values_generator import generate_small_integer
-from values_generator import generate_string
-from values_generator import generate_text
-from values_generator import generate_url
-from values_generator import generate_uuid
+from django.db.models.fields import (
+    BigIntegerField,
+    BinaryField,
+    BooleanField,
+    CharField,
+    CommaSeparatedIntegerField,
+    DateField,
+    DateTimeField,
+    DecimalField,
+    DurationField,
+    EmailField,
+    FilePathField,
+    FloatField,
+    GenericIPAddressField,
+    IntegerField,
+    IPAddressField,
+    NullBooleanField,
+    PositiveBigIntegerField,
+    PositiveIntegerField,
+    PositiveSmallIntegerField,
+    SlugField,
+    SmallIntegerField,
+    TextField,
+    TimeField,
+    URLField,
+    UUIDField,
+)
+from django.db.models.fields.files import (
+    FieldFile, FileField, ImageField, ImageFieldFile,
+)
+
+from .values_generator import (
+    generate_big_integer,
+    generate_boolean,
+    generate_comma_separated_int,
+    generate_date_time,
+    generate_decimal,
+    generate_email,
+    generate_file_name,
+    generate_file_path,
+    generate_float,
+    generate_int,
+    generate_ip,
+    generate_png,
+    generate_positive_big_integer,
+    generate_positive_integer,
+    generate_small_integer,
+    generate_string,
+    generate_text,
+    generate_url,
+    generate_uuid,
+)
 
 
-def generate_random_values(field, size=50):
+def generate_random_field_values(field, size, force_unique=False):
     """
     Generate a list of random values for a given field. The size of the output
     list might be less than 'size', if the total number of the possible values
@@ -65,7 +72,27 @@ def generate_random_values(field, size=50):
     :rtype: List
     :returns: A list of random values generated for the given field.
     """
-    return list(set([generate_random_value(field) for _ in xrange(size)]))
+    results = set([])
+    fail = 0
+    for _ in range(10 * size):
+        value = generate_random_value(field)
+
+        if value not in results:
+            results.add(value)
+            if fail < 50:
+                fail = 0
+            if len(results) >= size:
+                break
+        else:
+            fail += 1
+    if fail >= 50 and force_unique:
+        # TODO: raise warning of too few values
+        Warning("Limited values")
+        raise ValueError(
+            f"{field.name} has generated very few values, "
+            "but it must by a unique field"
+        )
+    return list(results)
 
 
 def generate_random_value(field):
@@ -73,16 +100,17 @@ def generate_random_value(field):
     Generate a random value for a given field, by matching to the corresponding
     random generator in values_generator.
 
-    :param DjangoField field:
-        A reference to the field to get values for.
+    :param DjangoField field: A reference to the field to get values for.
     :returns: A random value generated for the given field.
     """
-    if isinstance(field, BigIntegerField):
+    if isinstance(field, PositiveBigIntegerField):
+        return generate_positive_big_integer()
+    elif isinstance(field, BigIntegerField):
         return generate_big_integer()
     elif isinstance(field, EmailField):
         return generate_email(field.max_length)
-    elif isinstance(field, BooleanField):
-        return generate_boolean(field.null)
+    elif isinstance(field, (BooleanField, NullBooleanField)):
+        return generate_boolean()
     elif isinstance(field, CommaSeparatedIntegerField):
         return generate_comma_separated_int(field.max_length)
     elif isinstance(field, DecimalField):
@@ -95,8 +123,6 @@ def generate_random_value(field):
         return generate_date_time(tz=timezone).date()
     elif isinstance(field, FloatField):
         return generate_float()
-    elif isinstance(field, NullBooleanField):
-        return generate_boolean(null_allowed=True)
     elif isinstance(field, PositiveSmallIntegerField):
         return abs(generate_small_integer())
     elif isinstance(field, PositiveIntegerField):
@@ -107,7 +133,8 @@ def generate_random_value(field):
         length = field.max_length
         if not length:
             length = 100
-        return buffer(base64.b64encode(generate_string(length)))
+        return generate_string(length).encode()
+        # return buffer(base64.b64encode(generate_string(length)))
     elif isinstance(field, SlugField):
         return generate_string(field.max_length, special=['_', '-'])
     elif isinstance(field, TextField):
@@ -120,6 +147,8 @@ def generate_random_value(field):
     elif isinstance(field, IntegerField):
         return generate_int()
     elif isinstance(field, GenericIPAddressField):
+        return generate_ip()
+    elif isinstance(field, IPAddressField):
         return generate_ip()
     elif isinstance(field, DurationField):
         timezone = settings.USE_TZ and settings.TIME_ZONE

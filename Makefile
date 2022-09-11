@@ -1,60 +1,18 @@
-.PHONY: clean-pyc clean-build docs help
-.DEFAULT_GOAL := help
-define BROWSER_PYSCRIPT
-import os, webbrowser, sys
-try:
-	from urllib import pathname2url
-except:
-	from urllib.request import pathname2url
+clean:
+	@find . -name "__pycache__" -exec rm -rfv {} +
+	@find . -name "migrations" -exec rm -rfv {} +
+	@find . -name "db.sqlite3" -exec rm -rfv {} +
+	@rm -r files images
 
-webbrowser.open("file://" + pathname2url(os.path.abspath(sys.argv[1])))
-endef
-export BROWSER_PYSCRIPT
-BROWSER := python -c "$$BROWSER_PYSCRIPT"
+migrations:
+	python3 manage.py makemigrations testapp
+	python3 manage.py migrate
 
-help:
-	@perl -nle'print $& if m{^[a-zA-Z_-]+:.*?## .*$$}' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-25s\033[0m %s\n", $$1, $$2}'
+test:
+	python3 manage.py test
 
-clean: clean-build clean-pyc
+lint:
+	flake8 djenerator/core testapp/models.py testapp/tests.py --import-order-style smarkets --show-source --statistics --application-import-names djenerator,testapp
 
-clean-build: ## remove build artifacts
-	rm -fr build/
-	rm -fr dist/
-	rm -fr *.egg-info
-
-clean-pyc: ## remove Python file artifacts
-	find . -name '*.pyc' -exec rm -f {} +
-	find . -name '*.pyo' -exec rm -f {} +
-	find . -name '*~' -exec rm -f {} +
-
-lint: ## check style with pep8
-	pep8 djenerator tests
-
-test: ## run tests quickly with the default Python
-	rm -fr media/
-	python runtests.py
-	rm -fr media/
-
-coverage: ## check code coverage quickly with the default Python
-	rm -fr media/
-	python-coverage run runtests.py
-	rm -fr media/
-	python-coverage report -m
-	python-coverage html
-	open htmlcov/index.html
-
-docs: ## generate Sphinx HTML documentation, including API docs
-	rm -f docs/djenerator.rst
-	rm -f docs/modules.rst
-	sphinx-apidoc -o docs/ djenerator
-	$(MAKE) -C docs clean
-	$(MAKE) -C docs html
-	$(BROWSER) docs/_build/html/index.html
-
-release: clean ## package and upload a release
-	python setup.py sdist upload
-	python setup.py bdist_wheel upload
-
-sdist: clean ## package
-	python setup.py sdist
-	ls -l dist
+all: clean migrations
+	python3 manage.py jenerate testapp 50

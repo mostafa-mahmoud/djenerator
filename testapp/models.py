@@ -1,0 +1,183 @@
+from django.db import models
+
+
+class ExtendingModel(models.Model):
+    pass
+
+
+class NotExtendingModel(object):
+    pass
+
+
+class TestModel0(models.Model):
+    field1 = models.BooleanField()
+    field2 = models.EmailField(max_length=200)
+
+
+class TestModel1(models.Model):
+    field1 = models.CharField(max_length=200)
+    field2 = models.BigIntegerField()
+    field3 = models.ForeignKey(TestModel0, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = (('field1', 'field2'), ('field2', 'field3'))
+
+
+class TestModelA(models.Model):
+    field1A = models.CharField(max_length=200)
+    field2A = models.CharField(max_length=200)
+
+    def __unicode__(self):
+        return str(self.id) + " " + self.field1A + " " + self.field2A
+
+
+class TestModelB(models.Model):
+    field1B = models.CharField(max_length=100)
+    field2B = models.ForeignKey(TestModelA, on_delete=models.CASCADE)
+
+
+class TestModelC(models.Model):
+    field1C = models.CharField(max_length=50)
+    field2C = models.OneToOneField(TestModelB, on_delete=models.CASCADE)
+
+
+class TestModelD(models.Model):
+    field1D = models.IntegerField()
+    field2D = models.ManyToManyField(TestModelA)
+
+
+class TestModelE(models.Model):
+    field1E = models.OneToOneField(TestModelB, on_delete=models.CASCADE)
+    field2E = models.ManyToManyField(TestModelA)
+    field3E = models.ForeignKey(TestModelC, on_delete=models.CASCADE)
+    field4E = models.IntegerField()
+
+
+class TestModelX(models.Model):
+    field1X = models.IntegerField()
+
+
+class TestModelY(models.Model):
+    field1Y = models.IntegerField()
+    field2Y = models.CharField(max_length=200)
+    field3Y = models.ForeignKey(TestModelX, on_delete=models.CASCADE)
+
+
+class SuperClass(models.Model):
+    fieldS = models.IntegerField()
+    fieldAbr = models.IntegerField()
+    fieldFak = models.IntegerField()
+    fieldMTM = models.ManyToManyField('self')
+
+
+class SuperAbstract(models.Model):
+    fieldAbs = models.IntegerField()
+
+    class Meta:
+        abstract = True
+
+
+class ExtendAbstract(SuperAbstract):
+    fieldExAbs = models.CharField(max_length=200)
+    fieldZZZ = models.IntegerField()
+
+
+# class ExtendSuperClass(SuperClass):
+#     fieldExSup = models.CharField(max_length=200)
+
+
+# class ProxyExtend(SuperClass):
+
+#     class Meta:
+#         proxy = True
+
+
+class TestModelFieldsTwo(models.Model):
+    fieldA = models.CharField(max_length=500)
+    fieldB = models.IntegerField()
+    fieldC = models.CharField(max_length=50)
+    fieldD = models.IntegerField()
+    fieldE = models.BooleanField()
+    fieldF = models.IntegerField()
+    fieldG = models.CharField(max_length=200)
+    fieldH = models.BooleanField()
+    fieldZ = models.ManyToManyField(TestModelE)
+
+
+class TestModelFields(models.Model):
+    fieldY = models.OneToOneField(TestModelY, on_delete=models.CASCADE)
+    fieldA = models.CharField(max_length=500, primary_key=True)
+    fieldB = models.IntegerField()
+    fieldC = models.CharField(max_length=50, unique=True)
+    fieldD = models.IntegerField()
+    fieldE = models.BooleanField()
+    fieldF = models.IntegerField()
+    fieldG = models.CharField(max_length=200, null=True)
+    fieldH = models.BooleanField()
+    fieldX = models.ForeignKey(TestModelX, on_delete=models.CASCADE)
+    fieldZ = models.ManyToManyField(TestModelE)
+
+    class Meta:
+        unique_together = ('fieldA', 'fieldC')
+
+
+class CycleA(models.Model):
+    ab = models.ForeignKey('CycleB', on_delete=models.CASCADE)
+    ae = models.ForeignKey('CycleE', on_delete=models.CASCADE)
+    a = models.IntegerField()
+
+
+class CycleB(models.Model):
+    bc = models.ForeignKey('CycleC', on_delete=models.CASCADE)
+    b = models.IntegerField()
+
+
+class CycleC(models.Model):
+    cc = models.ManyToManyField('self')
+    ca = models.OneToOneField(CycleA, null=True, on_delete=models.CASCADE)
+    c = models.DecimalField(max_digits=15, decimal_places=10)
+
+
+class CycleD(models.Model):
+    dc = models.ForeignKey(CycleC, on_delete=models.CASCADE)
+    df = models.ForeignKey('CycleF', null=True, on_delete=models.CASCADE)
+    d = models.IntegerField()
+
+
+class CycleE(models.Model):
+    ec = models.ForeignKey(CycleC, on_delete=models.CASCADE)
+    ed = models.ForeignKey(CycleD, on_delete=models.CASCADE)
+    e = models.IntegerField()
+
+
+class CycleF(models.Model):
+    fd = models.ForeignKey(CycleD, on_delete=models.CASCADE)
+    f = models.IntegerField()
+
+
+class AllFieldsModel(models.Model):
+    bigint_field = models.BigIntegerField()
+    int_field = models.IntegerField()
+    email_field = models.EmailField(max_length=40)
+    bool_field = models.BooleanField()
+    char_field = models.CharField(max_length=100)
+    decimal_field = models.DecimalField(max_digits=15, decimal_places=8)
+    datetime_field = models.DateTimeField()
+    date_field = models.DateField()
+    duration_field = models.DurationField()
+    float_field = models.FloatField()
+    null_bool_field = models.BooleanField(null=True)
+    pos_int_field = models.PositiveIntegerField()
+    small_pos_int_field = models.PositiveSmallIntegerField()
+    small_int_field = models.SmallIntegerField()
+    pos_big_int_field = models.PositiveBigIntegerField()
+    text_field = models.TextField(max_length=500)
+    time_field = models.TimeField()
+    gen_ip_field = models.GenericIPAddressField()
+    url_field = models.URLField()
+    slug_field = models.SlugField()
+    uuid_field = models.UUIDField()
+    file_path_field = models.FilePathField()
+    binary_field = models.BinaryField(max_length=200)
+    file_field = models.FileField(upload_to='files/')
+    image_field = models.ImageField(upload_to='images/')
