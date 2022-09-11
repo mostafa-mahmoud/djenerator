@@ -2,7 +2,7 @@ clean:
 	@find . -name "__pycache__" -exec rm -rfv {} +
 	@find . -name "migrations" -exec rm -rfv {} +
 	@find . -name "db.sqlite3" -exec rm -rfv {} +
-	@rm -r files images
+	@rm -vfr files images
 
 migrations:
 	python3 manage.py makemigrations testapp
@@ -16,3 +16,6 @@ lint:
 
 all: clean migrations
 	python3 manage.py jenerate testapp 50
+
+shell:
+	python3 manage.py shell

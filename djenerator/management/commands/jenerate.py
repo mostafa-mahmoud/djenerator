@@ -21,4 +21,4 @@ class Command(BaseCommand):
         app_name = options["app-name"]
         models_cls = options["models"]
 
-        generate_test_data(app_name, size, models_cls)
+        generate_test_data(app_name, size, models_cls=models_cls)

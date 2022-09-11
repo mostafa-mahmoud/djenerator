@@ -22,7 +22,7 @@ from djenerator.core.utils import (
     # is_reverse_related,
     is_unidirectional_related,
     is_unique,
-    names_of_fields,
+    # names_of_fields,
     retrieve_fields,
     # retrieve_generators,
     retrieve_models
@@ -53,11 +53,15 @@ from djenerator.core.values_generator import (
     generate_url,
     generate_uuid,
 )
-from testapp.models import TestModelE, TestModelFields, TestModelX, TestModelY
+from testapp.models import (
+    Extend_SuperClass, ExtendAbstract, ExtendExtendSuperClass,
+    ExtendSuperClassNoProxy, ProxyExtend, TestModelE, TestModelFields,
+    TestModelX, TestModelY,
+)
 
 
 class UtilsTestCase(TestCase):
-    def test_models(self):
+    def test_utils(self):
         models = retrieve_models('testapp.models')
         existing_models = [
             "ExtendingModel",
@@ -72,8 +76,10 @@ class UtilsTestCase(TestCase):
             "TestModelY",
             "SuperClass",
             "ExtendAbstract",
-            # "ExtendSuperClass",
-            # "ProxyExtend",
+            "Extend_SuperClass",
+            "ExtendExtendSuperClass",
+            "ExtendSuperClassNoProxy",
+            "ProxyExtend",
             "TestModelFieldsTwo",
             "TestModelFields",
             "CycleA",
@@ -89,7 +95,7 @@ class UtilsTestCase(TestCase):
             sorted([cls.__name__ for cls in models])
         )
         fields = retrieve_fields(TestModelFields)
-        names = names_of_fields(TestModelFields)
+        names = [field_name(field) for field in fields]
         self.assertEqual(
             set(names),
             set(["fieldY", "fieldA", "fieldB", "fieldC", "fieldD", "fieldE",
@@ -142,6 +148,39 @@ class UtilsTestCase(TestCase):
         self.assertTrue(is_auto_field(TestModelE.id.field))
         self.assertFalse(is_auto_field(TestModelFields.fieldZ.field))
         self.assertFalse(is_auto_field(TestModelFields.fieldA.field))
+
+        self.assertEqual(
+            set([field_name(f) for f in retrieve_fields(ExtendAbstract)]),
+            set(["fieldExAbs", "fieldZZZ", "fieldAbs"]),
+            set([field_name(f) for f in retrieve_fields(ExtendAbstract)]),
+        )
+        self.assertEqual(
+            set([field_name(f) for f in retrieve_fields(Extend_SuperClass)]),
+            set(["fieldS", "fieldAbr", "fieldFak", "fieldMTM", "fieldExSup"]),
+            set([field_name(f) for f in retrieve_fields(Extend_SuperClass)]),
+        )
+        self.assertEqual(
+            set([field_name(f)
+                 for f in retrieve_fields(ExtendExtendSuperClass)]),
+            set(["fieldS", "fieldAbr", "fieldFak",
+                 "fieldMTM", "fieldExSup", "fieldExSup2"]),
+            set([field_name(f)
+                 for f in retrieve_fields(ExtendExtendSuperClass)]),
+        )
+
+        self.assertEqual(
+            set([field_name(f)
+                 for f in retrieve_fields(ExtendSuperClassNoProxy)]),
+            set(["fieldS", "fieldAbr", "fieldFak", "fieldMTM"]),
+            set([field_name(f)
+                 for f in retrieve_fields(ExtendSuperClassNoProxy)]),
+        )
+
+        self.assertEqual(
+            set([field_name(f) for f in retrieve_fields(ProxyExtend)]),
+            set(["fieldS", "fieldAbr", "fieldFak", "fieldMTM"]),
+            set([field_name(f) for f in retrieve_fields(ProxyExtend)]),
+        )
 
 
 class MainTestCase(TestCase):

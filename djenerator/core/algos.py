@@ -1,13 +1,10 @@
 
-def topological_sort(models, dependencies_func):
+def topological_sort(models: list, dependencies_func) -> list:
     """
     Sort a given list of models according to the dependencies of the
     relations between the models.
 
-    :param List models:
-        A list of references to the classes of the given models.
-    :rtype: List
-    :returns: A list of references to the classes of the given models.
+    :param List models: A list of model class references.
     """
     result = []
     visited = set([])

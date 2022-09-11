@@ -1,4 +1,15 @@
+
+from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils.translation import gettext_lazy as _
+
+
+def validate_mod91(value):
+    if value % 91 != 0:
+        raise ValidationError(
+            _('%(value)s is not an even number'),
+            params={'value': value},
+        )
 
 
 class ExtendingModel(models.Model):
@@ -16,7 +27,7 @@ class TestModel0(models.Model):
 
 class TestModel1(models.Model):
     field1 = models.CharField(max_length=200)
-    field2 = models.BigIntegerField()
+    field2 = models.BigIntegerField(validators=[validate_mod91])
     field3 = models.ForeignKey(TestModel0, on_delete=models.CASCADE)
 
     class Meta:
@@ -82,14 +93,24 @@ class ExtendAbstract(SuperAbstract):
     fieldZZZ = models.IntegerField()
 
 
-# class ExtendSuperClass(SuperClass):
-#     fieldExSup = models.CharField(max_length=200)
+class Extend_SuperClass(SuperClass):
+    fieldExSup = models.CharField(max_length=200)
 
 
-# class ProxyExtend(SuperClass):
+class ExtendExtendSuperClass(Extend_SuperClass):
+    fieldExSup2 = models.CharField(max_length=200)
 
-#     class Meta:
-#         proxy = True
+
+class ExtendSuperClassNoProxy(SuperClass):
+
+    class Meta:
+        proxy = False
+
+
+class ProxyExtend(SuperClass):
+
+    class Meta:
+        proxy = True
 
 
 class TestModelFieldsTwo(models.Model):

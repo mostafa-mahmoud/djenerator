@@ -1,0 +1,3 @@
+
+class SparseGeneratorError(Exception):
+    pass

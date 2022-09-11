@@ -1,3 +1,4 @@
+import functools
 import logging
 import math
 import random
@@ -5,7 +6,9 @@ import random
 from django.db.utils import IntegrityError
 
 from .algos import topological_sort
-from .fields_generator import generate_random_field_values
+from .fields_generator import (
+    generate_random_field_values, generate_random_value
+)
 from .utils import (
     dependencies,
     field_name,
@@ -20,24 +23,46 @@ from .utils import (
 )
 
 
-logger = logging.getLogger('djenerator')
+logger = logging.getLogger(__name__)
 
 
 def generate_field_values(
-    field, size, prev_generated, fill_null=True,
-    generators={}, num_unique_constraints=0
-):
+    field, size: int, prev_generated: dict, fill_null: bool = True,
+    generators: dict = {}, num_unique_constraints: int = 0
+) -> list:
+    """
+    Generate a list of values for a given field.
+
+    :param field: A Django Field.
+    :param size: The number of values to generate.
+    :param prev_generated: A dictionary of previously generated_values.
+    :param fill_null: Fill all null values.
+    :param generators:
+        A dictionary containing generator function imported from the
+        test_data module.
+    :param num_unique_constraints:
+        Number of unique_together constraints in the model including
+        the given field.
+    """
+    gen_function = functools.partial(generate_random_value, field)
     values = []
     gen_size = size * (int(math.sqrt(1000 * num_unique_constraints)) + 1)
     if field_name(field) in generators.keys():
-        values = generators[field_name(field)](gen_size)
-    elif is_related(field):
+        gen_function = generators[field_name(field)]
+        if hasattr(gen_function, "__iter__"):
+            gen_function = gen_function.__iter__()
+
+    if is_related(field):
         related_model_cls = get_related_model(field)
         if related_model_cls.__name__ in prev_generated.keys():
             values = prev_generated[related_model_cls.__name__]
     else:
         values = generate_random_field_values(
-            field, gen_size, is_unique(field)
+            field,
+            gen_function,
+            gen_size,
+            is_unique(field),
+            validators=field.validators
         )
     # if num_unique_constraints > 0:
     #     logger.debug(f"{field.name} {len(values)}")
@@ -55,8 +80,12 @@ def generate_field_values(
 
 
 def generate_models(
-    model_cls, size, prev_generated, generators={}, fill_null=True
-):
+    model_cls, size: int, prev_generated: dict, generators: dict = {},
+    fill_null: bool = True
+) -> tuple:
+    """
+    Generate a set of instances of a given model class.
+    """
     fields = retrieve_fields(model_cls)
     generated_dicts = {}
     recheck = []
@@ -75,12 +104,11 @@ def generate_models(
         values = generate_field_values(
             field, size, prev_generated,
             num_unique_constraints=num_constraints,
-            generators=generators,
+            generators=generators.get(model_cls.__name__, None) or {},
             fill_null=fill_null
         )
         if values:
             generated_dicts[field_name(field)] = values
-            # print(field_name(field), "VALUES:", values)
             assert len(values) == size
         else:
             recheck.append(field)
@@ -108,6 +136,10 @@ def generate_models(
 
 
 def postcompute(to_postcompute, generated, fill_null=True):
+    """
+    Postcompute some of the postponed fields, especially when there are
+    cyclic relations of ManyToManyRelations.
+    """
     for model_cls_name, fields in to_postcompute.items():
         models = generated[model_cls_name]
         for field in fields:
@@ -127,7 +159,8 @@ def postcompute(to_postcompute, generated, fill_null=True):
             model.save()
 
 
-def generate_test_data(app_name, size, models_cls=None):
+def generate_test_data(app_name: str, size: int,
+                       fill_null: bool = True, models_cls: list[str] = None):
     """
     Generates a list of 'size' random data for each model in the models module
     in the given path, If the sample data is not enough for generating 'size'
@@ -135,17 +168,12 @@ def generate_test_data(app_name, size, models_cls=None):
     inconsistent then no data will be generated. The data will be stored in
     a temporary database used for generation.
 
-    :param str app_name: Name of the app
-    :param int size: An integer that specifies the size of the generated data.
-    :param dict size_options:
-        A dictionary of that maps a str:model_name to int:model_size, that will
-        be used as a size of the generated models. If a model is not in
-        size_options then the default value 'size' will be used.
+    :param app_name: Name of the app
+    :param size: An integer that specifies the size of the generated data.
     :rtype: None
     """
 
     all_models = retrieve_models(app_name + ".models")
-    generators = retrieve_generators(app_name + ".test_data")
     if models_cls is None:
         models_cls = all_models[:]
     else:
@@ -162,14 +190,18 @@ def generate_test_data(app_name, size, models_cls=None):
     if cycle:
         raise ValueError(
             "Detected cyclic dependencies between models. " +
-            " -> ".join(map(str, cycle))
+            " -> ".join(map(lambda cls: cls.__name__, cycle))
         )
 
+    generators = retrieve_generators(
+        app_name + ".test_data", [cls.__name__ for cls in models_cls]
+    )
     to_postcompute = {}
     generated = {}
     for model_cls in models_cls:
         models, recheck = generate_models(
-            model_cls, size, generated, generators=generators
+            model_cls, size, generated, generators=generators,
+            fill_null=fill_null
         )
         generated[model_cls.__name__] = models
         if recheck:

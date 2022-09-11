@@ -1,9 +1,7 @@
-#!/usr/bin/env python
 """
 This module has a function that matches django fields to the corresponding
 random value generator.
 """
-# import base64
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.db.models.fields import (
@@ -37,6 +35,8 @@ from django.db.models.fields.files import (
     FieldFile, FileField, ImageField, ImageFieldFile,
 )
 
+from .exceptions import SparseGeneratorError
+from .utils import validate_data
 from .values_generator import (
     generate_big_integer,
     generate_boolean,
@@ -60,37 +60,39 @@ from .values_generator import (
 )
 
 
-def generate_random_field_values(field, size, force_unique=False):
+def generate_random_field_values(
+    field, gen_function, size: int, force_unique: bool = False, validators=[]
+) -> list:
     """
     Generate a list of random values for a given field. The size of the output
     list might be less than 'size', if the total number of the possible values
     are less than 'size', like in Booleans.
 
-    :param DjangoField field:
-        A reference to the field to get values for.
-    :param int size: The size of the output list.
-    :rtype: List
+    :param DjangoField field: A reference to the field to get values for.
+    :param size: The size of the output list.
+    :param force_unique: A flag to validate unique values.
+    :param validators:
+        A list of django validators to generated only valid values.
     :returns: A list of random values generated for the given field.
     """
     results = set([])
     fail = 0
     for _ in range(10 * size):
-        value = generate_random_value(field)
-
-        if value not in results:
-            results.add(value)
-            if fail < 50:
-                fail = 0
-            if len(results) >= size:
-                break
-        else:
+        value = gen_function()
+        if (
+            value is None or value in results or
+            not validate_data(value, *validators)
+        ):
             fail += 1
+        else:
+            results.add(value)
+            fail = 0
+        if len(results) >= size or fail >= 50:
+            break
     if fail >= 50 and force_unique:
-        # TODO: raise warning of too few values
-        Warning("Limited values")
-        raise ValueError(
-            f"{field.name} has generated very few values, "
-            "but it must by a unique field"
+        raise SparseGeneratorError(
+            f"{field.model.__name__}.{field.name} has generated very few "
+            "valid values, but it must by a unique field"
         )
     return list(results)
 
