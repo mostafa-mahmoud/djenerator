@@ -23,8 +23,9 @@ from djenerator.core.utils import (
     is_unidirectional_related,
     is_unique,
     retrieve_fields,
-    # retrieve_generators,
-    retrieve_models
+    retrieve_generators,
+    retrieve_models,
+    validate_data
 )
 from djenerator.core.values_generator import (
     generate_big_integer,
@@ -55,12 +56,15 @@ from djenerator.core.values_generator import (
 from testapp.models import (
     Extend_SuperClass, ExtendAbstract, ExtendExtendSuperClass,
     ExtendSuperClassNoProxy, ProxyExtend, TestModelE, TestModelFields,
-    TestModelX, TestModelY,
+    TestModelX, TestModelY, validate_mod91,
 )
 
 
 class UtilsTestCase(TestCase):
     def test_utils(self):
+
+        models_abstract = retrieve_models('testapp.models', keep_abstract=True)
+
         models = retrieve_models('testapp.models')
         existing_models = [
             "ExtendingModel",
@@ -93,6 +97,10 @@ class UtilsTestCase(TestCase):
             sorted(existing_models),
             sorted([cls.__name__ for cls in models])
         )
+        self.assertEqual(
+            sorted(existing_models + ["SuperAbstract"]),
+            sorted([cls.__name__ for cls in models_abstract])
+        )
         fields = retrieve_fields(TestModelFields)
         names = [field_name(field) for field in fields]
         self.assertEqual(
@@ -106,7 +114,7 @@ class UtilsTestCase(TestCase):
                 "fieldF", "fieldG", "fieldH", "fieldX", "fieldZ"])
         )
         non_required_fields = [f.name for f in fields if not is_required(f)]
-        self.assertEqual(non_required_fields, ["fieldG"])
+        self.assertEqual(non_required_fields, ["fieldB", "fieldG"])
         unique_fields = set([f.name for f in fields if is_unique(f)])
         self.assertEqual(unique_fields, set(["fieldY", "fieldA", "fieldC"]))
         types = {
@@ -194,7 +202,33 @@ class UtilsTestCase(TestCase):
 
 class MainTestCase(TestCase):
     def test_djenerator(self):
-        models = retrieve_models("testapp.models", keep_abstract=False)
+        models = retrieve_models("testapp.models")
+        counts = {
+            model_cls.__name__: model_cls.objects.count()
+            for model_cls in models
+        }
+        first_models = [
+            "TestModelFields", "TestModelE", "TestModelX", "TestModelY",
+            "TestModelB", "TestModelC", "TestModelA"
+        ]
+        generate_test_data(
+            "testapp", 250, fill_null=False, models_cls=["TestModelFields"]
+        )
+        for model_cls in models:
+            if model_cls.__name__ in first_models:
+                self.assertGreaterEqual(
+                    model_cls.objects.count(),
+                    250 + counts[model_cls.__name__],
+                    model_cls.__name__
+                )
+        self.assertTrue(
+            any(x is None for x in (
+                list(TestModelY.objects.values_list("field2Y", flat=True)) +
+                list(TestModelFields.objects.values_list("fieldG", flat=True))
+                +
+                list(TestModelFields.objects.values_list("fieldB", flat=True))
+            ))
+        )
         counts = {
             model_cls.__name__: model_cls.objects.count()
             for model_cls in models
@@ -509,3 +543,12 @@ class TestFileGenerators(TestCase):
             self.assertTrue(b'IHDR' in img)
             self.assertTrue(b'IEND' in img)
             self.assertTrue(b'IDAT' in img)
+
+
+class TestTrivia(TestCase):
+    def test(self):
+        self.assertFalse(
+            retrieve_generators("testapp.fakemodule", ["TestModel1"])
+        )
+        self.assertFalse(validate_data(41, validate_mod91))
+        self.assertTrue(validate_data(182, validate_mod91))

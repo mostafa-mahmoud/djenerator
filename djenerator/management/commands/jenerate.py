@@ -12,6 +12,10 @@ class Command(BaseCommand):
             "size", type=int, help="Number of instance per model"
         )
         parser.add_argument(
+            "--allow-null", action="store_true",
+            help="decide of allowing null values"
+        )
+        parser.add_argument(
             "--models", type=str, default=None, nargs="*",
             help="Generate data for a specific set of models."
         )
@@ -20,5 +24,8 @@ class Command(BaseCommand):
         size = int(options["size"])
         app_name = options["app-name"]
         models_cls = options["models"]
+        fill_null = not options["allow_null"]
 
-        generate_test_data(app_name, size, models_cls=models_cls)
+        generate_test_data(
+            app_name, size, fill_null=fill_null, models_cls=models_cls
+        )

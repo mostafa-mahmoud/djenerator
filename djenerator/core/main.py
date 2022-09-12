@@ -84,6 +84,7 @@ def generate_field_values(
     if not values:
         return values
     elif is_unique(field):
+        assert len(set(values)) >= size, len(set(values))
         random.shuffle(values)  # choose without replacement
         return values[:size]
     else:
@@ -160,7 +161,7 @@ def postcompute(to_postcompute, generated, fill_null=True):
             if is_many_to_many_field(field):
                 for model in models:
                     getattr(model, field_name(field)).add(*choices(
-                        values, k=random.randint(1, min(5, len(values)))
+                        values, k=random.randint(0, min(5, len(values)))
                     ))
             else:
                 for model, value in zip(models, values):
@@ -192,11 +193,19 @@ def generate_test_data(app_name: str, size: int,
         names_map = dict(
             (model_cls.__name__, model_cls) for model_cls in all_models
         )
-        models_cls = [names_map[model_cls] for model_cls in models_cls]
+        models_cls = set([names_map[model_cls] for model_cls in models_cls])
         # get all dependencies
-        models_cls = list(set([
-            dep for model_cls in models_cls for dep in dependencies(model_cls)
-        ]))
+        siz = len(models_cls)
+        while True:
+            models_cls |= set([
+                dep for model_cls in models_cls
+                for dep in dependencies(model_cls, True)
+            ])
+            if len(models_cls) <= siz:
+                break
+            else:
+                siz = len(models_cls)
+        models_cls = list(models_cls)
 
     models_cls, cycle = topological_sort(models_cls, dependencies)
     if cycle:

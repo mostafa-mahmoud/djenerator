@@ -5,7 +5,7 @@ branch = True
 omit = 
     *django*
     *dist-packages*
-    example*
+    *site-packages*
 
 exclude_lines =
     pass

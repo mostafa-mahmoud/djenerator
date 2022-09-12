@@ -29,3 +29,6 @@ all: clean migrations
 
 shell:
 	python3 manage.py shell
+
+coverage:
+	coverage run --source "djenerator.core,testapp.models" manage.py test && coverage report

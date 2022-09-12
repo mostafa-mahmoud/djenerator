@@ -51,9 +51,6 @@ class TestModelA(models.Model):
         validators=[validators.validate_ipv4_address]
     )
 
-    def __unicode__(self):
-        return str(self.id) + " " + self.field1A + " " + self.field2A
-
 
 class TestModelB(models.Model):
     field1B = models.CharField(max_length=100)
@@ -83,7 +80,7 @@ class TestModelX(models.Model):
 
 class TestModelY(models.Model):
     field1Y = models.IntegerField()
-    field2Y = models.CharField(max_length=200)
+    field2Y = models.CharField(max_length=200, null=True)
     field3Y = models.ForeignKey(TestModelX, on_delete=models.CASCADE)
 
 
@@ -133,7 +130,10 @@ class TestModelFieldsTwo(models.Model):
     fieldD = models.IntegerField()
     fieldE = models.BooleanField()
     fieldF = models.IntegerField()
-    fieldG = models.CharField(max_length=200)
+    fieldG = models.CharField(
+        max_length=200,
+        validators=[validators.validate_comma_separated_integer_list]
+    )
     fieldH = models.BooleanField()
     fieldZ = models.ManyToManyField(TestModelE)
 
@@ -141,7 +141,7 @@ class TestModelFieldsTwo(models.Model):
 class TestModelFields(models.Model):
     fieldY = models.OneToOneField(TestModelY, on_delete=models.CASCADE)
     fieldA = models.CharField(max_length=500, primary_key=True)
-    fieldB = models.IntegerField()
+    fieldB = models.IntegerField(null=True)
     fieldC = models.CharField(max_length=50, unique=True)
     fieldD = models.IntegerField()
     fieldE = models.BooleanField()
@@ -216,6 +216,7 @@ class AllFieldsModel(models.Model):
     slug_field = models.SlugField()
     uuid_field = models.UUIDField()
     file_path_field = models.FilePathField()
-    binary_field = models.BinaryField(max_length=200)
+    # binary_field = models.BinaryField(max_length=200)
+    binary_field = models.BinaryField()
     file_field = models.FileField(upload_to=os.path.join('media', 'files'))
     image_field = models.ImageField(upload_to=os.path.join('media', 'images'))

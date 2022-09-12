@@ -44,7 +44,7 @@ from .utils import is_unique, validate_data
 from .values_generator import (
     generate_big_integer,
     generate_boolean,
-    generate_comma_separated_int,
+    # generate_comma_separated_int,
     generate_date_time,
     generate_decimal,
     generate_email,
@@ -147,16 +147,13 @@ def generate_random_value(field):
         return generate_ip()
     elif (
         isinstance(field, CommaSeparatedIntegerField) or
-        validators.validate_comma_separated_integer_list in field.validators
+        validators.validate_comma_separated_integer_list in field.validators or
+        validators.int_list_validator in field.validators
     ):
-        return generate_comma_separated_int(field.max_length)
-    elif validators.int_list_validator in field.validators:
+        # return generate_comma_separated_int(field.max_length)
         return generate_integer_list(field.max_length)
     elif isinstance(field, BinaryField):
-        length = field.max_length
-        if not length:
-            length = 100
-        return generate_string(length).encode()
+        return generate_string(field.max_length or 100).encode()
     elif (
         isinstance(field, SlugField) or
         validators.validate_slug in field.validators or

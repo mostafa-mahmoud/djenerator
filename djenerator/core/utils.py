@@ -69,8 +69,10 @@ def dependencies(model_cls, strong_dependency: bool = False) -> list:
     return [
         get_related_model(field)
         for field in retrieve_fields(model_cls)
-        if is_unidirectional_related(field) and (
-            is_required(field) or strong_dependency
+        if (
+            is_unidirectional_related(field) and (
+                is_required(field) or strong_dependency
+            ) or (is_related(field) and strong_dependency)
         )
     ]
 
@@ -213,6 +215,8 @@ def retrieve_generators(module_path, models_names):
             }
             for name in models_names if hasattr(module, name)
         }
+    except ImportError:
+        return {}
     except ModuleNotFoundError:
         return {}
 

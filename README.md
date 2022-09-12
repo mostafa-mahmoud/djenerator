@@ -34,6 +34,18 @@ The generation of data are then done by a command using manage.py file in your p
 $ python3 manage.py jenerate app_name size
 ```
 
+To generate for specific models:
+
+```bash
+$ python3 manage.py jenerate app_name size --models ModelA ModelB ...
+```
+
+To allow some null values
+
+```bash
+$ python3 manage.py jenerate app_name size --allow-null
+```
+
 ## Writing your custom generators
 
 You can add a customized values generator for a some fields in some models.
@@ -109,8 +121,8 @@ The following combinations are tested:
 ## Requirements
 
 1. `django >= 1.10`.
-1. `pytz` is required for `django < 1.11`, otherwise it is installed by django when it is required.
-1. `pillow` if ImageFields are used.
+1. `pytz` is required to manually installed for `django < 1.11`, otherwise it is installed by django when it is required (it is not required for higher versions of django).
+1. `pillow` if ImageFields are used, we don't require it be default, but django will.
 
 Our setup requires only `django`, other packages are reported by django.
 
