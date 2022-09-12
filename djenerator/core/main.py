@@ -1,4 +1,5 @@
 import functools
+import inspect
 import logging
 import math
 import random
@@ -6,6 +7,7 @@ import random
 from django.db.utils import IntegrityError
 
 from .algos import topological_sort
+from .exceptions import InvalidGenerator
 from .fields_generator import (
     generate_random_field_values, generate_random_value
 )
@@ -17,6 +19,7 @@ from .utils import (
     is_related,
     is_required,
     is_unique,
+    make_generator,
     retrieve_fields,
     retrieve_generators,
     retrieve_models,
@@ -44,28 +47,35 @@ def generate_field_values(
         Number of unique_together constraints in the model including
         the given field.
     """
-    gen_function = functools.partial(generate_random_value, field)
+    gen_function = make_generator(
+        functools.partial(generate_random_value, field)
+    )
     values = []
     gen_size = size * (int(math.sqrt(1000 * num_unique_constraints)) + 1)
     if field_name(field) in generators.keys():
-        gen_function = generators[field_name(field)]
-        if hasattr(gen_function, "__iter__"):
-            gen_function = gen_function.__iter__()
+        iterator = generators[field_name(field)]
+        if hasattr(iterator, "__iter__"):
+            gen_function = iterator.__iter__()
+        else:
+            sign = inspect.signature(iterator)
+            if [
+                p.kind for p in sign.parameters.values()
+                if p.kind not in [p.KEYWORD_ONLY, p.VAR_KEYWORD]
+            ]:
+                raise InvalidGenerator(
+                    ("The generator for %s.%s has some required arguments"
+                     ", which can't be given.") %
+                    (field.model.__name__, field.name)
+                )
+
+            gen_function = make_generator(iterator)
 
     if is_related(field):
         related_model_cls = get_related_model(field)
         if related_model_cls.__name__ in prev_generated.keys():
             values = prev_generated[related_model_cls.__name__]
     else:
-        values = generate_random_field_values(
-            field,
-            gen_function,
-            gen_size,
-            is_unique(field),
-            validators=field.validators
-        )
-    # if num_unique_constraints > 0:
-    #     logger.debug(f"{field.name} {len(values)}")
+        values = generate_random_field_values(field, gen_function, gen_size)
 
     if not fill_null and not is_required(field):
         values.append(None)
@@ -80,7 +90,7 @@ def generate_field_values(
 
 
 def generate_models(
-    model_cls, size: int, prev_generated: dict, generators: dict = {},
+    model_cls, size: int, prev_generated: dict = {}, generators: dict = {},
     fill_null: bool = True
 ) -> tuple:
     """
@@ -104,7 +114,7 @@ def generate_models(
         values = generate_field_values(
             field, size, prev_generated,
             num_unique_constraints=num_constraints,
-            generators=generators.get(model_cls.__name__, None) or {},
+            generators=generators.get(model_cls.__name__, {}),
             fill_null=fill_null
         )
         if values:
@@ -119,18 +129,18 @@ def generate_models(
                 key: generated_dicts[key][i] for key in generated_dicts.keys()
             })
         except IntegrityError:  # as error:
-            """
-            for j in range(size):
-                print({
-                    key: generated_dicts[key][j]
-                    for key in generated_dicts.keys()
-                }, "\n")
-            print("\n--------------------\n")
-            for k, v in generated_dicts.items():
-                print(k, "::", len(set(v)), set(v), "\n")
-            """
+            # for j in range(size):
+            #     print({
+            #         key: generated_dicts[key][j]
+            #         for key in generated_dicts.keys()
+            #     }, "\n")
+            # print("\n--------------------\n")
+            # for k, v in generated_dicts.items():
+            #     print(k, "::", len(set(v)), set(v), "\n")
             raise
-        logger.info(f"generated Model {model.__class__.__name__} {model.pk}")
+        logger.info(
+            "generated Model %s %s", model.__class__.__name__, model.pk
+        )
         models.append(model)
     return models, recheck
 
@@ -170,7 +180,8 @@ def generate_test_data(app_name: str, size: int,
 
     :param app_name: Name of the app
     :param size: An integer that specifies the size of the generated data.
-    :rtype: None
+    :param fill_null: if True, no null values will be allowed.
+    :param models_cls: Generate only for a specific set of models.
     """
 
     all_models = retrieve_models(app_name + ".models")

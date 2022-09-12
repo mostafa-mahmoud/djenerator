@@ -226,3 +226,11 @@ def validate_data(value, *validators) -> bool:
     except ValidationError:
         return False
     return True
+
+
+def make_generator(func):
+    """
+    Create an infinite generator out of a function returning random values.
+    """
+    while True:
+        yield func()

@@ -1,4 +1,6 @@
+import os
 
+from django.core import validators
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -26,7 +28,9 @@ class TestModel0(models.Model):
 
 
 class TestModel1(models.Model):
-    field1 = models.CharField(max_length=200)
+    field1 = models.CharField(
+        max_length=200, validators=[validators.int_list_validator]
+    )
     field2 = models.BigIntegerField(validators=[validate_mod91])
     field3 = models.ForeignKey(TestModel0, on_delete=models.CASCADE)
 
@@ -37,6 +41,15 @@ class TestModel1(models.Model):
 class TestModelA(models.Model):
     field1A = models.CharField(max_length=200)
     field2A = models.CharField(max_length=200)
+    field3A = models.GenericIPAddressField(
+        validators=[validators.validate_ipv46_address]
+    )
+    field4A = models.GenericIPAddressField(
+        validators=[validators.validate_ipv6_address]
+    )
+    field5A = models.GenericIPAddressField(
+        validators=[validators.validate_ipv4_address]
+    )
 
     def __unicode__(self):
         return str(self.id) + " " + self.field1A + " " + self.field2A
@@ -200,5 +213,5 @@ class AllFieldsModel(models.Model):
     uuid_field = models.UUIDField()
     file_path_field = models.FilePathField()
     binary_field = models.BinaryField(max_length=200)
-    file_field = models.FileField(upload_to='files/')
-    image_field = models.ImageField(upload_to='images/')
+    file_field = models.FileField(upload_to=os.path.join('media', 'files'))
+    image_field = models.ImageField(upload_to=os.path.join('media', 'images'))

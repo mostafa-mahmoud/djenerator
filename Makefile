@@ -2,7 +2,11 @@ clean:
 	@find . -name "__pycache__" -exec rm -rfv {} +
 	@find . -name "migrations" -exec rm -rfv {} +
 	@find . -name "db.sqlite3" -exec rm -rfv {} +
-	@rm -vfr files images
+	@rm -vfr files images build dist djenerator.egg-info media
+	@find . -name "__pycache__ 2" -exec rm -rfv {} +
+	@find . -name "migrations 2" -exec rm -rfv {} +
+	@find . -name "db.sqlite3 2" -exec rm -rfv {} +
+	@rm -vfr "files 2" "images 2"
 
 migrations:
 	python3 manage.py makemigrations testapp

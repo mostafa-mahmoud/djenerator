@@ -22,7 +22,6 @@ from djenerator.core.utils import (
     # is_reverse_related,
     is_unidirectional_related,
     is_unique,
-    # names_of_fields,
     retrieve_fields,
     # retrieve_generators,
     retrieve_models
@@ -185,7 +184,17 @@ class UtilsTestCase(TestCase):
 
 class MainTestCase(TestCase):
     def test_djenerator(self):
+        models = retrieve_models("testapp.models", keep_abstract=False)
+        counts = {
+            model_cls.__name__: model_cls.objects.count()
+            for model_cls in models
+        }
         generate_test_data("testapp", 50)
+        for model_cls in models:
+            self.assertGreaterEqual(
+                model_cls.objects.count(), 50 + counts[model_cls.__name__],
+                model_cls.__name__
+            )
 
 
 class AlgorithmsTestCase(TestCase):
@@ -260,9 +269,21 @@ class TestFieldsGeneratorNumbers(TestCase):
             gen_val = generate_boolean(True)
             self.assertTrue(gen_val is None or isinstance(gen_val, bool))
 
-            gen_val = generate_ip()
+            gen_val = generate_ip(v6=False)
             self.assertTrue(isinstance(gen_val, str))
-            ip_regex = r'^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$'
+            ip_regex = r'^(?:\d{1,3})(?:\.\d{1,3}){3}$'
+            match = re.search(ip_regex, gen_val)
+            self.assertRegexpMatches(gen_val, ip_regex)
+            self.assertIsNotNone(match)
+            match = map(int, match.groups())
+            self.assertTrue(all([x in range(256) for x in match]))
+
+            gen_val = generate_ip(v4=False)
+            self.assertTrue(isinstance(gen_val, str))
+            ip_regex = (
+                r'^(?:[0123456789ABCDEF]{1,4})'
+                r'(?:\:[0123456789ABCDEF]{1,4}){7}$'
+            )
             match = re.search(ip_regex, gen_val)
             self.assertRegexpMatches(gen_val, ip_regex)
             self.assertIsNotNone(match)

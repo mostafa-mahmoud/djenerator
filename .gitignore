@@ -1,5 +1,5 @@
 *~HEAD
-*.py[cod]
+*.py[code]
 __pycache__
 
 # C extensions
@@ -33,7 +33,7 @@ media/*
 *.sqlite3
 
 # Editor
-*.sw[op]
+*.sw[opm]
 
 # Sphinx
 docs/_build

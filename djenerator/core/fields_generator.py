@@ -3,6 +3,7 @@ This module has a function that matches django fields to the corresponding
 random value generator.
 """
 from django.conf import settings
+from django.core import validators
 from django.core.files.base import ContentFile
 from django.db.models.fields import (
     BigIntegerField,
@@ -36,7 +37,7 @@ from django.db.models.fields.files import (
 )
 
 from .exceptions import SparseGeneratorError
-from .utils import validate_data
+from .utils import is_unique, validate_data
 from .values_generator import (
     generate_big_integer,
     generate_boolean,
@@ -48,6 +49,7 @@ from .values_generator import (
     generate_file_path,
     generate_float,
     generate_int,
+    generate_integer_list,
     generate_ip,
     generate_png,
     generate_positive_big_integer,
@@ -60,39 +62,40 @@ from .values_generator import (
 )
 
 
-def generate_random_field_values(
-    field, gen_function, size: int, force_unique: bool = False, validators=[]
-) -> list:
+def generate_random_field_values(field, generator, size: int) -> list:
     """
     Generate a list of random values for a given field. The size of the output
     list might be less than 'size', if the total number of the possible values
-    are less than 'size', like in Booleans.
+    are less than 'size', like in Booleans. The given generator can be an
+    iterator over a list, or a generator that generates random (possibly
+    repetitive) values. The generator must always yield a "valid" value with
+    high probability, otherwise it will raise a SparseGeneratorException if
+    it fails frequently (50 times in a row); valid here means non-repetitive
+    values that satisfies the validator of the django field.
 
     :param DjangoField field: A reference to the field to get values for.
+    :param generator: A generator that generates a set of values.
     :param size: The size of the output list.
-    :param force_unique: A flag to validate unique values.
-    :param validators:
-        A list of django validators to generated only valid values.
     :returns: A list of random values generated for the given field.
     """
     results = set([])
     fail = 0
-    for _ in range(10 * size):
-        value = gen_function()
+    for idx, value in enumerate(generator):
         if (
             value is None or value in results or
-            not validate_data(value, *validators)
+            not validate_data(value, *field.validators)
         ):
             fail += 1
         else:
             results.add(value)
             fail = 0
-        if len(results) >= size or fail >= 50:
+        if len(results) >= size or fail >= 50 or idx >= 10 * size:
             break
-    if fail >= 50 and force_unique:
+    if fail >= 50 and is_unique(field):
         raise SparseGeneratorError(
-            f"{field.model.__name__}.{field.name} has generated very few "
-            "valid values, but it must by a unique field"
+            ("%s.%s has generated very few valid values"
+             ", but it must by a unique field.") %
+            (field.model.__name__, field.name)
         )
     return list(results)
 
@@ -109,13 +112,57 @@ def generate_random_value(field):
         return generate_positive_big_integer()
     elif isinstance(field, BigIntegerField):
         return generate_big_integer()
-    elif isinstance(field, EmailField):
-        return generate_email(field.max_length)
+    elif isinstance(field, PositiveSmallIntegerField):
+        return abs(generate_small_integer())
+    elif isinstance(field, PositiveIntegerField):
+        return generate_positive_integer()
+    elif isinstance(field, SmallIntegerField):
+        return generate_small_integer()
+    elif isinstance(field, IntegerField):
+        return generate_int()
     elif isinstance(field, (BooleanField, NullBooleanField)):
         return generate_boolean()
-    elif isinstance(field, CommaSeparatedIntegerField):
+    elif (isinstance(field, EmailField) or
+          validators.validate_email in field.validators or any(
+              isinstance(v, validators.EmailValidator)
+              for v in field.validators
+          )):
+        return generate_email(field.max_length)
+    elif (isinstance(field, URLField) or any(
+            isinstance(v, validators.URLValidator) for v in field.validators
+          )):
+        return generate_url(field.max_length)
+    elif validators.validate_ipv4_address in field.validators:
+        return generate_ip(v6=False)
+    elif validators.validate_ipv6_address in field.validators:
+        return generate_ip(v4=False)
+    elif (isinstance(field, (GenericIPAddressField, IPAddressField)) or
+          validators.validate_ipv46_address in field.validators):
+        return generate_ip()
+    elif (
+        isinstance(field, CommaSeparatedIntegerField) or
+        validators.validate_comma_separated_integer_list in field.validators
+    ):
         return generate_comma_separated_int(field.max_length)
-    elif isinstance(field, DecimalField):
+    elif validators.int_list_validator in field.validators:
+        return generate_integer_list(field.max_length)
+    elif isinstance(field, BinaryField):
+        length = field.max_length
+        if not length:
+            length = 100
+        return generate_string(length).encode()
+    elif (isinstance(field, SlugField) or
+            validators.validate_slug in field.validators or
+            validators.validate_unicode_slug in field.validators):
+        return generate_string(field.max_length, special=['_', '-'])
+    elif isinstance(field, TextField):
+        return generate_text(field.max_length)
+    elif (
+        isinstance(field, DecimalField) or any(
+            isinstance(v, validators.DecimalValidator)
+            for v in field.validators
+        )
+    ):
         return generate_decimal(field.max_digits, field.decimal_places)
     elif isinstance(field, DateTimeField):
         timezone = settings.USE_TZ and settings.TIME_ZONE
@@ -125,33 +172,9 @@ def generate_random_value(field):
         return generate_date_time(tz=timezone).date()
     elif isinstance(field, FloatField):
         return generate_float()
-    elif isinstance(field, PositiveSmallIntegerField):
-        return abs(generate_small_integer())
-    elif isinstance(field, PositiveIntegerField):
-        return generate_positive_integer()
-    elif isinstance(field, URLField):
-        return generate_url(field.max_length)
-    elif isinstance(field, BinaryField):
-        length = field.max_length
-        if not length:
-            length = 100
-        return generate_string(length).encode()
-        # return buffer(base64.b64encode(generate_string(length)))
-    elif isinstance(field, SlugField):
-        return generate_string(field.max_length, special=['_', '-'])
-    elif isinstance(field, TextField):
-        return generate_text(field.max_length)
-    elif isinstance(field, SmallIntegerField):
-        return generate_small_integer()
     elif isinstance(field, TimeField):
         timezone = settings.USE_TZ and settings.TIME_ZONE
         return generate_date_time(tz=timezone).time()
-    elif isinstance(field, IntegerField):
-        return generate_int()
-    elif isinstance(field, GenericIPAddressField):
-        return generate_ip()
-    elif isinstance(field, IPAddressField):
-        return generate_ip()
     elif isinstance(field, DurationField):
         timezone = settings.USE_TZ and settings.TIME_ZONE
         t1 = generate_date_time(tz=timezone)
@@ -160,12 +183,17 @@ def generate_random_value(field):
             return t2 - t1
         else:
             return t1 - t2
-    elif isinstance(field, CharField):
-        return generate_string(field.max_length)
     elif isinstance(field, UUIDField):
         return generate_uuid()
     elif isinstance(field, FilePathField):
         return generate_file_path()
+    elif any(
+        isinstance(v, validators.RegexValidator) for v in field.validators
+    ):
+        # TODO: Handle this scenario with exrex package.
+        return generate_string(field.max_length)
+    elif isinstance(field, CharField):
+        return generate_string(field.max_length)
     elif isinstance(field, ImageField):
         name = generate_file_name(12, extension='png')
         image = generate_png()

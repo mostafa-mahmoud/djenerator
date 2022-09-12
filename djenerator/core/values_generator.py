@@ -64,8 +64,16 @@ def generate_boolean(null_allowed=False):
         return bool(res)
 
 
-def generate_ip():
-    return '.'.join([str(randint(0, 255)) for _ in range(4)])
+def generate_ip(v4=True, v6=True):
+    ip4 = '.'.join([str(randint(0, 255)) for _ in range(4)])
+    ip6 = ':'.join([hex(randint(0, 2 ** 16 - 1))[2:].upper()
+                    for _ in range(8)])
+    if v4 and v6:
+        return choice([ip4, ip6])
+    if v6:
+        return ip6
+    else:
+        return ip4
 
 
 def generate_comma_separated_int(max_length):
@@ -330,3 +338,23 @@ def generate_png(width=128, height=128):
         png_pack(b'IHDR', struct.pack("!2I5B", width, height, 8, 6, 0, 0, 0)),
         png_pack(b'IDAT', zlib.compress(raw_data, 9)),
         png_pack(b'IEND', b'')])
+
+
+def generate_integer_list(max_length=128, sep=',', allow_negative=True):
+    length = randint(1, max_length)
+    res = ""
+    while len(res) + 8 <= length:
+        if res:
+            res += sep
+        if not allow_negative or random() < 0.5:
+            res += str(randint(0, 999999))
+        else:
+            res += str(randint(-999999, 0))
+
+    if 1 < length - len(res):
+        if res:
+            res += sep
+        res += str(randint(0, 10 ** (length - len(res) - 1) - 1))
+    elif len(res) == 0:
+        res += str(randint(0, 10 ** (length - len(res)) - 1))
+    return res
