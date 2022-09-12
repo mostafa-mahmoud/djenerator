@@ -17,4 +17,12 @@ cat Dockerfile.temp | sed "s/3.5/3.6/" | sed "s/2.2/3.2.15/"  > Dockerfile && ma
 head -n 1 Dockerfile && head -n 5 Dockerfile | tail -n 1 && echo -e "\n\n"
 cat Dockerfile.temp | sed "s/3.5/3.7/" | sed "s/2.2/3.2.15/"  > Dockerfile && make docker-test
 head -n 1 Dockerfile && head -n 5 Dockerfile | tail -n 1 && echo -e "\n\n"
+cat Dockerfile.temp | sed "s/3.5/3.8/" | sed "s/2.2/4.0.7/"  > Dockerfile && make docker-test
+head -n 1 Dockerfile && head -n 5 Dockerfile | tail -n 1 && echo -e "\n\n"
+cat Dockerfile.temp | sed "s/3.5/3.8/" | sed "s/2.2/4.1.1/"  > Dockerfile && make docker-test
+head -n 1 Dockerfile && head -n 5 Dockerfile | tail -n 1 && echo -e "\n\n"
+cat Dockerfile.temp | sed "s/3.5/3.9/" | sed "s/2.2/4.0.7/"  > Dockerfile && make docker-test
+head -n 1 Dockerfile && head -n 5 Dockerfile | tail -n 1 && echo -e "\n\n"
+cat Dockerfile.temp | sed "s/3.5/3.9/" | sed "s/2.2/4.1.1/"  > Dockerfile && make docker-test
+head -n 1 Dockerfile && head -n 5 Dockerfile | tail -n 1 && echo -e "\n\n"
 rm Dockerfile

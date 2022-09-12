@@ -258,6 +258,10 @@ def get_timezone(tz: str):
     try:
         import zoneinfo
         return zoneinfo.ZoneInfo(tz)
-    except Exception:
-        import pytz
-        return pytz.timezone(tz)
+    except ImportError:
+        try:
+            from backports import zoneinfo
+            return zoneinfo.ZoneInfo(tz)
+        except Exception:
+            import pytz
+            return pytz.timezone(tz)
