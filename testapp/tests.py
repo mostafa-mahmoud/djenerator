@@ -144,9 +144,19 @@ class UtilsTestCase(TestCase):
             set(dependencies(TestModelFields)),
             set([TestModelX, TestModelY])
         )
-        self.assertTrue(is_auto_field(TestModelE.id.field))
-        self.assertFalse(is_auto_field(TestModelFields.fieldZ.field))
-        self.assertFalse(is_auto_field(TestModelFields.fieldA.field))
+
+        f = next(filter(
+            lambda x: field_name(x) == "id", TestModelE._meta.fields
+        ))
+        self.assertTrue(is_auto_field(f))
+        self.assertFalse(is_auto_field(
+            next(field_name(f) == 'fieldZ'
+                 for f in retrieve_fields(TestModelFields))
+        ))
+        self.assertFalse(is_auto_field(
+            next(field_name(f) == 'fieldA'
+                 for f in retrieve_fields(TestModelFields))
+        ))
 
         self.assertEqual(
             set([field_name(f) for f in retrieve_fields(ExtendAbstract)]),

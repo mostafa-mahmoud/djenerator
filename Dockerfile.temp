@@ -1,0 +1,13 @@
+FROM python:3.5-stretch
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+RUN chown -R root:root /usr/local/lib/python*
+RUN pip3 install --no-cache --pre Django==2.2 pillow
+COPY djenerator/ /tmp/djenerator
+COPY setup.py README.md /tmp
+RUN (cd tmp && python3 setup.py install)
+COPY backend /opt/pyapps/djentest/backend
+COPY testapp /opt/pyapps/djentest/testapp
+COPY manage.py /opt/pyapps/djentest/
+WORKDIR /opt/pyapps/djentest
+CMD ["python3", "manage.py", "test"]

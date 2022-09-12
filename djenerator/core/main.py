@@ -12,6 +12,7 @@ from .fields_generator import (
     generate_random_field_values, generate_random_value
 )
 from .utils import (
+    choices,
     dependencies,
     field_name,
     get_related_model,
@@ -86,7 +87,7 @@ def generate_field_values(
         random.shuffle(values)  # choose without replacement
         return values[:size]
     else:
-        return random.choices(values, k=size)  # choose with replacement
+        return choices(values, k=size)  # choose with replacement
 
 
 def generate_models(
@@ -158,7 +159,7 @@ def postcompute(to_postcompute, generated, fill_null=True):
             )
             if is_many_to_many_field(field):
                 for model in models:
-                    getattr(model, field_name(field)).add(*random.choices(
+                    getattr(model, field_name(field)).add(*choices(
                         values, k=random.randint(1, min(5, len(values)))
                     ))
             else:
@@ -170,7 +171,7 @@ def postcompute(to_postcompute, generated, fill_null=True):
 
 
 def generate_test_data(app_name: str, size: int,
-                       fill_null: bool = True, models_cls: list[str] = None):
+                       fill_null: bool = True, models_cls: list = None):
     """
     Generates a list of 'size' random data for each model in the models module
     in the given path, If the sample data is not enough for generating 'size'

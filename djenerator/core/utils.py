@@ -1,5 +1,6 @@
 
 import inspect
+import random
 from importlib import import_module
 
 from django.core.exceptions import ValidationError
@@ -234,3 +235,25 @@ def make_generator(func):
     """
     while True:
         yield func()
+
+
+def choices(lst: list, k: int = 1) -> list:
+    """
+    Select k random values randomly from a list.
+    """
+    if hasattr(random, "choices"):
+        return random.choices(lst, k=k)
+    else:
+        return [random.choice(lst) for _ in range(k)]
+
+
+def get_timezone(tz: str):
+    """
+    Get the timezone from the timezone.
+    """
+    try:
+        import zoneinfo
+        return zoneinfo.ZoneInfo(tz)
+    except Exception:
+        import pytz
+        return pytz.timezone(tz)

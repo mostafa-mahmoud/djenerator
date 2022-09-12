@@ -22,7 +22,6 @@ from django.db.models.fields import (
     IntegerField,
     IPAddressField,
     NullBooleanField,
-    PositiveBigIntegerField,
     PositiveIntegerField,
     PositiveSmallIntegerField,
     SlugField,
@@ -32,6 +31,10 @@ from django.db.models.fields import (
     URLField,
     UUIDField,
 )
+try:
+    from django.db.models.fields import PositiveBigIntegerField
+except ImportError:
+    PositiveBigIntegerField = None
 from django.db.models.fields.files import (
     FieldFile, FileField, ImageField, ImageFieldFile,
 )
@@ -108,7 +111,10 @@ def generate_random_value(field):
     :param DjangoField field: A reference to the field to get values for.
     :returns: A random value generated for the given field.
     """
-    if isinstance(field, PositiveBigIntegerField):
+    if (
+        PositiveBigIntegerField is not None and
+        isinstance(field, PositiveBigIntegerField)
+    ):
         return generate_positive_big_integer()
     elif isinstance(field, BigIntegerField):
         return generate_big_integer()
@@ -151,9 +157,11 @@ def generate_random_value(field):
         if not length:
             length = 100
         return generate_string(length).encode()
-    elif (isinstance(field, SlugField) or
-            validators.validate_slug in field.validators or
-            validators.validate_unicode_slug in field.validators):
+    elif (
+        isinstance(field, SlugField) or
+        validators.validate_slug in field.validators or
+        validators.validate_unicode_slug in field.validators
+    ):
         return generate_string(field.max_length, special=['_', '-'])
     elif isinstance(field, TextField):
         return generate_text(field.max_length)

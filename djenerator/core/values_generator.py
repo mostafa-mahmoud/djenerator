@@ -10,7 +10,7 @@ from decimal import Decimal
 from itertools import islice
 from random import choice, randint, random, shuffle
 
-import pytz
+from .utils import get_timezone
 
 
 def generate_integer(bits=32, negative_allowed=True):
@@ -115,7 +115,7 @@ def generate_string(max_length, lower=True, upper=True, digits=True,
 def generate_date_time(auto_now=False, tz=None):
     if auto_now:
         if tz:
-            return datetime.datetime.now(tzinfo=pytz.timezone(tz))
+            return datetime.datetime.now(tzinfo=get_timezone(tz))
         else:
             return datetime.datetime.now()
     else:
@@ -140,7 +140,7 @@ def generate_date_time(auto_now=False, tz=None):
         if tz:
             return datetime.datetime(year, month, day, hour, minute,
                                      second, microsecond,
-                                     tzinfo=pytz.timezone(tz))
+                                     tzinfo=get_timezone(tz))
         else:
             return datetime.datetime(year, month, day, hour, minute,
                                      second, microsecond)

@@ -200,11 +200,15 @@ class AllFieldsModel(models.Model):
     date_field = models.DateField()
     duration_field = models.DurationField()
     float_field = models.FloatField()
-    null_bool_field = models.BooleanField(null=True)
+    # null_bool_field = models.BooleanField(null=True)
     pos_int_field = models.PositiveIntegerField()
     small_pos_int_field = models.PositiveSmallIntegerField()
     small_int_field = models.SmallIntegerField()
-    pos_big_int_field = models.PositiveBigIntegerField()
+    pos_big_int_field = (
+        models.PositiveBigIntegerField()
+        if hasattr(models, "PositiveBigIntegerField") else
+        models.BigIntegerField()
+    )
     text_field = models.TextField(max_length=500)
     time_field = models.TimeField()
     gen_ip_field = models.GenericIPAddressField()

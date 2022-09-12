@@ -1,0 +1,20 @@
+#!/bin/bash
+cat Dockerfile.temp | sed "s/3.5/3.5/" | sed "s/2.2/1.10.8 pytz/"  > Dockerfile && make docker-test
+head -n 1 Dockerfile && head -n 5 Dockerfile | tail -n 1 && echo -e "\n\n"
+cat Dockerfile.temp | sed "s/3.5/3.5/" | sed "s/2.2/1.11.29/"  > Dockerfile && make docker-test
+head -n 1 Dockerfile && head -n 5 Dockerfile | tail -n 1 && echo -e "\n\n"
+cat Dockerfile.temp | sed "s/3.5/3.6/" | sed "s/2.2/1.11.29/"  > Dockerfile && make docker-test
+head -n 1 Dockerfile && head -n 5 Dockerfile | tail -n 1 && echo -e "\n\n"
+cat Dockerfile.temp | sed "s/3.5/3.7/" | sed "s/2.2/1.11.29/"  > Dockerfile && make docker-test
+head -n 1 Dockerfile && head -n 5 Dockerfile | tail -n 1 && echo -e "\n\n"
+cat Dockerfile.temp | sed "s/3.5/3.5/" | sed "s/2.2/2.2.28/"  > Dockerfile && make docker-test
+head -n 1 Dockerfile && head -n 5 Dockerfile | tail -n 1 && echo -e "\n\n"
+cat Dockerfile.temp | sed "s/3.5/3.6/" | sed "s/2.2/2.2.28/"  > Dockerfile && make docker-test
+head -n 1 Dockerfile && head -n 5 Dockerfile | tail -n 1 && echo -e "\n\n"
+cat Dockerfile.temp | sed "s/3.5/3.7/" | sed "s/2.2/2.2.28/"  > Dockerfile && make docker-test
+head -n 1 Dockerfile && head -n 5 Dockerfile | tail -n 1 && echo -e "\n\n"
+cat Dockerfile.temp | sed "s/3.5/3.6/" | sed "s/2.2/3.2.15/"  > Dockerfile && make docker-test
+head -n 1 Dockerfile && head -n 5 Dockerfile | tail -n 1 && echo -e "\n\n"
+cat Dockerfile.temp | sed "s/3.5/3.7/" | sed "s/2.2/3.2.15/"  > Dockerfile && make docker-test
+head -n 1 Dockerfile && head -n 5 Dockerfile | tail -n 1 && echo -e "\n\n"
+rm Dockerfile

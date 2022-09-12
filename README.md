@@ -6,7 +6,7 @@ Djenerator is a simple tool made to generate test/random data from the model des
 Using pip, you can install djenerator using this command:
 
 ```bash
-$ pip install djenerator
+$ pip3 install djenerator
 ```
 
 ## Usage
@@ -22,9 +22,9 @@ INSTALLED_APPS = [
    'django.contrib.auth',
    'django.contrib.contenttypes',
    'django.contrib.sessions',
-   ...
+   # ...
    'djenerator',
-   ...
+   # ...
 ]
 ```
 
@@ -38,7 +38,7 @@ $ python3 manage.py jenerate app_name size
 
 You can add a customized values generator for a some fields in some models.
 **This will most likely be required if you are writing your own validators.**
-Writing your customized generator, can be done by adding a class to the module `{appname}.test_data`:
+Writing your customized generator, can be done by adding a class to the module `{app_name}.test_data`:
 1. Write a class with the same name as the model.
 2. For the fields to write a custom generator, write an attirbute with a matching name, with the generator as a value.
 
@@ -68,7 +68,7 @@ class TestModel(models.Model):
         unique_together = (('field1', 'field2'),)
 ```
 
-then `testapp/test_data.py` is the following:
+then `testapp/test_data.py` will contain the following:
 
 ```python
 import random
@@ -89,10 +89,30 @@ In the example above, the `validate_mod91` checks if a number is divisible by 91
 Run the tests by running the command:
 
 ```bash
-
 $ python3 manage.py test
-
 ```
+
+The following combinations are tested:
+
+| Django      | Python      | Status |
+| ----------- | ----------- | ------ |
+|    1.10.8   |     3.5     |   ✅   |
+|    1.11.29  |     3.5     |   ✅   |
+|    1.11.29  |     3.6     |   ✅   |
+|    1.11.29  |     3.7     |   ✅   |
+|    2.2.28   |     3.5     |   ✅   |
+|    2.2.28   |     3.6     |   ✅   |
+|    2.2.28   |     3.7     |   ✅   |
+|    3.2.15   |     3.6     |   ✅   |
+|    3.2.15   |     3.7     |   ✅   |
+
+## Requirements
+
+1. `django >= 1.10`.
+1. `pytz` is required for `django < 1.11`, otherwise it is installed by django when it is required.
+1. `pillow` if ImageFields are used.
+
+Our setup requires only `django`, other packages are reported by django.
 
 ## TODOs and BUGS
 

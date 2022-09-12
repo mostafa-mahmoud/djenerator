@@ -1,3 +1,9 @@
+docker-build:
+	docker build -t djen .
+
+docker-test: docker-build
+	docker run -it djen
+
 clean:
 	@find . -name "__pycache__" -exec rm -rfv {} +
 	@find . -name "migrations" -exec rm -rfv {} +
