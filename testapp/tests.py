@@ -270,17 +270,27 @@ class TestFieldsGeneratorNumbers(TestCase):
                     gen_val = generate_integer(bits, negative_allowed)
 
                     self.assertTrue(isinstance(gen_val, int))
-                    if not negative_allowed:
-                        self.assertGreaterEqual(gen_val, 0)
+                    if negative_allowed:
+                        self.assertGreaterEqual(gen_val, -2 ** (bits - 1))
                         self.assertLess(gen_val, 2 ** (bits - 1))
                     else:
-                        self.assertGreaterEqual(gen_val, -2 ** (bits - 1))
+                        self.assertGreaterEqual(gen_val, 0)
                         self.assertLess(gen_val, 2 ** (bits - 1))
 
             gen_val = generate_int()
             self.assertTrue(isinstance(gen_val, int))
             self.assertLessEqual(abs(gen_val), 2 ** 31)
             self.assertLess(gen_val, 2 ** 31)
+
+            gen_val = generate_int(mn=-2, mx=2)
+            self.assertTrue(isinstance(gen_val, int))
+            self.assertGreaterEqual(gen_val, -2)
+            self.assertLess(gen_val, 3)
+
+            gen_val = generate_int(mn=-2, mx=-1)
+            self.assertTrue(isinstance(gen_val, int))
+            self.assertGreaterEqual(gen_val, -2)
+            self.assertLess(gen_val, 0)
 
             gen_val = generate_big_integer()
             self.assertTrue(isinstance(gen_val, int))
@@ -291,6 +301,14 @@ class TestFieldsGeneratorNumbers(TestCase):
             self.assertTrue(isinstance(gen_val, int))
             self.assertLessEqual(abs(gen_val), 2 ** 15)
             self.assertLess(gen_val, 2 ** 15)
+
+            gen_val = generate_big_integer(mn=-100, mx=100)
+            self.assertTrue(isinstance(gen_val, int))
+            self.assertLessEqual(abs(gen_val), 100)
+
+            gen_val = generate_small_integer(mn=-150, mx=150)
+            self.assertTrue(isinstance(gen_val, int))
+            self.assertLessEqual(abs(gen_val), 150)
 
             gen_val = generate_positive_integer()
             self.assertTrue(isinstance(gen_val, int))
@@ -305,6 +323,21 @@ class TestFieldsGeneratorNumbers(TestCase):
             gen_val = generate_positive_big_integer()
             self.assertTrue(isinstance(gen_val, int))
             self.assertLess(gen_val, 2 ** 63)
+            self.assertGreaterEqual(gen_val, 0)
+
+            gen_val = generate_positive_integer(mn=1000, mx=10000)
+            self.assertTrue(isinstance(gen_val, int))
+            self.assertLess(gen_val, 10001)
+            self.assertGreaterEqual(gen_val, 1000)
+
+            gen_val = generate_positive_small_integer(mn=1000)
+            self.assertTrue(isinstance(gen_val, int))
+            self.assertLess(gen_val, 2 ** 15)
+            self.assertGreaterEqual(gen_val, 1000)
+
+            gen_val = generate_positive_big_integer(mx=10000)
+            self.assertTrue(isinstance(gen_val, int))
+            self.assertLess(gen_val, 10001)
             self.assertGreaterEqual(gen_val, 0)
 
             gen_val = generate_boolean()
@@ -552,3 +585,13 @@ class TestTrivia(TestCase):
         )
         self.assertFalse(validate_data(41, validate_mod91))
         self.assertTrue(validate_data(182, validate_mod91))
+        try:
+            generate_positive_small_integer(mn=-100, mx=-10)
+            self.assertTrue(False)
+        except AssertionError:
+            self.assertTrue(True)
+        try:
+            generate_positive_small_integer(mn=1000000, mx=10000000)
+            self.assertTrue(False)
+        except AssertionError:
+            self.assertTrue(True)

@@ -2,6 +2,7 @@
 This module has functions that generated random values for django fields.
 """
 import datetime
+import math
 import os
 import struct
 import uuid
@@ -13,49 +14,62 @@ from random import choice, randint, random, shuffle
 from .utils import get_timezone
 
 
-def generate_integer(bits=32, negative_allowed=True):
-    if random() < 0.05:
-        return 0
-    length = randint(1, bits - 1) - 1
-    positive = True
-    if negative_allowed:
+def generate_positive_log(mx):
+    try:
+        return min(mx, int(round(math.exp(math.log(mx) * random()))))
+    except ValueError:
+        print(mx)
+        raise
+
+
+def generate_integer(bits=32, negative_allowed=True, mn=None, mx=None):
+    if mn is not None and mx is not None:
+        assert mn <= mx, (mn, mx)
+
+    positive_allowed = mx is None or mx >= 0
+    negative_allowed = negative_allowed and (mn is None or mn < 0)
+    assert negative_allowed or positive_allowed,\
+        "No values are allowed with the given constraints"
+    if negative_allowed and positive_allowed:
         positive = choice([True, False])
-    if positive:
-        low = (1 << length)
-        high = 2 * (low - 1) + 1
-        if low == 1:
-            low = 0
-        return randint(low, high)
     else:
-        high = -(1 << length) - 1
-        low = 2 * (high + 1)
-        if high == -2:
-            high = -1
-        return randint(low, high)
+        positive = positive_allowed and not negative_allowed
+
+    if positive:
+        mx = mx or (2 ** (bits - 1) - 1)
+        mn = max(mn or 0, 0)
+        assert mn <= mx, "No values are allowed with the given constraints"
+        return generate_positive_log(mx - mn) + mn
+    else:
+        mn = mn or -(2 ** (bits - 1))
+        mx = min(mx or -1, -1)
+        assert mn <= mx, "No values are allowed with the given constraints"
+        return mx - generate_positive_log(mx - mn)
 
 
-def generate_big_integer():
-    return generate_integer(64)
+def generate_big_integer(mn=None, mx=None):
+    return generate_integer(64, mn=mn, mx=mx)
 
 
-def generate_int():
-    return generate_integer(32)
+def generate_int(mn=None, mx=None):
+    return generate_integer(32, mn=mn, mx=mx)
 
 
-def generate_small_integer():
-    return generate_integer(16)
+def generate_small_integer(mn=None, mx=None):
+    return generate_integer(16, mn=mn, mx=mx)
 
 
-def generate_positive_big_integer():
-    return generate_integer(64, False)
+def generate_positive_big_integer(mn=None, mx=None):
+    return generate_integer(64, False, mn=mn, mx=mx)
 
 
-def generate_positive_integer():
-    return generate_integer(32, False)
+def generate_positive_integer(mn=None, mx=None):
+    return generate_integer(32, False, mn=mn, mx=mx)
 
 
-def generate_positive_small_integer():
-    return generate_integer(16, False)
+def generate_positive_small_integer(mn=None, mx=None):
+    return generate_integer(16, False, mn=mn, mx=mx)
+
 
 
 def generate_boolean(null_allowed=False):
@@ -113,37 +127,14 @@ def generate_string(max_length, lower=True, upper=True, digits=True,
 
 
 def generate_date_time(auto_now=False, tz=None):
+    if tz is not None:
+        tz = get_timezone(tz)
+    now = datetime.datetime.now(tz=tz)
     if auto_now:
-        if tz:
-            return datetime.datetime.now(tzinfo=get_timezone(tz))
-        else:
-            return datetime.datetime.now()
+        return now
     else:
-        year = randint(1900, 2100)
-        month = randint(1, 12)
-        long_month = [1, 3, 5, 7, 8, 10, 12]
-        day = 0
-        if month in long_month:
-            day = randint(1, 31)
-        else:
-            if month == 2:
-                x = year
-                leap_year = int((x % 4 == 0 and not x % 100 == 0)
-                                or x % 400 == 0)
-                day = randint(1, 28 + leap_year)
-            else:
-                day = randint(1, 30)
-        hour = randint(0, 23)
-        minute = randint(0, 59)
-        second = randint(0, 59)
-        microsecond = randint(0, 999999)
-        if tz:
-            return datetime.datetime(year, month, day, hour, minute,
-                                     second, microsecond,
-                                     tzinfo=get_timezone(tz))
-        else:
-            return datetime.datetime(year, month, day, hour, minute,
-                                     second, microsecond)
+        delta = generate_positive_log(3600 * 24 * 365 * 3)
+        return datetime.datetime.fromtimestamp(now.timestamp() - delta, tz=tz)
 
 
 def generate_date(auto_now=False, tz=None):
