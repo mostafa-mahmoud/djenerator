@@ -212,13 +212,13 @@ class MainTestCase(TestCase):
             "TestModelB", "TestModelC", "TestModelA"
         ]
         generate_test_data(
-            "testapp", 250, fill_null=False, models_cls=["TestModelFields"]
+            "testapp", 200, allow_null=True, models_cls=["TestModelFields"]
         )
         for model_cls in models:
             if model_cls.__name__ in first_models:
                 self.assertGreaterEqual(
                     model_cls.objects.count(),
-                    250 + counts[model_cls.__name__],
+                    200 + counts[model_cls.__name__],
                     model_cls.__name__
                 )
         self.assertTrue(
@@ -229,6 +229,8 @@ class MainTestCase(TestCase):
                 list(TestModelFields.objects.values_list("fieldB", flat=True))
             ))
         )
+        for x in TestModelFields.objects.values_list("fieldB", flat=True):
+            self.assertIn(x, [1, 2, 3, 4, 5, None])
         counts = {
             model_cls.__name__: model_cls.objects.count()
             for model_cls in models
@@ -302,13 +304,15 @@ class TestFieldsGeneratorNumbers(TestCase):
             self.assertLessEqual(abs(gen_val), 2 ** 15)
             self.assertLess(gen_val, 2 ** 15)
 
-            gen_val = generate_big_integer(mn=-100, mx=100)
+            gen_val = generate_big_integer(mn=-100, mx=100, step=13)
             self.assertTrue(isinstance(gen_val, int))
             self.assertLessEqual(abs(gen_val), 100)
+            self.assertEqual(gen_val % 13, 0)
 
-            gen_val = generate_small_integer(mn=-150, mx=150)
+            gen_val = generate_small_integer(mn=-150, mx=150, step=13)
             self.assertTrue(isinstance(gen_val, int))
             self.assertLessEqual(abs(gen_val), 150)
+            self.assertEqual(gen_val % 13, 0)
 
             gen_val = generate_positive_integer()
             self.assertTrue(isinstance(gen_val, int))
@@ -396,7 +400,7 @@ class TestFieldsGeneratorStringGenerators(TestCase):
             self.assertEqual(len(gen_sentence), length)
 
         for length in range(3, 50):
-            seperators = [['.'], ['-', '_'], ['@']]
+            seperators = ['.', '-_', '@']
             for sep in seperators:
                 for _ in range(20):
                     gen_val = generate_sentence(length, seperators=sep)
@@ -405,28 +409,32 @@ class TestFieldsGeneratorStringGenerators(TestCase):
                     reg = r'^(?:\w+(?:%s))*\w+\.$' % str.join('|', sep)
                     self.assertRegexpMatches(gen_val, reg)
 
-            gen_text = generate_text(length)
+            min_length = length * 8 // 10
+            gen_text = generate_text(length, min_length)
             txt_re = r'^(?:(?:\w+\s?)+\.)+(?:\s(?:\w+\s?)+\.)*$'
             self.assertLessEqual(len(gen_text), length)
+            self.assertGreaterEqual(len(gen_text), min_length)
             self.assertRegexpMatches(gen_text, txt_re, gen_text)
 
             gen_sentence = generate_sentence(length)
-            self.assertLessEqual(len(gen_sentence), length)
+            self.assertEqual(len(gen_sentence), length)
             sent_re = r'^(?:\w+\s?)+\.$'
             self.assertRegexpMatches(gen_sentence, sent_re, gen_sentence)
 
-            gen_sentence = generate_sentence(length, end_char=['', '.'])
-            self.assertLessEqual(len(gen_sentence), length)
+            gen_sentence = generate_sentence(length, endchar=['', '.'])
+            self.assertEqual(len(gen_sentence), length)
             sent_re = r'^(?:\w+\s?)+\.?$'
             self.assertRegexpMatches(gen_sentence, sent_re, gen_sentence)
 
-            gen_sentence = generate_sentence(length, end_char=None)
-            self.assertLessEqual(len(gen_sentence), length)
-            sent_re = r'^(?:\w+\s?)+$'
+            gen_sentence = generate_sentence(
+                length, seperators='!', endchar=None
+            )
+            self.assertEqual(len(gen_sentence), length)
+            sent_re = r'^(?:\w+\!?)+$'
             self.assertRegexpMatches(gen_sentence, sent_re, gen_sentence)
 
-            gen_sentence = generate_sentence(length, end_char=['.', ','])
-            self.assertLessEqual(len(gen_sentence), length)
+            gen_sentence = generate_sentence(length, endchar='.,')
+            self.assertEqual(len(gen_sentence), length)
             sent_re = r'^(?:\w+\s?)+[\.,]$'
             self.assertRegexpMatches(gen_sentence, sent_re, gen_sentence)
 
@@ -443,14 +451,15 @@ class TestFieldsGeneratorChar(TestCase):
                 range(1, 10 ** (log + 1) + 1 - bool(log)), 10
             )
             for length in lengths:
-                for tup in itertools.product(*zip(6 * [True], 6 * [False])):
-                    lower, upper, digits, special, null_allowed, exact = tup
+                for tup in itertools.product(*zip(4 * [True], 4 * [False])):
+                    lower, upper, digits, special = tup
                     if rand.randint(1, 6) < 3:
                         special = ['@', '!', '~']
                     if not (lower or upper or digits or special):
                         continue
-                    gen_val = generate_string(length, lower, upper, digits,
-                                              special, null_allowed, exact)
+                    gen_val = generate_string(
+                        length, 1, lower, upper, digits, special
+                    )
                     existing_chars = set([])
 
                     for char in gen_val:
@@ -485,27 +494,55 @@ class TestFieldsGeneratorChar(TestCase):
                     self.assertFalse(existing_chars & set(excluded),
                                      str(existing_chars) +
                                      str(set(excluded) & existing_chars))
-                    if exact:
-                        self.assertEqual(len(gen_val), length)
-                    elif not null_allowed:
-                        self.assertGreater(len(gen_val), 0)
 
                     self.assertGreaterEqual(len(gen_val), 0)
                     self.assertLessEqual(len(gen_val), length)
 
-                email = generate_email(length)
-                self.assertTrue(isinstance(email, str), email)
-                self.assertLessEqual(len(email), length)
-                if length >= 7:
-                    email_reg = r'^\w+(?:\.\w+)*@(?:[A-Za-z0-9]+\.)+[A-Za-z]+$'
+                if length >= 14:
+                    min_length = max(14, length * 9 // 10)
+                    email = generate_email(length, min_length=min_length)
+                    self.assertTrue(isinstance(email, str), email)
+                    self.assertLessEqual(len(email), length)
+                    self.assertGreaterEqual(len(email), min_length)
+                    email_reg = (
+                        r'^\w+(?:\.?\-?\w+)*@'
+                        r'(?:[A-Za-z0-9\-]+\.)*[A-Za-z0-9\-]+$'
+                    )
                     self.assertRegexpMatches(email, email_reg)
 
-                url = generate_url(length)
-                self.assertTrue(isinstance(url, str), url)
-                self.assertLessEqual(len(url), length)
+                    email = generate_email(
+                        length, min_length=min_length,
+                        allowlist=["localhost", "mydomain"]
+                    )
+                    self.assertTrue(isinstance(email, str), email)
+                    self.assertLessEqual(len(email), length)
+                    self.assertGreaterEqual(len(email), min_length)
+                    email_reg = (
+                        r'^\w+(?:\.?\-?\w+)*@(?:localhost|mydomain)$'
+                    )
+                    self.assertRegexpMatches(email, email_reg)
+
                 if length >= 16:
+                    min_length = max(16, length * 9 // 10)
+                    url = generate_url(length, min_length=min_length)
+                    self.assertTrue(isinstance(url, str), url)
+                    self.assertLessEqual(len(url), length)
+                    self.assertGreaterEqual(len(url), min_length)
                     url_re = (
                         r'^(?:http|ftp|https|ftps)://(?:[a-z0-9_\-]+\.?)+/?'
+                        r'(?:/[a-z0-9_\-]+)*/?$'
+                    )
+                    self.assertRegexpMatches(url, url_re)
+
+                    url = generate_url(
+                        length, min_length=min_length,
+                        schemas=["tcp", "redis", "http"]
+                    )
+                    self.assertTrue(isinstance(url, str), url)
+                    self.assertLessEqual(len(url), length)
+                    self.assertGreaterEqual(len(url), min_length)
+                    url_re = (
+                        r'^(?:http|tcp|redis)://(?:[a-z0-9_\-]+\.?)+/?'
                         r'(?:/[a-z0-9_\-]+)*/?$'
                     )
                     self.assertRegexpMatches(url, url_re)
@@ -561,11 +598,11 @@ class TestFieldsGeneratorDateTime(TestCase):
 class TestFileGenerators(TestCase):
     def test(self):
         for _ in range(20):
-            ext = rand.choice(['txt', 'rst', 'md'])
-            name = generate_file_name(12, ext)
+            ext = rand.choice(['.txt', '.rst', '.md'])
+            name = generate_file_name(12, extensions=[ext])
             self.assertTrue(isinstance(name, str), name)
             self.assertLessEqual(len(name), 12, name)
-            self.assertRegexpMatches(name, r'[a-zA-Z_]*\.' + ext, name)
+            self.assertRegexpMatches(name, r'[a-zA-Z_]*\.' + ext[1:], name)
 
             path = generate_file_path()
             self.assertTrue(os.path.exists(path), path)

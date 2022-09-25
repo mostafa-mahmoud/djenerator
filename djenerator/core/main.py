@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 def generate_field_values(
-    field, size: int, prev_generated: dict, fill_null: bool = True,
+    field, size: int, prev_generated: dict, allow_null: bool = False,
     generators: dict = {}, num_unique_constraints: int = 0
 ) -> list:
     """
@@ -40,7 +40,7 @@ def generate_field_values(
     :param field: A Django Field.
     :param size: The number of values to generate.
     :param prev_generated: A dictionary of previously generated_values.
-    :param fill_null: Fill all null values.
+    :param allow_null: Allow null values to appear.
     :param generators:
         A dictionary containing generator function imported from the
         test_data module.
@@ -78,7 +78,7 @@ def generate_field_values(
     else:
         values = generate_random_field_values(field, gen_function, gen_size)
 
-    if not fill_null and not is_required(field):
+    if allow_null and not is_required(field):
         values.append(None)
 
     if not values:
@@ -93,7 +93,7 @@ def generate_field_values(
 
 def generate_models(
     model_cls, size: int, prev_generated: dict = {}, generators: dict = {},
-    fill_null: bool = True
+    allow_null: bool = False
 ) -> tuple:
     """
     Generate a set of instances of a given model class.
@@ -117,7 +117,7 @@ def generate_models(
             field, size, prev_generated,
             num_unique_constraints=num_constraints,
             generators=generators.get(model_cls.__name__, {}),
-            fill_null=fill_null
+            allow_null=allow_null
         )
         if values:
             generated_dicts[field_name(field)] = values
@@ -131,15 +131,13 @@ def generate_models(
                 key: generated_dicts[key][i] for key in generated_dicts.keys()
             })
         except IntegrityError:  # as error:
-            # for j in range(size):
-            #     print({
-            #         key: generated_dicts[key][j]
-            #         for key in generated_dicts.keys()
-            #     }, "\n")
-            # print("\n--------------------\n")
-            # for k, v in generated_dicts.items():
-            #     print(k, "::", len(set(v)), set(v), "\n")
-            raise
+            kwargs = {
+                key: generated_dicts[key][i] for key in generated_dicts.keys()
+            }
+            logger.error(
+                "skipping bad value for model %s: %s",
+                model_cls.__name__, str(kwargs)
+            )
         logger.info(
             "generated Model %s %s", model.__class__.__name__, model.pk
         )
@@ -147,7 +145,7 @@ def generate_models(
     return models, recheck
 
 
-def postcompute(to_postcompute, generated, fill_null=True):
+def postcompute(to_postcompute, generated, allow_null=False):
     """
     Postcompute some of the postponed fields, especially when there are
     cyclic relations of ManyToManyRelations.
@@ -156,7 +154,7 @@ def postcompute(to_postcompute, generated, fill_null=True):
         models = generated[model_cls_name]
         for field in fields:
             values = generate_field_values(
-                field, len(models), generated, fill_null=fill_null
+                field, len(models), generated, allow_null=allow_null
             )
             if is_many_to_many_field(field):
                 for model in models:
@@ -172,7 +170,7 @@ def postcompute(to_postcompute, generated, fill_null=True):
 
 
 def generate_test_data(app_name: str, size: int,
-                       fill_null: bool = True, models_cls: list = None):
+                       allow_null: bool = False, models_cls: list = None):
     """
     Generates a list of 'size' random data for each model in the models module
     in the given path, If the sample data is not enough for generating 'size'
@@ -182,7 +180,7 @@ def generate_test_data(app_name: str, size: int,
 
     :param app_name: Name of the app
     :param size: An integer that specifies the size of the generated data.
-    :param fill_null: if True, no null values will be allowed.
+    :param allow_null: if True, no null values will be allowed.
     :param models_cls: Generate only for a specific set of models.
     """
 
@@ -222,7 +220,7 @@ def generate_test_data(app_name: str, size: int,
     for model_cls in models_cls:
         models, recheck = generate_models(
             model_cls, size, generated, generators=generators,
-            fill_null=fill_null
+            allow_null=allow_null
         )
         generated[model_cls.__name__] = models
         if recheck:

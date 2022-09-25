@@ -4,86 +4,91 @@ This module has functions that generated random values for django fields.
 import datetime
 import math
 import os
+import random
 import struct
 import uuid
 import zlib
 from decimal import Decimal
 from itertools import islice
-from random import choice, randint, random, shuffle
 
+from django.utils.text import slugify
+
+from .exceptions import InconsistentDefinition
 from .utils import get_timezone
 
 
 def generate_positive_log(mx):
-    try:
-        return min(mx, int(round(math.exp(math.log(mx) * random()))))
-    except ValueError:
-        print(mx)
-        raise
+    return min(mx, int(round(math.exp(math.log(mx) * random.random()))))
 
 
-def generate_integer(bits=32, negative_allowed=True, mn=None, mx=None):
+def generate_integer(bits=32, negative_allowed=True, mn=None, mx=None, step=1):
     if mn is not None and mx is not None:
         assert mn <= mx, (mn, mx)
 
-    positive_allowed = mx is None or mx >= 0
-    negative_allowed = negative_allowed and (mn is None or mn < 0)
+    positive_allowed = mx is None or math.floor(mx / step) >= 0
+    negative_allowed = (
+        negative_allowed and (mn is None or math.ceil(mn / step) < 0)
+    )
     assert negative_allowed or positive_allowed,\
         "No values are allowed with the given constraints"
     if negative_allowed and positive_allowed:
-        positive = choice([True, False])
+        positive = random.choice([True, False])
     else:
         positive = positive_allowed and not negative_allowed
 
     if positive:
         mx = mx or (2 ** (bits - 1) - 1)
         mn = max(mn or 0, 0)
+        mx = math.floor(mx / step)
+        mn = math.ceil(mn / step)
         assert mn <= mx, "No values are allowed with the given constraints"
-        return generate_positive_log(mx - mn) + mn
+
+        return (generate_positive_log(mx - mn) + mn) * step
     else:
         mn = mn or -(2 ** (bits - 1))
         mx = min(mx or -1, -1)
+        mx = math.floor(mx / step)
+        mn = math.ceil(mn / step)
         assert mn <= mx, "No values are allowed with the given constraints"
-        return mx - generate_positive_log(mx - mn)
+        return (mx - generate_positive_log(mx - mn)) * step
 
 
-def generate_big_integer(mn=None, mx=None):
-    return generate_integer(64, mn=mn, mx=mx)
+def generate_big_integer(mn=None, mx=None, step=1):
+    return generate_integer(64, mn=mn, mx=mx, step=step)
 
 
-def generate_int(mn=None, mx=None):
-    return generate_integer(32, mn=mn, mx=mx)
+def generate_int(mn=None, mx=None, step=1):
+    return generate_integer(32, mn=mn, mx=mx, step=step)
 
 
-def generate_small_integer(mn=None, mx=None):
-    return generate_integer(16, mn=mn, mx=mx)
+def generate_small_integer(mn=None, mx=None, step=1):
+    return generate_integer(16, mn=mn, mx=mx, step=step)
 
 
-def generate_positive_big_integer(mn=None, mx=None):
-    return generate_integer(64, False, mn=mn, mx=mx)
+def generate_positive_big_integer(mn=None, mx=None, step=1):
+    return generate_integer(64, False, mn=mn, mx=mx, step=step)
 
 
-def generate_positive_integer(mn=None, mx=None):
-    return generate_integer(32, False, mn=mn, mx=mx)
+def generate_positive_integer(mn=None, mx=None, step=1):
+    return generate_integer(32, False, mn=mn, mx=mx, step=step)
 
 
-def generate_positive_small_integer(mn=None, mx=None):
-    return generate_integer(16, False, mn=mn, mx=mx)
-
+def generate_positive_small_integer(mn=None, mx=None, step=1):
+    return generate_integer(16, False, mn=mn, mx=mx, step=step)
 
 
 def generate_boolean(null_allowed=False):
-    res = randint(0, 1 + int(null_allowed))
+    res = random.randint(0, 1 + int(null_allowed))
     if res < 2:
         return bool(res)
 
 
 def generate_ip(v4=True, v6=True):
-    ip4 = '.'.join([str(randint(0, 255)) for _ in range(4)])
-    ip6 = ':'.join([hex(randint(0, 2 ** 16 - 1))[2:].upper()
+    ip4 = '.'.join([str(random.randint(0, 255)) for _ in range(4)])
+    ip6 = ':'.join([hex(random.randint(0, 2 ** 16 - 1))[2:].upper()
                     for _ in range(8)])
     if v4 and v6:
-        return choice([ip4, ip6])
+        return random.choice([ip4, ip6])
     if v6:
         return ip6
     else:
@@ -91,39 +96,30 @@ def generate_ip(v4=True, v6=True):
 
 
 def generate_comma_separated_int(max_length):
-    parts = randint(0, (max_length - 1) // 4)
-    left = randint(1, min(3, max_length - 4 * parts))
-    number = [str(randint(int(bool(parts)), 10 ** left - 1))]
-    number.extend('%.3d' % randint(0, 999) for _ in range(parts))
+    parts = random.randint(0, (max_length - 1) // 4)
+    left = random.randint(1, min(3, max_length - 4 * parts))
+    number = [str(random.randint(int(bool(parts)), 10 ** left - 1))]
+    number.extend('%.3d' % random.randint(0, 999) for _ in range(parts))
     return str.join(',', number)
 
 
-def generate_string(max_length, lower=True, upper=True, digits=True,
-                    special=True, null_allowed=False, exact_len=False):
-    vascii = dict([(chr(n), n) for n in range(128)])
-    allowed_characters = []
-    chars_in_range = (
-        lambda beg, end: [chr(n) for n in range(vascii[beg], vascii[end] + 1)]
-    )
+def generate_string(
+    max_length, min_length=1, lower=True, upper=True, digits=True, special=True
+):
+    allowed_characters = ""
     if lower:
-        allowed_characters.extend(chars_in_range('a', 'z'))
+        allowed_characters += "abcdefghijklmnopqrstuvwxyz"
     if upper:
-        allowed_characters.extend(chars_in_range('A', 'Z'))
+        allowed_characters += "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     if digits:
-        allowed_characters.extend(chars_in_range('0', '9'))
-    if special:
-        if (isinstance(special, list) or isinstance(special, tuple) or
-           isinstance(special, set)):
-            allowed_characters.extend(special)
-        elif special is True:
-            allowed_characters.extend(chars_in_range('!', '/'))
-            allowed_characters.extend(chars_in_range(':', '@'))
-            allowed_characters.extend(chars_in_range('[', '`'))
-            allowed_characters.extend(chars_in_range('{', '~'))
-    length = max_length
-    if not exact_len:
-        length = randint(1 - null_allowed, max_length)
-    return str.join('', [choice(allowed_characters) for _ in range(length)])
+        allowed_characters += "0123456789"
+    if isinstance(special, (list, tuple, set, str)):
+        allowed_characters += ''.join(special)
+    elif special is True:
+        allowed_characters += "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+
+    length = random.randint(min_length, max_length)
+    return ''.join([random.choice(allowed_characters) for _ in range(length)])
 
 
 def generate_date_time(auto_now=False, tz=None):
@@ -157,9 +153,11 @@ def generate_dictionary():
         if os.path.isfile(fl):
             with open(fl, "r") as f:
                 words = f.read().split("\n")[:-1]
-            return list(filter(lambda x: len(x) in [3, 4, 5, 6, 7], words))
+            words = list(filter(
+                lambda x: len(x) in [3, 4, 5, 6, 7] and "'" not in x, words
+            ))
     # precomputed list of random words in case the words file doesn't exist.
-    return [
+    words = [
         'Aerope', 'scowder', 'towmast', 'amla', 'choaty', 'Sosia', 'pagus',
         'gasper', 'mongery', 'pewing', 'chinkle', 'knyazi', 'darg', 'pomfret',
         'inure', 'reactor', 'phulwa', 'coseat', 'allege', 'attire', 'hardish',
@@ -185,127 +183,231 @@ def generate_dictionary():
         'ovology', 'upwound', 'myron', 'Picus', 'oration', 'protium',
         'ambrite', 'inflate', 'townee', 'octuple', 'Delbert', 'mix', 'Antonia',
     ]
+    dic = {}
+    for word in words:
+        if len(word) not in dic.keys():
+            dic[len(word)] = []
+        dic[len(word)].append(word)
+    return dic
 
 
 WORDS_DICTIONARY = generate_dictionary()
 
 
-def generate_text(max_length, exact=False):
-    sentences = randint(
-        1, max((max_length + 39) // 60, (max_length + 39) // 40)
-    )
-    rem_length = max_length
-    text = []
-    for idx in range(sentences):
-        length = rem_length // (sentences - idx)
-        length = min((rem_length) // (sentences - idx) + int(bool(idx)),
-                     randint(2, 7) * 6, rem_length - int(bool(idx)))
-        if length > 0:
-            text.append(generate_sentence(length, exact=exact))
-            rem_length -= len(text[-1]) + int(bool(idx))
-    return str.join(' ', text)
+def generate_text(max_length, min_length=0, sep=" "):
+    if max_length <= 8:
+        return generate_sentence(max_length)
+
+    sentences = random.randint(1, max(1, max_length // 40))
+
+    lengths = [
+        random.randint(5, min(40, max_length)) for _ in range(sentences)
+    ]
+    if sum(lengths) + max(len(lengths) - 1, 0) * len(sep) < min_length:
+        rem = min_length - sum(lengths) - max(len(lengths) - 1, 0) * len(sep)
+        if rem < 3:
+            lengths[-1] += rem
+        else:
+            lengths.append(rem)
+
+    res = sep.join((generate_sentence(length) for length in lengths))
+    assert len(res) >= min_length and len(res) <= max_length,\
+        (lengths, sum(lengths), min_length, max_length)
+    return res
+
+    # rem_length = max_length
+    # text = []
+    # for idx in range(sentences):
+    #     length = rem_length // (sentences - idx)
+    #     length = min((rem_length) // (sentences - idx) + int(bool(idx)),
+    #                  random.randint(2, 7) * 6, rem_length - int(bool(idx)))
+    #     if length > 0:
+    #         text.append(generate_sentence(length, exact=exact))
+    #         rem_length -= len(text[-1]) + int(bool(idx))
+    # return str.join(' ', text)
 
 
-def generate_sentence(max_length, lower=True, upper=False, digits=False,
-                      seperators=[' '], end_char=['.'], exact=False):
-    if max_length < 3:
-        return generate_string(max_length, lower, upper, digits, special=False,
-                               null_allowed=True, exact_len=True)
-    if not end_char:
-        end_char = ['']
-    # words = generate_dictionary()
-    max_length -= bool(end_char) and bool(any(end_char))
+# def generate_sentence(max_length, lower=True, upper=False, digits=False,
+#                       seperator=' ', endchar=['.'], exact=False):
+#     if max_length < 3:
+#         return generate_string(max_length, lower, upper, digits,
+#                                special=False, null_allowed=True,
+#                                exact_len=True)
+#     if not endchar:
+#         endchar = ['']
+#     # words = generate_dictionary()
+#     max_length -= bool(endchar) and bool(any(endchar))
 
-    length = max_length
-    if not exact and length >= 5:
-        length = randint(1, max_length)
-    # total = ""
-    a = 5.0 / 6.0
-    no_words = randint(1, int(2 * length * (1 - a) + 1 - 2 * a) + 1)
-    max_word_length = int((length + 1) / no_words * a)
-    lengths = [randint(1, max_word_length) for _ in range(no_words)]
-    lengths.sort()
-    tot = length - no_words + 1 - sum(lengths)
-    while tot < 0 and lengths:
-        tot += lengths.pop()
-        tot += int(bool(lengths))
-        no_words -= 1
-    if tot > 1 and (exact or randint(0, 1) == 0 or not lengths):
-        lengths.append(tot - 1)
-        no_words += 1
-    shuffle(lengths)
+#     length = max_length
+#     if not exact and length >= 5:
+#         length = random.randint(1, max_length)
+#     # total = ""
+#     a = 5.0 / 6.0
+#     no_words = random.randint(1, int(2 * length * (1 - a) + 1 - 2 * a) + 1)
+#     max_word_length = int((length + 1) / no_words * a)
+#     lengths = [random.randint(1, max_word_length) for _ in range(no_words)]
+#     lengths.sort()
+#     tot = length - no_words + 1 - sum(lengths)
+#     while tot < 0 and lengths:
+#         tot += lengths.pop()
+#         tot += int(bool(lengths))
+#         no_words -= 1
+#     if tot > 1 and (exact or random.randint(0, 1) == 0 or not lengths):
+#         lengths.append(tot - 1)
+#         no_words += 1
+#     random.shuffle(lengths)
 
-    words = [generate_string(word_length, lower, upper, digits, False,
-                             False, True) for word_length in lengths]
-    words_endings = [choice(seperators) for _ in range(len(lengths) - 1)]
-    words_endings.append(choice(end_char))
-    words = map(lambda t: t[0] + t[1], zip(words, words_endings))
-    return str.join('', words)
+#     words = [generate_string(word_length, lower, upper, digits, False,
+#                              False, True) for word_length in lengths]
+#     words_endings = [
+#         random.choice(seperators) for _ in range(len(lengths) - 1)
+#     ]
+#     words_endings.append(random.choice(endchar))
+#     words = map(lambda t: t[0] + t[1], zip(words, words_endings))
+#     return str.join('', words)
+
+
+def generate_sentence(length, seperators=" ", endchar="."):
+    """
+    Generate a sentence of a specific length, with specific seperators and
+    ending character.
+    """
+    end = random.choice(endchar) if endchar else ""
+    length -= len(end)
+
+    res = ""
+    while len(res) + int(bool(res)) < length:
+        max_word_len = length - len(res) - int(bool(res))
+        if res:
+            res += random.choice(seperators)
+        if max_word_len <= 2:
+            for _ in range(max_word_len):
+                res += random.choice("abcdefghijklmnopqrstuvwxyz")
+            break
+        else:
+            res += random.choice(
+                WORDS_DICTIONARY[random.randint(3, min(max_word_len, 7))]
+            )
+    while len(res) < length:
+        res += random.choice("abcdefghijklmnopqrstuvwxyz")
+    res = res[:length] + end
+    return res
 
 
 def generate_decimal(max_digits, decimal_places):
     integer_part_len = max_digits - decimal_places
-    integer_part = generate_string(integer_part_len, False, False, True,
-                                   False, False, False)
-    integer_part = str(int(integer_part))
-    decimal_part = generate_string(decimal_places, False, False, True,
-                                   False, False, False)
-    return Decimal('%s.%s' % (integer_part, decimal_part))
+    res = ""
+    for _ in range(random.randint(0, integer_part_len)):
+        res += str(random.randint(1 - int(bool(res)), 9))
+    res = res or "0"
+    res += "."
+    for _ in range(random.randint(1, decimal_places)):
+        res += str(random.randint(0, 9))
+    if len(res) < max_digits + 1 and random.random() < 0.5:
+        res = "-" + res
+
+    return Decimal(res)
 
 
-def generate_float(max_digits=50, decimal_places=30):
+def generate_float(max_digits=30, decimal_places=20):
     return float(generate_decimal(max_digits, decimal_places))
 
 
-def generate_email(max_length, exact_len=False):
-    if max_length < 7:
-        return ''
-    dom = ['com', 'de', 'it', 'uk', 'edu', 'es', 'fr', 'eg', 'ru', 'pl', 'org',
-           'es', 'pk', 'jo', 'fe', 'se', 'tr', 'ch']
-    tot_length = (max_length - 5) // 2
-    parts = [generate_string(tot_length, lower=True, upper=False, digits=True,
-                             special=False, null_allowed=False,
-                             exact_len=exact_len) for _ in range(2)]
-
-    return '%s@%s.%s' % (parts[0], parts[1], choice(dom))
+def generate_domain_name(max_length=20):
+    dom = ['com', 'de', 'it', 'uk', 'edu', 'es', 'fr', 'eg', 'ru',
+           'pl', 'org', 'es', 'pk', 'jo', 'fe', 'se', 'tr', 'ch']
+    end = '.' + random.choice(dom)
+    return slugify(generate_sentence(
+        max_length - len(end), seperators='-', endchar='.'
+    ).lower()) + end
 
 
-def generate_url(max_length, schemas=["https", "http", "ftp", "ftps"]):
-    if max_length < 16:
-        return ''
-    dom = ['com', 'de', 'it', 'uk', 'edu', 'es', 'fr', 'eg', 'ru', 'pl', 'org',
-           'es', 'pk', 'jo', 'fe', 'se', 'tr', 'ch']
-    domain = generate_sentence(randint(3, max_length - 11), lower=True,
-                               digits=True, seperators=['.'], end_char=['.'])
-    domain += choice(dom)
-    suburl = ''
-    if len(domain) + 8 < max_length:
-        suburl = choice(['', '/'])
-    if randint(1, 6) > 2 and len(domain) + len(suburl) + 10 < max_length:
-        suburl = '/'
-        suburl += generate_sentence(max_length - len(domain) - 8 - len(suburl),
-                                    digits=True, seperators=[''],
-                                    end_char=['/', ''])
-    return '%s://%s%s' % (choice(schemas), domain, suburl)
+def generate_email(max_length, min_length=14, allowlist=None):
+    if min_length < 14 or max_length < min_length:
+        raise InconsistentDefinition(
+            "An Email with the specified lengths is too short. Should "
+            "be 14 <= min_length (%d) <= max_length (%d)" % (
+                min_length, max_length
+            )
+        )
+    domain = random.choice(allowlist) if allowlist else generate_domain_name(9)
+    min_length -= len(domain) + 1
+    max_length -= len(domain) + 1
+    if max_length < 2:
+        raise InconsistentDefinition(
+            "The allowed domain names with the allowed length are too tight. "
+            "Domain %s, remaining length: %d" % (domain, min_length)
+        )
+
+    email = slugify(generate_sentence(
+        random.randint(max(min_length, 2), max_length), endchar=None
+    )) + "@" + domain
+    return email
+
+
+def generate_url(
+    max_length, min_length=16, schemas=["https", "http", "ftp", "ftps"]
+):
+    if min_length < 16 or max_length < min_length:
+        raise InconsistentDefinition(
+            "A Url with the specified lengths is too short. Should "
+            "be 16 <= min_length (%d) <= max_length (%d)" % (
+                min_length, max_length
+            )
+        )
+
+    url = random.choice(schemas) + "://"
+
+    domain = generate_domain_name(random.randint(6, min(max_length - 8, 30)))
+    if len(url) + 4 + len(domain) < max_length:
+        domain = random.choice(["www.", ""]) + domain
+    url += domain
+
+    max_length -= len(url)
+    min_length -= len(url)
+    if max_length == 0:
+        return url
+    elif max_length == 1:
+        return url + "/"
+    else:
+        url += "/" + "/".join(map(
+            slugify,
+            generate_text(
+                max_length - 1, min_length=min_length - 1, sep=""
+            ).split(".")
+        ))
+    if len(url) < max_length and url[-1] != '/' and random.random() < 0.5:
+        url += "/"
+    return url
 
 
 def generate_uuid():
     return uuid.uuid4()
 
 
-def generate_file_path(root=os.getcwd()):
+def generate_file_path(root=os.getcwd(), max_length=256, min_length=1):
     walk = os.walk(root)
     flt = list(filter(
-        lambda path: not any(p.startswith('.') for p in path[0]), walk
+        lambda path: (
+            not any(p.startswith('.') for p in path[0]) and
+            min_length <= len(path[0]) <= max_length
+        ), walk
     ))
     flt = list(map(lambda path: path[0], flt))
     flt = list(islice(flt, 1000))
-    return choice(flt)
+    return random.choice(flt)
 
 
-def generate_file_name(length=15, extension=''):
-    return "%s.%s" % (generate_string(length - len(extension) - 1,
-                                      digits=False, special=['_']), extension)
+def generate_file_name(max_length=15, min_length=6, extensions=[]):
+    if extensions:
+        extension = random.choice(extensions)
+    else:
+        extension = ""
+    return generate_sentence(
+        random.randint(
+            max(1, min_length - len(extension)), max_length - len(extension)
+        ), seperators="-_", endchar=None
+    ) + extension
 
 
 def png_pack(png_tag, data):
@@ -315,37 +417,52 @@ def png_pack(png_tag, data):
             struct.pack("!I", 0xFFFFFFFF & zlib.crc32(chunk_head)))
 
 
-def generate_png(width=128, height=128):
-    buf = b''.join([struct.pack('>I', (randint(0, (1 << 24) - 1) << 8) | 0xff)
-                    for _ in range(width * height)])
+def generate_png(width=128, height=128, max_length=None):
+    buf = b''.join(
+        [struct.pack('>I', (random.randint(0, (1 << 24) - 1) << 8) | 0xff)
+         for _ in range(width * height)]
+    )
 
     width_byte_4 = width * 4
-    raw_data = b''.join(b'\x00' + buf[span:span + width_byte_4]
-                        for span in range((height - 1) * width_byte_4, -1,
-                                          - width_byte_4))
+    raw_data = b''.join(
+        b'\x00' + buf[span:span + width_byte_4]
+        for span in range((height - 1) * width_byte_4, -1, - width_byte_4)
+    )
 
     return b''.join([
         b'\x89PNG\r\n\x1a\n',
         png_pack(b'IHDR', struct.pack("!2I5B", width, height, 8, 6, 0, 0, 0)),
         png_pack(b'IDAT', zlib.compress(raw_data, 9)),
-        png_pack(b'IEND', b'')])
+        png_pack(b'IEND', b'')
+    ])
 
 
-def generate_integer_list(max_length=128, sep=',', allow_negative=True):
-    length = randint(1, max_length)
+def generate_integer_list(
+    max_length=128, min_length=1, sep=',', allow_negative=True
+):
+    length = random.randint(min_length, max_length)
     res = ""
     while len(res) + 8 <= length:
         if res:
             res += sep
-        if not allow_negative or random() < 0.5:
-            res += str(randint(0, 999999))
+        if not allow_negative or random.random() < 0.5:
+            res += str(random.randint(0, 999999))
         else:
-            res += str(randint(-999999, 0))
+            res += str(random.randint(-999999, 0))
 
-    if 1 < length - len(res):
+    if length - len(res) == 0:
+        return res
+    if length - len(res) == 1:
+        return res + str(random.randint(0, 9))
+    else:
         if res:
             res += sep
-        res += str(randint(0, 10 ** (length - len(res) - 1) - 1))
-    elif len(res) == 0:
-        res += str(randint(0, 10 ** (length - len(res)) - 1))
+        rem = length - len(res)
+        if rem > 1 and allow_negative and random.random() < 0.5:
+            rem -= 1
+            res += str(-random.randint(10 ** (rem - 1), 10 ** rem - 1))
+        elif rem == 1:
+            res += str(random.randint(0, 9))
+        else:
+            res += str(random.randint(10 ** (rem - 1), 10 ** rem - 1))
     return res

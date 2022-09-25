@@ -1,5 +1,6 @@
 import os
 
+import django
 from django.core import validators
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -24,12 +25,30 @@ class NotExtendingModel(object):
 
 class TestModel0(models.Model):
     field1 = models.BooleanField()
-    field2 = models.EmailField(max_length=200)
+    field2 = models.EmailField(
+        validators=[
+            (
+                validators.EmailValidator(whitelist=["google.com"])
+                if django.__version__ < "4.1" else
+                validators.EmailValidator(allowlist=["google.com"])
+            ),
+            validators.MinLengthValidator(40),
+        ]
+    )
+    field3 = models.URLField(
+        validators=[
+            validators.URLValidator(schemes=["redis", "tcp"]),
+            validators.MinLengthValidator(40),
+            validators.MaxLengthValidator(120),
+        ]
+    )
 
 
 class TestModel1(models.Model):
     field1 = models.CharField(
-        max_length=200, validators=[validators.int_list_validator]
+        max_length=200, validators=[
+            validators.int_list_validator, validators.MinLengthValidator(195)
+        ]
     )
     field2 = models.BigIntegerField(validators=[validate_mod91])
     field3 = models.ForeignKey(TestModel0, on_delete=models.CASCADE)
@@ -41,13 +60,13 @@ class TestModel1(models.Model):
 class TestModelA(models.Model):
     field1A = models.CharField(max_length=200)
     field2A = models.CharField(max_length=200)
-    field3A = models.GenericIPAddressField(
-        validators=[validators.validate_ipv46_address]
-    )
-    field4A = models.GenericIPAddressField(
+    field3A = models.GenericIPAddressField()
+    field4A = models.GenericIPAddressField(protocol="IPv4")
+    field5A = models.GenericIPAddressField(
         validators=[validators.validate_ipv6_address]
     )
-    field5A = models.GenericIPAddressField(
+    field6A = models.GenericIPAddressField(protocol="IPv6")
+    field7A = models.GenericIPAddressField(
         validators=[validators.validate_ipv4_address]
     )
 
@@ -136,6 +155,13 @@ class TestModelFieldsTwo(models.Model):
     )
     fieldH = models.BooleanField()
     fieldZ = models.ManyToManyField(TestModelE)
+    fieldQ = models.FileField(
+        upload_to=os.path.join("media", "trash"),
+        validators=(
+            [validators.FileExtensionValidator([".rst"])]
+            if hasattr(validators, "FileExtensionValidator") else []
+        )
+    )
 
 
 class TestModelFields(models.Model):
@@ -158,7 +184,10 @@ class TestModelFields(models.Model):
 class CycleA(models.Model):
     ab = models.ForeignKey('CycleB', on_delete=models.CASCADE)
     ae = models.ForeignKey('CycleE', on_delete=models.CASCADE)
-    a = models.IntegerField()
+    a = models.IntegerField(validators=[
+        validators.MaxValueValidator(-3),
+        validators.MinValueValidator(-100),
+    ])
 
 
 class CycleB(models.Model):
@@ -169,7 +198,7 @@ class CycleB(models.Model):
 class CycleC(models.Model):
     cc = models.ManyToManyField('self')
     ca = models.OneToOneField(CycleA, null=True, on_delete=models.CASCADE)
-    c = models.DecimalField(max_digits=15, decimal_places=10)
+    c = models.DecimalField(max_digits=3, decimal_places=3)
 
 
 class CycleD(models.Model):
@@ -218,5 +247,17 @@ class AllFieldsModel(models.Model):
     file_path_field = models.FilePathField()
     # binary_field = models.BinaryField(max_length=200)
     binary_field = models.BinaryField()
-    file_field = models.FileField(upload_to=os.path.join('media', 'files'))
-    image_field = models.ImageField(upload_to=os.path.join('media', 'images'))
+    file_field = models.FileField(
+        upload_to=os.path.join('media', 'files'),
+        validators=(
+            [validators.FileExtensionValidator([".txt", ".rst"])]
+            if hasattr(validators, "FileExtensionValidator") else []
+        )
+    )
+    image_field = models.ImageField(
+        upload_to=os.path.join('media', 'images'),
+        validators=(
+            [validators.FileExtensionValidator([".png", ".jpg"])]
+            if hasattr(validators, "FileExtensionValidator") else []
+        )
+    )

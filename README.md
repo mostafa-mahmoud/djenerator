@@ -3,18 +3,14 @@
 Djenerator is a simple tool made to generate test/random data from the model descriptions of django.
 
 ## Installation
-Using pip, you can install djenerator using this command:
+
+1. Using pip, you can install djenerator using this command:
 
 ```bash
 $ pip3 install djenerator
 ```
 
-## Usage
-
-Full documentation: http://pythonhosted.org/djenerator/usage.html
-
-Add `'djenerator'` to your `INSTALLED_APPS`:
-
+2. Add `'djenerator'` to your `INSTALLED_APPS`:
 
 ```python
 INSTALLED_APPS = [
@@ -28,22 +24,47 @@ INSTALLED_APPS = [
 ]
 ```
 
-The generation of data are then done by a command using manage.py file in your project:
+## Usage
+
+The generation of data can be done by a command using the `manage.py` file in your project:
 
 ```bash
 $ python3 manage.py jenerate app_name size
 ```
 
-To generate for specific models:
+Equivalently, this can be done within python code
+
+```python
+from djenerator import generate_test_data
+generate_test_data(app_name, size)
+```
+
+### To generate for specific models
 
 ```bash
 $ python3 manage.py jenerate app_name size --models ModelA ModelB ...
 ```
 
-To allow some null values
+Equivalently, this can be done within python code
+
+```python
+from djenerator import generate_test_data
+generate_test_data(app_name, size, models_cls=["ModelA", "ModelB"])
+```
+
+### To allow some null values
+
+By default, djenerator generates data for all fields even if null values are allowed. To allow some null values, allow the following option:
 
 ```bash
 $ python3 manage.py jenerate app_name size --allow-null
+```
+
+Equivalently, this can be done within python code
+
+```python
+from djenerator import generate_test_data
+generate_test_data(app_name, size, allow_null=True)
 ```
 
 ## Writing your custom generators
@@ -125,7 +146,7 @@ The following combinations are tested:
 ## Requirements
 
 1. `django >= 1.10`.
-1. `pytz` is required to manually installed for `django < 1.11`, otherwise it is installed by django when it is required (it is not required for higher versions of django).
+1. `pytz` is required to be manually installed for `django < 1.11`, otherwise it is installed by django when it is required (it is not required for some higher versions of django).
 1. `pillow` if ImageFields are used, we don't require it be default, but django will.
 
 Our setup requires only `django`, other packages are reported by django.

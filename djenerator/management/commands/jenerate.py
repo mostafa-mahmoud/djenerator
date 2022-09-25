@@ -24,8 +24,8 @@ class Command(BaseCommand):
         size = int(options["size"])
         app_name = options["app-name"]
         models_cls = options["models"]
-        fill_null = not options["allow_null"]
+        allow_null = bool(options["allow_null"])
 
         generate_test_data(
-            app_name, size, fill_null=fill_null, models_cls=models_cls
+            app_name, size, allow_null=allow_null, models_cls=models_cls
         )

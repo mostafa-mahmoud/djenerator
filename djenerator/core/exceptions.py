@@ -5,3 +5,7 @@ class SparseGeneratorError(Exception):
 
 class InvalidGenerator(Exception):
     pass
+
+
+class InconsistentDefinition(Exception):
+    pass

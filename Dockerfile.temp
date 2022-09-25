@@ -11,4 +11,4 @@ COPY backend /opt/pyapps/djentest/backend
 COPY testapp /opt/pyapps/djentest/testapp
 COPY manage.py /opt/pyapps/djentest/
 WORKDIR /opt/pyapps/djentest
-CMD ["python3", "manage.py", "test"]
+CMD ["python3", "-W", "ignore", "manage.py", "test"]
