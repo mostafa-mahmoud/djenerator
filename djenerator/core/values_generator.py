@@ -194,7 +194,8 @@ def generate_dictionary():
 WORDS_DICTIONARY = generate_dictionary()
 
 
-def generate_text(max_length, min_length=0, sep=" "):
+def generate_text(max_length=None, min_length=0, sep=" "):
+    max_length = max_length or 1000
     if max_length <= 8:
         return generate_sentence(max_length)
 
@@ -468,7 +469,7 @@ def generate_integer_list(
     return res
 
 
-def generate_json(depth=0):
+def generate_json(depth=0, max_length=None):
     if random.random() < 1 - 1 / (1 + depth):
         return random.choice([
             generate_small_integer(),
@@ -476,16 +477,18 @@ def generate_json(depth=0):
             generate_small_integer(),
             True,
             False,
-            # None,
+            None,
         ] + (
-            choices(WORDS_DICTIONARY[3], 3) +
-            choices(WORDS_DICTIONARY[5], 3) +
-            choices(WORDS_DICTIONARY[7], 3)
+            list(map(lambda x: x.lower(), choices(WORDS_DICTIONARY[3], 3))) +
+            list(map(lambda x: x.lower(), choices(WORDS_DICTIONARY[4], 3))) +
+            list(map(lambda x: x.lower(), choices(WORDS_DICTIONARY[5], 3))) +
+            list(map(lambda x: x.lower(), choices(WORDS_DICTIONARY[7], 3)))
         ))
 
     values = [generate_json(depth + 1) for _ in range(0, 4)]
     words = [
-        random.choice(WORDS_DICTIONARY[random.randint(3, 7)]) for _ in values
+        random.choice(WORDS_DICTIONARY[random.randint(3, 7)]).lower()
+        for _ in values
     ]
     if random.random() < 0.5:
         return values

@@ -163,7 +163,21 @@ class TestModelFieldsTwo(models.Model):
     fieldQ = models.FileField(
         upload_to=os.path.join("media", "trash"),
         validators=(
+            [validators.FileExtensionValidator([".rst", ".json", ".txt"])]
+            if hasattr(validators, "FileExtensionValidator") else []
+        )
+    )
+    fieldR = models.FileField(
+        upload_to=os.path.join("media", "trash"),
+        validators=(
             [validators.FileExtensionValidator([".rst"])]
+            if hasattr(validators, "FileExtensionValidator") else []
+        )
+    )
+    fieldI = models.ImageField(
+        upload_to=os.path.join('media', 'trash'),
+        validators=(
+            [validators.FileExtensionValidator([".png", ".jpg"])]
             if hasattr(validators, "FileExtensionValidator") else []
         )
     )
@@ -226,7 +240,7 @@ class CycleF(models.Model):
 class AllFieldsModel(models.Model):
     bigint_field = models.BigIntegerField()
     int_field = models.IntegerField()
-    email_field = models.EmailField(max_length=40)
+    email_field = models.EmailField()
     bool_field = models.BooleanField()
     char_field = models.CharField(max_length=100)
     decimal_field = models.DecimalField(max_digits=15, decimal_places=8)
@@ -243,7 +257,7 @@ class AllFieldsModel(models.Model):
         if hasattr(models, "PositiveBigIntegerField") else
         models.BigIntegerField()
     )
-    text_field = models.TextField(max_length=500)
+    text_field = models.TextField()
     time_field = models.TimeField()
     gen_ip_field = models.GenericIPAddressField()
     url_field = models.URLField()
@@ -252,21 +266,9 @@ class AllFieldsModel(models.Model):
     file_path_field = models.FilePathField()
     # binary_field = models.BinaryField(max_length=200)
     binary_field = models.BinaryField()
-    file_field = models.FileField(
-        upload_to=os.path.join('media', 'files'),
-        validators=(
-            [validators.FileExtensionValidator([".txt", ".rst"])]
-            if hasattr(validators, "FileExtensionValidator") else []
-        )
-    )
-    image_field = models.ImageField(
-        upload_to=os.path.join('media', 'images'),
-        validators=(
-            [validators.FileExtensionValidator([".png", ".jpg"])]
-            if hasattr(validators, "FileExtensionValidator") else []
-        )
-    )
+    file_field = models.FileField(upload_to=os.path.join('media', 'files'))
+    image_field = models.ImageField(upload_to=os.path.join('media', 'images'))
     js_field = (
         models.JSONField() if hasattr(models, "JSONField")
-        else models.TextField(max_length=100)
+        else models.TextField()
     )

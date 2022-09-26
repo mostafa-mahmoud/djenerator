@@ -2,6 +2,7 @@
 This module has a function that matches django fields to the corresponding
 random value generator.
 """
+import json
 import os
 import random
 import warnings
@@ -324,18 +325,25 @@ def generate_random_value(field):
             extensions = kwargs["extensions"][:]
             del kwargs["extensions"]
         else:
+            extensions = [".txt", ".json"]
+        if ".txt" in extensions and ".json" in extensions:
+            extensions = [".txt", ".json"]
+        elif ".txt" in extensions:
             extensions = [".txt"]
-        if ".txt" in extensions:
-            extensions = [".txt"]
+        elif ".json" in extensions:
+            extensions = [".json"]
         else:
             warn = True
         name = generate_file_name(12, extensions=extensions)
         if warn:
             warnings.warn(
-                "Native text (not following the file extension) is written in "
-                + str(os.path.join(field.upload_to, name))
+                "Native text (not following the file extension) is "
+                "written in " + str(os.path.join(field.upload_to, name))
             )
-        txt = generate_text(**kwargs)
+        if name.endswith(".json"):
+            txt = json.dumps(generate_json(**kwargs))
+        else:
+            txt = generate_text(**kwargs)
         content = ContentFile(txt)
         val = FieldFile(content, field, name)
         val.save(name, content, False)
