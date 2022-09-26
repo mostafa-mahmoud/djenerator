@@ -32,3 +32,7 @@ shell:
 
 coverage:
 	coverage run --source "djenerator.core,testapp.models" manage.py test && coverage report
+
+release:
+	python3 setup.py sdist && twine upload dist/* --verbose
+
