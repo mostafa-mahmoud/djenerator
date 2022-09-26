@@ -19,13 +19,22 @@ class Command(BaseCommand):
             "--models", type=str, default=None, nargs="*",
             help="Generate data for a specific set of models."
         )
+        parser.add_argument(
+            "--allow-external-instances", action="store_true",
+            help=(
+                "decide if related fields can be linked to already existing mo"
+                "dels, otherwise, they restricted to the ones being generated."
+            )
+        )
 
     def handle(self, *args, **options):
         size = int(options["size"])
         app_name = options["app-name"]
         models_cls = options["models"]
         allow_null = bool(options["allow_null"])
+        allow_external_instances = bool(options["allow_external_instances"])
 
         generate_test_data(
-            app_name, size, allow_null=allow_null, models_cls=models_cls
+            app_name, size, allow_null=allow_null, models_cls=models_cls,
+            allow_external_instances=allow_external_instances
         )

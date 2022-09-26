@@ -1,8 +1,17 @@
+VERSION=1.1.2
+
 docker-build:
 	docker build -t djen .
 
 docker-test: docker-build
 	docker run -it djen
+
+# change tag here and in djenerator/__init__.py
+tag:
+	git tag -a v${VERSION} -m "Version ${VERSION}" && git push origin v${VERSION}
+
+rm-tag:
+	git tag -d v${VERSION} && git push origin --delete v${VERSION}
 
 clean:
 	@find . -name "__pycache__" -exec rm -rfv {} +
@@ -35,4 +44,3 @@ coverage:
 
 release:
 	python3 setup.py sdist && twine upload dist/* --verbose
-

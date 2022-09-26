@@ -235,7 +235,7 @@ class MainTestCase(TestCase):
             model_cls.__name__: model_cls.objects.count()
             for model_cls in models
         }
-        generate_test_data("testapp", 50)
+        generate_test_data("testapp", 50, allow_external_instances=True)
         for model_cls in models:
             self.assertGreaterEqual(
                 model_cls.objects.count(), 50 + counts[model_cls.__name__],

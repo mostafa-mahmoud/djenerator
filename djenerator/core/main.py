@@ -32,7 +32,8 @@ logger = logging.getLogger(__name__)
 
 def generate_field_values(
     field, size: int, prev_generated: dict, allow_null: bool = False,
-    generators: dict = {}, num_unique_constraints: int = 0
+    generators: dict = {}, num_unique_constraints: int = 0,
+    allow_external_instances: bool = False,
 ) -> list:
     """
     Generate a list of values for a given field.
@@ -47,6 +48,9 @@ def generate_field_values(
     :param num_unique_constraints:
         Number of unique_together constraints in the model including
         the given field.
+    :param allow_external_instances:
+        if True, related fields can be linked to already existing models,
+        otherwise, they restricted to the ones being generated.
     """
     gen_function = make_generator(
         functools.partial(generate_random_value, field)
@@ -73,8 +77,26 @@ def generate_field_values(
 
     if is_related(field):
         related_model_cls = get_related_model(field)
-        if related_model_cls.__name__ in prev_generated.keys():
+        if (
+            related_model_cls.__name__ in prev_generated.keys() and
+            not allow_external_instances
+        ):
             values = prev_generated[related_model_cls.__name__]
+        elif allow_external_instances:
+            values = related_model_cls.objects.all().distinct()
+            if is_unique(field):
+                values = list(values.exclude(
+                    pk__in=field.model.objects.values_list(
+                        field.name, flat=True
+                    )
+                ))
+            # assert len(values) >= len(
+            #     prev_generated.get(related_model_cls.__name__, [])
+            # ), (
+            #     len(values),
+            #     len(prev_generated.get(related_model_cls.__name__, []))
+            # )
+
     else:
         values = generate_random_field_values(field, gen_function, gen_size)
 
@@ -93,7 +115,7 @@ def generate_field_values(
 
 def generate_models(
     model_cls, size: int, prev_generated: dict = {}, generators: dict = {},
-    allow_null: bool = False
+    allow_null: bool = False, allow_external_instances: bool = False
 ) -> tuple:
     """
     Generate a set of instances of a given model class.
@@ -117,7 +139,8 @@ def generate_models(
             field, size, prev_generated,
             num_unique_constraints=num_constraints,
             generators=generators.get(model_cls.__name__, {}),
-            allow_null=allow_null
+            allow_null=allow_null,
+            allow_external_instances=allow_external_instances
         )
         if values:
             generated_dicts[field_name(field)] = values
@@ -130,18 +153,19 @@ def generate_models(
             model = model_cls.objects.create(**{
                 key: generated_dicts[key][i] for key in generated_dicts.keys()
             })
-        except IntegrityError:  # as error:
+            logger.info(
+                "generated Model %s %s", model.__class__.__name__, model.pk
+            )
+            models.append(model)
+        except IntegrityError as error:
             kwargs = {
                 key: generated_dicts[key][i] for key in generated_dicts.keys()
             }
             logger.error(
-                "skipping bad value for model %s: %s",
-                model_cls.__name__, str(kwargs)
+                "skipping bad value for model %s: %s. %s",
+                model_cls.__name__, str(kwargs), str(error)
             )
-        logger.info(
-            "generated Model %s %s", model.__class__.__name__, model.pk
-        )
-        models.append(model)
+            raise
     return models, recheck
 
 
@@ -170,7 +194,9 @@ def postcompute(to_postcompute, generated, allow_null=False):
 
 
 def generate_test_data(app_name: str, size: int,
-                       allow_null: bool = False, models_cls: list = None):
+                       allow_null: bool = False,
+                       allow_external_instances: bool = False,
+                       models_cls: list = None):
     """
     Generates a list of 'size' random data for each model in the models module
     in the given path, If the sample data is not enough for generating 'size'
@@ -181,6 +207,9 @@ def generate_test_data(app_name: str, size: int,
     :param app_name: Name of the app
     :param size: An integer that specifies the size of the generated data.
     :param allow_null: if True, no null values will be allowed.
+    :param allow_external_instances:
+        if True, related fields can be linked to already existing models,
+        otherwise, they restricted to the ones being generated.
     :param models_cls: Generate only for a specific set of models.
     """
 
@@ -220,6 +249,7 @@ def generate_test_data(app_name: str, size: int,
     for model_cls in models_cls:
         models, recheck = generate_models(
             model_cls, size, generated, generators=generators,
+            allow_external_instances=allow_external_instances,
             allow_null=allow_null
         )
         generated[model_cls.__name__] = models

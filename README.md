@@ -1,6 +1,17 @@
 # Djenerator
 
-Djenerator is a simple tool made to generate test/random data from the model descriptions of django.
+Djenerator is a simple tool made to consistently generate test, random or dummy data from the model descriptions of Django. Djenerator has several advantages
+over other alternatives:
+
+1. Entry level is extremely easy, just install the package and include it in your project, there's no requirement by the user to specify the random data factory (it is optional).
+2. It generates data for dependent models (based on related fields), for example, if a model A has a `ForeignKey` to model B, then djenerator will recognize that
+generating data for model A requires having some instances of model B, and will
+generate them when necessary.
+3. Generators can simultaneously satisfy many constraints, like the `unique` flag,
+`null` flag, `unique_together` constraints, or [django field validators](https://docs.djangoproject.com/en/3.2/ref/validators/).
+4. Easy to extend to include your own values for some of the fields.
+5. It can generate a big dump for a database at once, not only individual models.
+
 
 ## Installation
 
