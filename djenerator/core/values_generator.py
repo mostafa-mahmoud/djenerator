@@ -14,7 +14,7 @@ from itertools import islice
 from django.utils.text import slugify
 
 from .exceptions import InconsistentDefinition
-from .utils import get_timezone
+from .utils import choices, get_timezone
 
 
 def generate_positive_log(mx):
@@ -466,3 +466,28 @@ def generate_integer_list(
         else:
             res += str(random.randint(10 ** (rem - 1), 10 ** rem - 1))
     return res
+
+
+def generate_json(depth=0):
+    if random.random() < 1 - 1 / (1 + depth):
+        return random.choice([
+            generate_small_integer(),
+            generate_small_integer(),
+            generate_small_integer(),
+            True,
+            False,
+            # None,
+        ] + (
+            choices(WORDS_DICTIONARY[3], 3) +
+            choices(WORDS_DICTIONARY[5], 3) +
+            choices(WORDS_DICTIONARY[7], 3)
+        ))
+
+    values = [generate_json(depth + 1) for _ in range(0, 4)]
+    words = [
+        random.choice(WORDS_DICTIONARY[random.randint(3, 7)]) for _ in values
+    ]
+    if random.random() < 0.5:
+        return values
+    else:
+        return dict(zip(words, values))

@@ -50,7 +50,12 @@ class TestModel1(models.Model):
             validators.int_list_validator, validators.MinLengthValidator(195)
         ]
     )
-    field2 = models.BigIntegerField(validators=[validate_mod91])
+    field2 = models.BigIntegerField(
+        validators=[
+            validators.StepValueValidator(91)
+            if hasattr(validators, "StepValueValidators") else validate_mod91
+        ]
+    )
     field3 = models.ForeignKey(TestModel0, on_delete=models.CASCADE)
 
     class Meta:
@@ -260,4 +265,8 @@ class AllFieldsModel(models.Model):
             [validators.FileExtensionValidator([".png", ".jpg"])]
             if hasattr(validators, "FileExtensionValidator") else []
         )
+    )
+    js_field = (
+        models.JSONField() if hasattr(models, "JSONField")
+        else models.TextField(max_length=100)
     )

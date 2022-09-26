@@ -39,9 +39,14 @@ try:
     from django.db.models.fields import PositiveBigIntegerField
 except ImportError:
     PositiveBigIntegerField = None
+try:
+    from django.db.models.fields.json import JSONField
+except ImportError:
+    JSONField = None
 from django.db.models.fields.files import (
     FieldFile, FileField, ImageField, ImageFieldFile,
 )
+from django.utils.text import slugify
 
 from .exceptions import InconsistentDefinition, SparseGeneratorError
 from .utils import is_unique, validate_data
@@ -58,6 +63,7 @@ from .values_generator import (
     generate_int,
     generate_integer_list,
     generate_ip,
+    generate_json,
     generate_png,
     generate_positive_big_integer,
     generate_positive_integer,
@@ -85,16 +91,22 @@ def generate_random_field_values(field, generator, size: int) -> list:
     :param size: The size of the output list.
     :returns: A list of random values generated for the given field.
     """
-    results = set([])
+    results = []
+    is_hashable = not (JSONField is not None and isinstance(field, JSONField))
+    if is_hashable:
+        results = set([])
     fail = 0
     for idx, value in enumerate(generator):
-        if (
+        if is_hashable and (
             value is None or value in results or
             not validate_data(value, *field.validators)
         ):
             fail += 1
         else:
-            results.add(value)
+            if is_hashable:
+                results.add(value)
+            else:
+                results.append(value)
             fail = 0
         if len(results) >= size or fail >= 50 or idx >= 10 * size:
             break
@@ -217,7 +229,9 @@ def generate_random_value(field):
         validators.validate_slug in field.validators or
         validators.validate_unicode_slug in field.validators
     ):
-        return generate_string(special=['_', '-'], **kwargs)
+        return slugify(generate_string(special=['_', '-'], **kwargs))
+    elif JSONField is not None and isinstance(field, JSONField):
+        return generate_json(**kwargs)
     elif isinstance(field, TextField):
         return generate_text(**kwargs)
     elif (
