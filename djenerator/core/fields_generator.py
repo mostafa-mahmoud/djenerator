@@ -50,7 +50,7 @@ from django.db.models.fields.files import (
 from django.utils.text import slugify
 
 from .exceptions import InconsistentDefinition, SparseGeneratorError
-from .utils import is_unique, validate_data
+from .utils import is_required, is_unique, validate_data
 from .values_generator import (
     generate_big_integer,
     generate_boolean,
@@ -76,7 +76,9 @@ from .values_generator import (
 )
 
 
-def generate_random_field_values(field, generator, size: int) -> list:
+def generate_random_field_values(
+    field, generator, size: int, to_filter=[]
+) -> list:
     """
     Generate a list of random values for a given field. The size of the output
     list might be less than 'size', if the total number of the possible values
@@ -99,7 +101,7 @@ def generate_random_field_values(field, generator, size: int) -> list:
     fail = 0
     for idx, value in enumerate(generator):
         if is_hashable and (
-            value is None or value in results or
+            value is None or value in results or value in to_filter or
             not validate_data(value, *field.validators)
         ):
             fail += 1
@@ -109,12 +111,15 @@ def generate_random_field_values(field, generator, size: int) -> list:
             else:
                 results.append(value)
             fail = 0
-        if len(results) >= size or fail >= 50 or idx >= 10 * size:
+        if len(results) >= size or fail >= 300 or idx >= 10 * size:
             break
-    if fail >= 50 and is_unique(field):
+    if (
+            is_unique(field) and is_required(field) and
+            (fail >= 300 or len(results) < size)
+    ):
         raise SparseGeneratorError(
             ("%s.%s has generated very few valid values"
-             ", but it must by a unique field.") %
+             ", but more is required by the given unique required field.") %
             (field.model.__name__, field.name)
         )
     return list(results)

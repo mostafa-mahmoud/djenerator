@@ -75,7 +75,18 @@ def generate_field_values(
 
             gen_function = make_generator(iterator)
 
-    if is_related(field):
+    bad_values = []
+    if is_unique(field) and not is_related(field):
+        bad_values = list(
+            field.model.objects.values_list(field.name, flat=True)
+        )
+
+    if hasattr(field, "choices") and field.choices:
+        values = [
+            x for x, _ in field.choices
+            if not is_unique(field) or x not in bad_values
+        ]
+    elif is_related(field):
         related_model_cls = get_related_model(field)
         if (
             related_model_cls.__name__ in prev_generated.keys() and
@@ -96,17 +107,23 @@ def generate_field_values(
             #     len(values),
             #     len(prev_generated.get(related_model_cls.__name__, []))
             # )
-
     else:
-        values = generate_random_field_values(field, gen_function, gen_size)
+        values = generate_random_field_values(
+            field, gen_function, gen_size, bad_values
+        )
+    # values = list(filter(lambda x: x not in bad_values, values))
+
+    if not values:
+        return values
 
     if allow_null and not is_required(field):
         values.append(None)
 
-    if not values:
-        return values
-    elif is_unique(field):
-        assert len(set(values)) >= size, len(set(values))
+    if is_unique(field):
+        assert len(set(values)) >= size or not is_required(field),\
+            len(set(values))
+        if len(values) < size:
+            values.extend([None] * (size - len(values)))
         random.shuffle(values)  # choose without replacement
         return values[:size]
     else:

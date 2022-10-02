@@ -63,8 +63,13 @@ class TestModel1(models.Model):
 
 
 class TestModelA(models.Model):
-    field1A = models.CharField(max_length=200)
-    field2A = models.CharField(max_length=200)
+    field1A = models.CharField(
+        max_length=200, unique=True, null=True,
+        choices=[("a", "Alice"), ("b", "Bob"), ("z", "Zeke")]
+    )
+    field2A = models.CharField(
+        max_length=200, choices=[("a", "Alice"), ("b", "Bob"), ("z", "Zeke")]
+    )
     field3A = models.GenericIPAddressField()
     field4A = models.GenericIPAddressField(protocol="IPv4")
     field5A = models.GenericIPAddressField(
@@ -77,7 +82,7 @@ class TestModelA(models.Model):
 
 
 class TestModelB(models.Model):
-    field1B = models.CharField(max_length=100)
+    field1B = models.CharField(max_length=100, unique=True)
     field2B = models.ForeignKey(TestModelA, on_delete=models.CASCADE)
 
 
@@ -190,7 +195,7 @@ class TestModelFields(models.Model):
     fieldC = models.CharField(max_length=50, unique=True)
     fieldD = models.IntegerField()
     fieldE = models.BooleanField()
-    fieldF = models.IntegerField()
+    fieldF = models.IntegerField(unique=True)
     fieldG = models.CharField(max_length=200, null=True)
     fieldH = models.BooleanField()
     fieldX = models.ForeignKey(TestModelX, on_delete=models.CASCADE)

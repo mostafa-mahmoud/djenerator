@@ -55,8 +55,8 @@ from djenerator.core.values_generator import (
 )
 from testapp.models import (
     Extend_SuperClass, ExtendAbstract, ExtendExtendSuperClass,
-    ExtendSuperClassNoProxy, ProxyExtend, TestModelE, TestModelFields,
-    TestModelX, TestModelY, validate_mod91,
+    ExtendSuperClassNoProxy, ProxyExtend, TestModelA, TestModelE,
+    TestModelFields, TestModelX, TestModelY, validate_mod91,
 )
 
 
@@ -116,7 +116,9 @@ class UtilsTestCase(TestCase):
         non_required_fields = [f.name for f in fields if not is_required(f)]
         self.assertEqual(non_required_fields, ["fieldB", "fieldG"])
         unique_fields = set([f.name for f in fields if is_unique(f)])
-        self.assertEqual(unique_fields, set(["fieldY", "fieldA", "fieldC"]))
+        self.assertEqual(
+            unique_fields, set(["fieldY", "fieldA", "fieldC", "fieldF"])
+        )
         types = {
             "fieldY": "OneToOneField",
             "fieldA": "CharField",
@@ -241,6 +243,11 @@ class MainTestCase(TestCase):
                 model_cls.objects.count(), 50 + counts[model_cls.__name__],
                 model_cls.__name__
             )
+        for a in list(TestModelA.objects.values_list("field1A", flat=True)):
+            if a:
+                self.assertIn(a, ["a", "b", "z"], a)
+        for a in list(TestModelA.objects.values_list("field2A", flat=True)):
+            self.assertIn(a, ["a", "b", "z"], a)
 
 
 class AlgorithmsTestCase(TestCase):
